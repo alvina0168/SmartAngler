@@ -5,9 +5,9 @@ require_once '../includes/functions.php';
 // If already logged in, redirect
 if (isLoggedIn()) {
     if (isAdmin()) {
-        redirect(SITE_URL . '/admin/dashboard.php');
+        redirect(SITE_URL . '/admin/index.php');
     } else {
-        redirect(SITE_URL . '/user/dashboard.php');
+        redirect(SITE_URL . '/index.php');
     }
 }
 
@@ -32,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['role'] = $user['role'];
             
             if ($user['role'] == 'admin') {
-                redirect(SITE_URL . '/admin/dashboard.php');
+                redirect(SITE_URL . '/admin/index.php');
             } else {
-                redirect(SITE_URL . '/user/dashboard.php');
+                redirect(SITE_URL . '/index.php');
             }
         } else {
             $error = 'Invalid email or password';

@@ -5,9 +5,9 @@ require_once '../includes/functions.php';
 // If already logged in, redirect
 if (isLoggedIn()) {
     if (isAdmin()) {
-        redirect(SITE_URL . '/admin/dashboard.php');
+        redirect(SITE_URL . '/admin/index.php');
     } else {
-        redirect(SITE_URL . '/user/dashboard.php');
+        redirect(SITE_URL . '/index.php');
     }
 }
 
