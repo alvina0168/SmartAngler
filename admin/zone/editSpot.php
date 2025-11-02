@@ -32,23 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $longitude = sanitize($_POST['longitude'] ?? '');
     $spot_status = sanitize($_POST['spot_status']);
     
-    // Handle image upload
-    $spot_image = $spot['spot_image'];
-    if (isset($_FILES['spot_image']) && $_FILES['spot_image']['error'] == 0) {
-        $uploaded = uploadFile($_FILES['spot_image'], 'spots');
-        if ($uploaded) {
-            if (!empty($spot_image)) {
-                deleteFile($spot_image, 'spots');
-            }
-            $spot_image = $uploaded;
-        }
-    }
-    
     $update_query = "UPDATE FISHING_SPOT SET 
                      latitude = " . ($latitude ? "'$latitude'" : "NULL") . ",
                      longitude = " . ($longitude ? "'$longitude'" : "NULL") . ",
-                     spot_status = '$spot_status',
-                     spot_image = " . ($spot_image ? "'$spot_image'" : "NULL") . "
+                     spot_status = '$spot_status'
                      WHERE spot_id = '$spot_id'";
     
     if (mysqli_query($conn, $update_query)) {
@@ -66,10 +53,17 @@ include '../includes/header.php';
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="form-container">
-    <h2 class="form-header-title">
-        <i class="fas fa-edit"></i> Edit Spot #<?php echo $spot_id; ?>
-    </h2>
-    <p class="form-header-subtitle">Zone: <?php echo htmlspecialchars($spot['zone_name']); ?></p>
+    <div class="form-header">
+        <div>
+            <h2 class="form-title">
+                <i class="fas fa-edit"></i> Edit Spot #<?php echo $spot_id; ?>
+            </h2>
+            <p class="form-subtitle">Zone: <?php echo htmlspecialchars($spot['zone_name']); ?></p>
+        </div>
+        <a href="viewZone.php?id=<?php echo $spot['zone_id']; ?>" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
 
     <?php if ($error): ?>
         <div class="alert alert-error">
@@ -78,9 +72,9 @@ include '../includes/header.php';
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="" enctype="multipart/form-data">
+    <form method="POST" action="">
         <div class="form-section">
-            <div class="section-title-form">
+            <div class="form-section-title">
                 <i class="fas fa-info-circle"></i>
                 Spot Information
             </div>
@@ -94,59 +88,40 @@ include '../includes/header.php';
                     <option value="cancelled" <?php echo ($spot['spot_status'] == 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <label>Spot Image</label>
-                <?php if (!empty($spot['spot_image'])): ?>
-                    <div class="current-image">
-                        <img src="<?php echo SITE_URL; ?>/assets/images/spots/<?php echo $spot['spot_image']; ?>" alt="Spot">
-                        <div>
-                            <strong>Current Image</strong>
-                            <p class="hint">Upload new to replace</p>
-                        </div>
-                    </div>
-                <?php endif; ?>
-                
-                <label for="spotImage" class="file-upload">
-                    <i class="fas fa-image"></i>
-                    <p><strong>Click to upload spot image</strong></p>
-                    <input type="file" id="spotImage" name="spot_image" accept="image/*">
-                </label>
-            </div>
         </div>
 
         <!-- Map Section -->
         <div class="form-section">
-            <div class="section-title-form">
+            <div class="form-section-title">
                 <i class="fas fa-map-marker-alt"></i>
                 Spot Location (Click on Map)
             </div>
             
-            <div class="map-container">
-                <div class="map-instructions">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Click on the map</strong> to update the spot location
-                </div>
-                
-                <div id="spotMap" class="interactive-map"></div>
-                
-                <div class="coordinates-display">
-                    <div class="coord-item">
-                        <label>Latitude:</label>
-                        <span id="displayLat"><?php echo !empty($spot['latitude']) ? $spot['latitude'] : 'Not set'; ?></span>
-                    </div>
-                    <div class="coord-item">
-                        <label>Longitude:</label>
-                        <span id="displayLng"><?php echo !empty($spot['longitude']) ? $spot['longitude'] : 'Not set'; ?></span>
-                    </div>
-                </div>
-                
-                <input type="hidden" name="latitude" id="spotLat" value="<?php echo $spot['latitude'] ?? ''; ?>">
-                <input type="hidden" name="longitude" id="spotLng" value="<?php echo $spot['longitude'] ?? ''; ?>">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Click on the map to update the spot location or drag the marker
             </div>
+            
+            <div id="spotMap" style="width: 100%; height: 450px; border-radius: 8px; border: 2px solid #6D94C5; margin-bottom: 1rem;"></div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Latitude</label>
+                    <input type="text" id="displayLat" class="form-control" readonly 
+                           value="<?php echo !empty($spot['latitude']) ? $spot['latitude'] : 'Not set'; ?>">
+                </div>
+                <div class="form-group">
+                    <label>Longitude</label>
+                    <input type="text" id="displayLng" class="form-control" readonly 
+                           value="<?php echo !empty($spot['longitude']) ? $spot['longitude'] : 'Not set'; ?>">
+                </div>
+            </div>
+            
+            <input type="hidden" name="latitude" id="spotLat" value="<?php echo $spot['latitude'] ?? ''; ?>">
+            <input type="hidden" name="longitude" id="spotLng" value="<?php echo $spot['longitude'] ?? ''; ?>">
         </div>
 
-        <div class="btn-group">
+        <div class="form-actions">
             <a href="viewZone.php?id=<?php echo $spot['zone_id']; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
@@ -183,8 +158,8 @@ if (hasCoords) {
         
         document.getElementById('spotLat').value = lat;
         document.getElementById('spotLng').value = lng;
-        document.getElementById('displayLat').textContent = lat;
-        document.getElementById('displayLng').textContent = lng;
+        document.getElementById('displayLat').value = lat;
+        document.getElementById('displayLng').value = lng;
     });
 }
 
@@ -198,8 +173,8 @@ map.on('click', function(e) {
     
     document.getElementById('spotLat').value = lat;
     document.getElementById('spotLng').value = lng;
-    document.getElementById('displayLat').textContent = lat;
-    document.getElementById('displayLng').textContent = lng;
+    document.getElementById('displayLat').value = lat;
+    document.getElementById('displayLng').value = lng;
     
     marker.bindPopup('<b>Spot #<?php echo $spot_id; ?></b>').openPopup();
     
@@ -209,8 +184,8 @@ map.on('click', function(e) {
         
         document.getElementById('spotLat').value = newLat;
         document.getElementById('spotLng').value = newLng;
-        document.getElementById('displayLat').textContent = newLat;
-        document.getElementById('displayLng').textContent = newLng;
+        document.getElementById('displayLat').value = newLat;
+        document.getElementById('displayLng').value = newLng;
     });
 });
 

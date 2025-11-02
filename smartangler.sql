@@ -113,18 +113,17 @@ CREATE TABLE FISHING_SPOT (
   zone_id INT NOT NULL,
   latitude DECIMAL(10,8),
   longitude DECIMAL(11,8),
-  spot_image VARCHAR(255),
   spot_status ENUM('available','booked','cancelled','maintenance') DEFAULT 'available',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (zone_id) REFERENCES ZONE(zone_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-INSERT INTO FISHING_SPOT (zone_id, latitude, longitude, spot_image, spot_status)
+INSERT INTO FISHING_SPOT (zone_id, latitude, longitude, spot_status)
 VALUES
-(1, 5.98765432, 116.07654321, 'spot1A.jpg', 'available'),
-(1, 5.98765499, 116.07654400, 'spot1B.jpg', 'booked'),
-(2, 5.98800000, 116.07700000, 'spot2A.jpg', 'available'),
-(3, 3.13400000, 101.68500000, 'spot3A.jpg', 'maintenance');
+(1, 5.98765432, 116.07654321, 'available'),
+(1, 5.98765499, 116.07654400, 'booked'),
+(2, 5.98800000, 116.07700000, 'available'),
+(3, 3.13400000, 101.68500000, 'maintenance');
 
 -- =========================================================
 -- TABLE: TOURNAMENT_REGISTRATION
