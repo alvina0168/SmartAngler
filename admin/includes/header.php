@@ -74,7 +74,7 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </li>
 
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/fish-catch-record.php" class="<?php echo $current_page == 'fish-catch-record.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/catch/selectTournament.php" class="<?php echo $current_page == 'selectTournament.php' ? 'active' : ''; ?>">
                     <i class="fas fa-fish"></i>
                     <span>Fish Catch Record</span>
                 </a>

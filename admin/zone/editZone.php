@@ -9,7 +9,10 @@ if (!isset($_GET['id'])) {
 $zone_id = intval($_GET['id']);
 
 // Get zone info
-$zone_query = "SELECT * FROM ZONE WHERE zone_id = '$zone_id'";
+$zone_query = "SELECT z.*, t.tournament_title 
+               FROM ZONE z 
+               LEFT JOIN TOURNAMENT t ON z.tournament_id = t.tournament_id
+               WHERE z.zone_id = '$zone_id'";
 $zone_result = mysqli_query($conn, $zone_query);
 
 if (!$zone_result || mysqli_num_rows($zone_result) == 0) {
@@ -19,7 +22,7 @@ if (!$zone_result || mysqli_num_rows($zone_result) == 0) {
 
 $zone = mysqli_fetch_assoc($zone_result);
 
-$page_title = 'Edit Zone';
+$page_title = 'Edit Zone - ' . $zone['zone_name'];
 $page_description = 'Update zone information';
 
 $error = '';
@@ -40,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if (mysqli_query($conn, $update_query)) {
             $_SESSION['success'] = 'Zone updated successfully!';
-            redirect(SITE_URL . '/admin/zone/zoneList.php');
+            redirect(SITE_URL . '/admin/zone/viewZone.php?id=' . $zone_id);
         } else {
             $error = 'Failed to update zone: ' . mysqli_error($conn);
         }
@@ -51,17 +54,10 @@ include '../includes/header.php';
 ?>
 
 <div class="form-container">
-    <div class="form-header">
-        <div>
-            <h2 class="form-title">
-                <i class="fas fa-edit"></i> Edit Zone
-            </h2>
-            <p class="form-subtitle"><?php echo htmlspecialchars($zone['zone_name']); ?></p>
-        </div>
-        <a href="zoneList.php" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
+    <h2 class="form-header-title">
+        <i class="fas fa-edit"></i> Edit Fishing Zone
+    </h2>
+    <p class="form-header-subtitle">Update zone information</p>
 
     <?php if ($error): ?>
         <div class="alert alert-error">
@@ -72,7 +68,7 @@ include '../includes/header.php';
 
     <form method="POST" action="">
         <div class="form-section">
-            <div class="form-section-title">
+            <div class="section-title-form">
                 <i class="fas fa-info-circle"></i>
                 Zone Information
             </div>
@@ -80,26 +76,24 @@ include '../includes/header.php';
             <div class="form-group">
                 <label>Zone Name <span class="required">*</span></label>
                 <input type="text" name="zone_name" class="form-control" 
-                       value="<?php echo htmlspecialchars($zone['zone_name']); ?>" 
-                       placeholder="e.g., Pond 1, Zone A" required>
+                       value="<?php echo htmlspecialchars($zone['zone_name']); ?>" required>
             </div>
 
             <div class="form-group">
                 <label>Zone Description</label>
-                <textarea name="zone_description" class="form-control" rows="3" 
-                          placeholder="Optional description"><?php echo htmlspecialchars($zone['zone_description']); ?></textarea>
+                <textarea name="zone_description" class="form-control"><?php echo htmlspecialchars($zone['zone_description']); ?></textarea>
             </div>
 
             <div class="form-group">
-                <label>Link to Tournament (Optional)</label>
+                <label>Linked Tournament</label>
                 <select name="tournament_id" class="form-control">
-                    <option value="">-- Select Tournament --</option>
+                    <option value="">-- No Tournament --</option>
                     <?php
                     $tournaments = mysqli_query($conn, "SELECT tournament_id, tournament_title FROM TOURNAMENT ORDER BY tournament_date DESC");
                     while ($t = mysqli_fetch_assoc($tournaments)):
                     ?>
                         <option value="<?php echo $t['tournament_id']; ?>" 
-                                <?php echo ($zone['tournament_id'] == $t['tournament_id']) ? 'selected' : ''; ?>>
+                                <?php echo ($t['tournament_id'] == $zone['tournament_id']) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($t['tournament_title']); ?>
                         </option>
                     <?php endwhile; ?>
@@ -107,8 +101,8 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <div class="form-actions">
-            <a href="zoneList.php" class="btn btn-secondary">
+        <div class="btn-group">
+            <a href="viewZone.php?id=<?php echo $zone_id; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
             <button type="submit" class="btn btn-primary">

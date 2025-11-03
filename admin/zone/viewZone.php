@@ -56,21 +56,34 @@ include '../includes/header.php';
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+<!-- Back Button -->
+<div class="text-right mb-3">
+    <a href="zoneList.php" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Zones
+    </a>
+    <a href="editZone.php?id=<?php echo $zone_id; ?>" class="btn btn-primary">
+        <i class="fas fa-edit"></i> Edit Zone
+    </a>
+</div>
+
 <!-- Zone Header -->
-<div class="zone-details-header">
-    <div class="zone-details-left">
-        <a href="zoneList.php" class="btn btn-secondary btn-sm mb-2">
-            <i class="fas fa-arrow-left"></i> Back to Zones
-        </a>
-        <h2><i class="fas fa-map-marked-alt"></i> <?php echo htmlspecialchars($zone['zone_name']); ?></h2>
-        <?php if (!empty($zone['zone_description'])): ?>
-            <p><?php echo htmlspecialchars($zone['zone_description']); ?></p>
-        <?php endif; ?>
-        <?php if (!empty($zone['tournament_title'])): ?>
-            <span class="badge badge-info">
-                <i class="fas fa-trophy"></i> <?php echo htmlspecialchars($zone['tournament_title']); ?>
-            </span>
-        <?php endif; ?>
+<div class="section">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">
+                <i class="fas fa-map-marked-alt"></i> <?php echo htmlspecialchars($zone['zone_name']); ?>
+            </h2>
+            <?php if (!empty($zone['zone_description'])): ?>
+                <p style="color: var(--color-gray-600); margin-top: 0.5rem;">
+                    <?php echo htmlspecialchars($zone['zone_description']); ?>
+                </p>
+            <?php endif; ?>
+            <?php if (!empty($zone['tournament_title'])): ?>
+                <span class="badge badge-info" style="margin-top: 0.5rem;">
+                    <i class="fas fa-trophy"></i> <?php echo htmlspecialchars($zone['tournament_title']); ?>
+                </span>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
@@ -135,9 +148,7 @@ include '../includes/header.php';
             </h2>
         </div>
         
-        <div class="map-view-container">
-            <div id="spotsMap" class="spots-map-large"></div>
-        </div>
+        <div id="spotsMap" style="width: 100%; height: 500px; border-radius: var(--radius-md); border: 3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
     </div>
 
     <?php mysqli_data_seek($spots_result, 0); ?>
@@ -153,29 +164,33 @@ include '../includes/header.php';
     </div>
 
     <?php if (mysqli_num_rows($spots_result) > 0): ?>
-        <table class="spots-table">
+        <table class="table">
             <thead>
                 <tr>
-                    <th>SPOT ID</th>
-                    <th>LATITUDE</th>
-                    <th>LONGITUDE</th>
-                    <th>STATUS</th>
-                    <th>BOOKED BY</th>
-                    <th>ACTIONS</th>
+                    <th>Spot ID</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Status</th>
+                    <th>Booked By</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php while ($spot = mysqli_fetch_assoc($spots_result)): ?>
                     <tr>
-                        <td><?php echo $spot['spot_id']; ?></td>
-                        <td class="coord-cell">
+                        <td><strong>#<?php echo $spot['spot_id']; ?></strong></td>
+                        <td style="font-family: 'Courier New', monospace; font-size: 0.875rem;">
                             <?php echo !empty($spot['latitude']) ? $spot['latitude'] : '-'; ?>
                         </td>
-                        <td class="coord-cell">
+                        <td style="font-family: 'Courier New', monospace; font-size: 0.875rem;">
                             <?php echo !empty($spot['longitude']) ? $spot['longitude'] : '-'; ?>
                         </td>
                         <td>
-                            <span class="status-badge <?php echo $spot['spot_status']; ?>">
+                            <span class="badge badge-<?php 
+                                echo $spot['spot_status'] == 'available' ? 'success' : 
+                                    ($spot['spot_status'] == 'booked' ? 'warning' : 
+                                    ($spot['spot_status'] == 'maintenance' ? 'error' : 'info')); 
+                            ?>">
                                 <?php echo strtoupper($spot['spot_status']); ?>
                             </span>
                         </td>
@@ -183,21 +198,26 @@ include '../includes/header.php';
                             <?php echo !empty($spot['booked_by']) ? htmlspecialchars($spot['booked_by']) : '-'; ?>
                         </td>
                         <td>
-                            <a href="editSpot.php?id=<?php echo $spot['spot_id']; ?>" class="btn-icon-small" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="deleteSpot(<?php echo $spot['spot_id']; ?>)" class="btn-icon-small" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <div class="action-btns">
+                                <a href="editSpot.php?id=<?php echo $spot['spot_id']; ?>" 
+                                   class="btn btn-success btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteSpot(<?php echo $spot['spot_id']; ?>)" 
+                                        class="btn btn-danger btn-sm" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
     <?php else: ?>
-        <div class="empty-state-mini">
+        <div class="empty-state">
             <i class="fas fa-map-marker-alt"></i>
-            <p>No spots in this zone yet</p>
+            <h3>No Spots in This Zone</h3>
+            <p>No fishing spots have been added to this zone yet</p>
         </div>
     <?php endif; ?>
 </div>

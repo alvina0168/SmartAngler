@@ -67,90 +67,99 @@ include '../includes/header.php';
 </div>
 
 <!-- Tournaments Table -->
-<div class="tournaments-table">
-    <?php if (mysqli_num_rows($tournaments_result) > 0): ?>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Image</th>
-                <th>Tournament Details</th>
-                <th>Date & Time</th>
-                <th>Participants</th>
-                <th>Fee</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($tournament = mysqli_fetch_assoc($tournaments_result)): 
-                // Get registration count
-                $reg_query = "SELECT COUNT(*) as count FROM TOURNAMENT_REGISTRATION 
-                              WHERE tournament_id = '{$tournament['tournament_id']}' 
-                              AND approval_status IN ('pending', 'approved')";
-                $reg_result = mysqli_query($conn, $reg_query);
-                $reg_count = mysqli_fetch_assoc($reg_result)['count'];
-            ?>
-            <tr>
-                <td>
-                    <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo !empty($tournament['image']) ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
-                         alt="Tournament" 
-                         class="tournament-thumb"
-                         onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
-                </td>
-                <td>
-                    <div class="tournament-title"><?php echo htmlspecialchars($tournament['tournament_title']); ?></div>
-                    <div class="tournament-location">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <?php echo htmlspecialchars(substr($tournament['location'], 0, 40)) . '...'; ?>
-                    </div>
-                </td>
-                <td>
-                    <div class="tournament-title">
-                        <?php echo date('d M Y', strtotime($tournament['tournament_date'])); ?>
-                    </div>
-                    <div class="tournament-location">
-                        <?php echo date('h:i A', strtotime($tournament['start_time'])); ?> - 
-                        <?php echo date('h:i A', strtotime($tournament['end_time'])); ?>
-                    </div>
-                </td>
-                <td>
-                    <span class="stat-value"><?php echo $reg_count; ?></span> / 
-                    <?php echo $tournament['max_participants']; ?>
-                </td>
-                <td class="tournament-title">
-                    RM <?php echo number_format($tournament['tournament_fee'], 2); ?>
-                </td>
-                <td>
-                    <span class="badge badge-<?php echo $tournament['status']; ?>">
-                        <?php echo ucfirst($tournament['status']); ?>
-                    </span>
-                </td>
-                <td>
-                    <div class="action-btns">
-                        <a href="<?php echo SITE_URL; ?>/pages/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" 
-                        class="btn btn-primary btn-sm" 
-                        title="View">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="editTournament.php?id=<?php echo $tournament['tournament_id']; ?>" 
-                        class="btn btn-success btn-sm" 
-                        title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <button type="button"
-                                onclick="deleteTournament(<?php echo $tournament['tournament_id']; ?>)" 
-                                class="btn btn-danger btn-sm" 
-                                title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
+<?php if (mysqli_num_rows($tournaments_result) > 0): ?>
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i>
+                All Tournaments (<?php echo mysqli_num_rows($tournaments_result); ?>)
+            </h2>
+        </div>
 
-            </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
-    <?php else: ?>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Tournament Details</th>
+                    <th>Date & Time</th>
+                    <th>Participants</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                mysqli_data_seek($tournaments_result, 0);
+                while ($tournament = mysqli_fetch_assoc($tournaments_result)): 
+                    // Get registration count
+                    $reg_query = "SELECT COUNT(*) as count FROM TOURNAMENT_REGISTRATION 
+                                  WHERE tournament_id = '{$tournament['tournament_id']}' 
+                                  AND approval_status IN ('pending', 'approved')";
+                    $reg_result = mysqli_query($conn, $reg_query);
+                    $reg_count = mysqli_fetch_assoc($reg_result)['count'];
+                ?>
+                <tr>
+                    <td>
+                        <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo !empty($tournament['image']) ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
+                             alt="Tournament" 
+                             class="tournament-thumb"
+                             onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
+                    </td>
+                    <td>
+                        <div class="tournament-title"><?php echo htmlspecialchars($tournament['tournament_title']); ?></div>
+                        <div class="tournament-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <?php echo htmlspecialchars(substr($tournament['location'], 0, 40)) . '...'; ?>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tournament-title">
+                            <?php echo date('d M Y', strtotime($tournament['tournament_date'])); ?>
+                        </div>
+                        <div class="tournament-location">
+                            <?php echo date('h:i A', strtotime($tournament['start_time'])); ?> - 
+                            <?php echo date('h:i A', strtotime($tournament['end_time'])); ?>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="stat-value"><?php echo $reg_count; ?></span> / 
+                        <?php echo $tournament['max_participants']; ?>
+                    </td>
+                    <td class="tournament-title">
+                        RM <?php echo number_format($tournament['tournament_fee'], 2); ?>
+                    </td>
+                    <td>
+                        <span class="badge badge-<?php echo $tournament['status']; ?>">
+                            <?php echo ucfirst($tournament['status']); ?>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="<?php echo SITE_URL; ?>/pages/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" 
+                            class="btn btn-primary btn-sm" 
+                            title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="editTournament.php?id=<?php echo $tournament['tournament_id']; ?>" 
+                            class="btn btn-success btn-sm" 
+                            title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button"
+                                    onclick="deleteTournament(<?php echo $tournament['tournament_id']; ?>)" 
+                                    class="btn btn-danger btn-sm" 
+                                    title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+<?php else: ?>
     <div class="empty-state">
         <i class="fas fa-trophy"></i>
         <h3>No Tournaments Found</h3>
@@ -159,8 +168,7 @@ include '../includes/header.php';
             <i class="fas fa-plus"></i> Create Your First Tournament
         </a>
     </div>
-    <?php endif; ?>
-</div>
+<?php endif; ?>
 
 <script>
 function deleteTournament(id) {

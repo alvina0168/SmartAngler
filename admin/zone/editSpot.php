@@ -53,17 +53,10 @@ include '../includes/header.php';
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="form-container">
-    <div class="form-header">
-        <div>
-            <h2 class="form-title">
-                <i class="fas fa-edit"></i> Edit Spot #<?php echo $spot_id; ?>
-            </h2>
-            <p class="form-subtitle">Zone: <?php echo htmlspecialchars($spot['zone_name']); ?></p>
-        </div>
-        <a href="viewZone.php?id=<?php echo $spot['zone_id']; ?>" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
+    <h2 class="form-header-title">
+        <i class="fas fa-edit"></i> Edit Spot #<?php echo $spot_id; ?>
+    </h2>
+    <p class="form-header-subtitle">Zone: <?php echo htmlspecialchars($spot['zone_name']); ?></p>
 
     <?php if ($error): ?>
         <div class="alert alert-error">
@@ -73,8 +66,9 @@ include '../includes/header.php';
     <?php endif; ?>
 
     <form method="POST" action="">
+        <!-- Spot Information -->
         <div class="form-section">
-            <div class="form-section-title">
+            <div class="section-title-form">
                 <i class="fas fa-info-circle"></i>
                 Spot Information
             </div>
@@ -92,28 +86,34 @@ include '../includes/header.php';
 
         <!-- Map Section -->
         <div class="form-section">
-            <div class="form-section-title">
+            <div class="section-title-form">
                 <i class="fas fa-map-marker-alt"></i>
-                Spot Location (Click on Map)
+                Spot Location (Click on Map to Update)
             </div>
             
-            <div class="alert alert-info">
+            <div style="background: var(--color-blue-light); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
                 <i class="fas fa-info-circle"></i>
-                Click on the map to update the spot location or drag the marker
+                <strong>Click on the map</strong> to update the spot location. You can also drag the marker.
             </div>
             
-            <div id="spotMap" style="width: 100%; height: 450px; border-radius: 8px; border: 2px solid #6D94C5; margin-bottom: 1rem;"></div>
+            <div id="spotMap" style="width: 100%; height: 450px; border-radius: var(--radius-md); border: 3px solid var(--color-blue-primary); box-shadow: var(--shadow-md); margin-bottom: 1rem;"></div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Latitude</label>
-                    <input type="text" id="displayLat" class="form-control" readonly 
-                           value="<?php echo !empty($spot['latitude']) ? $spot['latitude'] : 'Not set'; ?>">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: var(--color-cream-light); border-radius: var(--radius-md);">
+                <div>
+                    <label style="font-weight: 600; color: var(--color-blue-primary); display: block; margin-bottom: 0.5rem;">
+                        <i class="fas fa-location-arrow"></i> Latitude:
+                    </label>
+                    <span id="displayLat" style="font-family: 'Courier New', monospace; font-size: 1rem;">
+                        <?php echo !empty($spot['latitude']) ? $spot['latitude'] : 'Not set'; ?>
+                    </span>
                 </div>
-                <div class="form-group">
-                    <label>Longitude</label>
-                    <input type="text" id="displayLng" class="form-control" readonly 
-                           value="<?php echo !empty($spot['longitude']) ? $spot['longitude'] : 'Not set'; ?>">
+                <div>
+                    <label style="font-weight: 600; color: var(--color-blue-primary); display: block; margin-bottom: 0.5rem;">
+                        <i class="fas fa-location-arrow"></i> Longitude:
+                    </label>
+                    <span id="displayLng" style="font-family: 'Courier New', monospace; font-size: 1rem;">
+                        <?php echo !empty($spot['longitude']) ? $spot['longitude'] : 'Not set'; ?>
+                    </span>
                 </div>
             </div>
             
@@ -121,7 +121,8 @@ include '../includes/header.php';
             <input type="hidden" name="longitude" id="spotLng" value="<?php echo $spot['longitude'] ?? ''; ?>">
         </div>
 
-        <div class="form-actions">
+        <!-- Form Actions -->
+        <div class="btn-group">
             <a href="viewZone.php?id=<?php echo $spot['zone_id']; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
@@ -158,8 +159,8 @@ if (hasCoords) {
         
         document.getElementById('spotLat').value = lat;
         document.getElementById('spotLng').value = lng;
-        document.getElementById('displayLat').value = lat;
-        document.getElementById('displayLng').value = lng;
+        document.getElementById('displayLat').textContent = lat;
+        document.getElementById('displayLng').textContent = lng;
     });
 }
 
@@ -173,8 +174,8 @@ map.on('click', function(e) {
     
     document.getElementById('spotLat').value = lat;
     document.getElementById('spotLng').value = lng;
-    document.getElementById('displayLat').value = lat;
-    document.getElementById('displayLng').value = lng;
+    document.getElementById('displayLat').textContent = lat;
+    document.getElementById('displayLng').textContent = lng;
     
     marker.bindPopup('<b>Spot #<?php echo $spot_id; ?></b>').openPopup();
     
@@ -184,8 +185,8 @@ map.on('click', function(e) {
         
         document.getElementById('spotLat').value = newLat;
         document.getElementById('spotLng').value = newLng;
-        document.getElementById('displayLat').value = newLat;
-        document.getElementById('displayLng').value = newLng;
+        document.getElementById('displayLat').textContent = newLat;
+        document.getElementById('displayLng').textContent = newLng;
     });
 });
 

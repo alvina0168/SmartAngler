@@ -26,24 +26,7 @@ VALUES
 ('user2@smartangler.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Tan Mei Ling','0198877665','angler','active','profile3.jpg');
 
 -- =========================================================
--- TABLE: WEIGHING_STATION
--- =========================================================
-CREATE TABLE WEIGHING_STATION (
-  station_id INT AUTO_INCREMENT PRIMARY KEY,
-  station_name VARCHAR(100),
-  marshal_name VARCHAR(100),
-  status ENUM('active','inactive') DEFAULT 'active',
-  notes TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
-INSERT INTO WEIGHING_STATION (station_name, marshal_name, status, notes)
-VALUES
-('Station A - Main Jetty','John Marshal','active','Primary weighing station'),
-('Station B - North Dock','Sarah Marshal','active','Secondary weighing station');
-
--- =========================================================
--- TABLE: TOURNAMENT
+-- TABLE: TOURNAMENT (Created without station_id FK first)
 -- =========================================================
 CREATE TABLE TOURNAMENT (
   tournament_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,10 +50,25 @@ CREATE TABLE TOURNAMENT (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   status ENUM('upcoming','ongoing','completed','cancelled') DEFAULT 'upcoming',
   FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by) REFERENCES USER(user_id) ON DELETE SET NULL,
-  FOREIGN KEY (station_id) REFERENCES WEIGHING_STATION(station_id) ON DELETE SET NULL
+  FOREIGN KEY (created_by) REFERENCES USER(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+-- =========================================================
+-- TABLE: WEIGHING_STATION
+-- =========================================================
+CREATE TABLE WEIGHING_STATION (
+    station_id INT PRIMARY KEY AUTO_INCREMENT,
+    tournament_id INT NOT NULL,
+    station_name VARCHAR(100) NOT NULL,
+    marshal_name VARCHAR(100),
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    notes TEXT,
+    FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- =========================================================
+-- INSERT TOURNAMENT DATA
+-- =========================================================
 INSERT INTO TOURNAMENT (
   user_id, tournament_title, tournament_date, location, description,
   start_time, end_time, tournament_fee, max_participants, image, status,
@@ -78,10 +76,27 @@ INSERT INTO TOURNAMENT (
 ) VALUES
 (1, 'Sabah Fishing Championship', '2025-10-27', 'Kota Kinabalu Jetty - https://goo.gl/maps/abcd1234',
  'Annual fishing competition with great prizes.', '07:00:00', '17:00:00',
- 50.00, 50, 'pond1.png', 'ongoing', 1, '1234567890', 'Maybank SmartAngler', 'Admin John', 1),
+ 50.00, 50, 'pond2.png', 'ongoing', 1, '1234567890', 'Maybank SmartAngler', 'Admin John', 1),
 (1, 'Lake Angler Fest', '2025-11-20', 'Taman Tasik Perdana - https://goo.gl/maps/efgh5678',
  'Fun lake fishing event with multiple categories.', '08:00:00', '16:00:00',
  30.00, 30, 'pond2.jpg', 'upcoming', 1, '9876543210', 'CIMB SmartAngler', 'Admin John', 2);
+
+-- =========================================================
+-- INSERT WEIGHING_STATION DATA
+-- =========================================================
+INSERT INTO WEIGHING_STATION (tournament_id, station_name, marshal_name, status, notes) VALUES
+(1, 'S1', 'John Doe', 'active', 'Main station at north jetty'),
+(1, 'S2', 'Jane Smith', 'active', 'Secondary station at south dock'),
+(1, 'S3', 'Mike Johnson', 'active', 'Backup station near parking area'),
+(2, 'Station A', 'Sarah Lee', 'active', 'East side of the lake'),
+(2, 'Station B', 'David Wong', 'active', 'West side near pavilion');
+
+-- =========================================================
+-- ADD FOREIGN KEY CONSTRAINT TO TOURNAMENT.station_id
+-- =========================================================
+ALTER TABLE TOURNAMENT 
+ADD CONSTRAINT fk_tournament_station 
+FOREIGN KEY (station_id) REFERENCES WEIGHING_STATION(station_id) ON DELETE SET NULL;
 
 -- =========================================================
 -- TABLE: ZONE 
@@ -152,25 +167,37 @@ VALUES
 -- TABLE: FISH_CATCH
 -- =========================================================
 CREATE TABLE FISH_CATCH (
-  catch_id INT AUTO_INCREMENT PRIMARY KEY,
-  tournament_id INT NOT NULL,
-  user_id INT NOT NULL,
-  fish_species VARCHAR(100),
-  fish_weight DECIMAL(5,2),
-  catch_time TIME,
-  catch_date DATE,
-  notes TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    catch_id INT PRIMARY KEY AUTO_INCREMENT,
+    station_id INT NOT NULL,
+    user_id INT NOT NULL,
+    fish_species VARCHAR(100) NOT NULL,
+    fish_weight DECIMAL(10,2) NOT NULL,
+    catch_time DATETIME NOT NULL,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (station_id) REFERENCES WEIGHING_STATION(station_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    INDEX idx_station (station_id),
+    INDEX idx_user (user_id),
+    INDEX idx_catch_time (catch_time),
+    INDEX idx_weight (fish_weight)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO FISH_CATCH (tournament_id, user_id, fish_species, fish_weight, catch_time, catch_date)
-VALUES
-(1,2,'Tuna',5.40,'09:30:00','2025-10-27'),
-(1,2,'Barramundi',4.80,'11:10:00','2025-10-27'),
-(2,3,'Tilapia',2.30,'10:15:00','2025-11-20');
+INSERT INTO FISH_CATCH (station_id, user_id, fish_species, fish_weight, catch_time, notes) VALUES
+-- Tournament 1 - Station S1
+(1, 2, 'ALUR ALUR', 5.50, '2025-10-27 08:30:00', 'Biggest catch of the morning session'),
+(1, 2, 'IKAN MSIN', 3.25, '2025-10-27 10:15:00', 'Caught near the mangroves'),
+-- Tournament 1 - Station S2
+(2, 2, 'BAWAL', 6.20, '2025-10-27 11:30:00', 'Caught using live bait'),
+(2, 2, 'JENAHAK', 2.90, '2025-10-27 14:20:00', NULL),
+
+-- Tournament 2 - Station A
+(4, 3, 'TILAPIA', 2.30, '2025-11-20 10:15:00', 'Good quality tilapia'),
+(4, 3, 'KELAH', 3.80, '2025-11-20 12:30:00', NULL),
+-- Tournament 2 - Station B
+(5, 3, 'KELI', 1.90, '2025-11-20 10:45:00', NULL),
+(5, 3, 'TOMAN', 6.40, '2025-11-20 14:00:00', 'Biggest catch at Station B');
 
 -- =========================================================
 -- TABLE: CATEGORY
@@ -333,7 +360,6 @@ VALUES
 -- =========================================================
 -- VIEW: v_spot_details (for admin reporting)
 -- =========================================================
-
 CREATE OR REPLACE VIEW v_spot_details AS
 SELECT 
   fs.spot_id,
@@ -346,3 +372,4 @@ JOIN ZONE z ON fs.zone_id = z.zone_id
 JOIN TOURNAMENT t ON z.tournament_id = t.tournament_id
 LEFT JOIN TOURNAMENT_REGISTRATION tr ON fs.spot_id = tr.spot_id
 LEFT JOIN USER u ON tr.user_id = u.user_id;
+
