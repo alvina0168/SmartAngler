@@ -129,12 +129,16 @@ include '../includes/header.php';
         </h2>
         
         <?php
-        $recent_catches_query = "SELECT fc.*, t.tournament_title 
-                                 FROM FISH_CATCH fc 
-                                 JOIN TOURNAMENT t ON fc.tournament_id = t.tournament_id 
-                                 WHERE fc.user_id = '$user_id' 
-                                 ORDER BY fc.catch_date DESC, fc.catch_time DESC 
-                                 LIMIT 5";
+        $recent_catches_query = "
+        SELECT fc.*, t.tournament_title
+        FROM FISH_CATCH fc
+        JOIN WEIGHING_STATION ws ON fc.station_id = ws.station_id
+        JOIN TOURNAMENT t ON ws.tournament_id = t.tournament_id
+        WHERE fc.user_id = '$user_id'
+        ORDER BY fc.catch_time DESC
+        LIMIT 5
+    ";
+    
         $recent_catches_result = mysqli_query($conn, $recent_catches_query);
         
         if ($recent_catches_result && mysqli_num_rows($recent_catches_result) > 0):

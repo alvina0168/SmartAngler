@@ -136,11 +136,12 @@ include '../includes/header.php';
                     </td>
                     <td>
                         <div class="action-btns">
-                            <a href="<?php echo SITE_URL; ?>/pages/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" 
+                        <a href="viewTournament.php?id=<?php echo $tournament['tournament_id']; ?>" 
                             class="btn btn-primary btn-sm" 
                             title="View">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                            <i class="fas fa-eye"></i>
+                        </a>
+
                             <a href="editTournament.php?id=<?php echo $tournament['tournament_id']; ?>" 
                             class="btn btn-success btn-sm" 
                             title="Edit">

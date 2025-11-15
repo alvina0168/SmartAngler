@@ -22,11 +22,17 @@ if (mysqli_num_rows($result) == 0) {
 $tournament = mysqli_fetch_assoc($result);
 
 // Get available spots count
-$spots_query = "SELECT COUNT(*) as total_spots, 
-                SUM(CASE WHEN spot_status = 'available' THEN 1 ELSE 0 END) as available_spots 
-                FROM FISHING_SPOT WHERE tournament_id = '$tournament_id'";
+$spots_query = "
+    SELECT 
+        COUNT(*) AS total_spots,
+        SUM(CASE WHEN fs.spot_status = 'available' THEN 1 ELSE 0 END) AS available_spots
+    FROM FISHING_SPOT fs
+    JOIN ZONE z ON fs.zone_id = z.zone_id
+    WHERE z.tournament_id = '$tournament_id'
+";
 $spots_result = mysqli_query($conn, $spots_query);
 $spots_data = mysqli_fetch_assoc($spots_result);
+
 
 // Get registered participants count
 $participants_query = "SELECT COUNT(*) as registered 

@@ -5,7 +5,7 @@ $page_title = 'Tournaments';
 include '../includes/header.php';
 
 // Get filter
-$status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'upcoming';
+$status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'all';
 ?>
 
 <div style="min-height: 70vh; padding: 50px 0; background-color: #F5EFE6;">
@@ -16,6 +16,7 @@ $status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'upcoming'
         
         <!-- Filter Tabs -->
         <div style="text-align: center; margin-bottom: 40px;">
+            <a href="?status=all" class="btn <?php echo $status_filter == 'all' ? 'btn-primary' : 'btn-secondary'; ?>" style="margin: 5px;">All</a>
             <a href="?status=upcoming" class="btn <?php echo $status_filter == 'upcoming' ? 'btn-primary' : 'btn-secondary'; ?>" style="margin: 5px;">Upcoming</a>
             <a href="?status=ongoing" class="btn <?php echo $status_filter == 'ongoing' ? 'btn-primary' : 'btn-secondary'; ?>" style="margin: 5px;">Ongoing</a>
             <a href="?status=completed" class="btn <?php echo $status_filter == 'completed' ? 'btn-primary' : 'btn-secondary'; ?>" style="margin: 5px;">Completed</a>
@@ -24,10 +25,12 @@ $status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'upcoming'
         <!-- Tournaments Grid -->
         <div class="features-grid">
             <?php
+            // Adjust query based on filter
+            $where = $status_filter == 'all' ? '' : "WHERE t.status = '$status_filter'";
             $query = "SELECT t.*, u.full_name as organizer_name 
                       FROM TOURNAMENT t 
                       LEFT JOIN USER u ON t.user_id = u.user_id 
-                      WHERE t.status = '$status_filter' 
+                      $where
                       ORDER BY t.tournament_date DESC";
             $result = mysqli_query($conn, $query);
             
@@ -41,7 +44,8 @@ $status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'upcoming'
                     <div class="card-content">
                         <span class="badge badge-<?php 
                             echo $tournament['status'] == 'upcoming' ? 'info' : 
-                                ($tournament['status'] == 'ongoing' ? 'warning' : 'success'); 
+                                ($tournament['status'] == 'ongoing' ? 'warning' : 
+                                    ($tournament['status'] == 'completed' ? 'success' : 'secondary')); 
                         ?>"><?php echo strtoupper($tournament['status']); ?></span>
                         
                         <h3 class="card-title" style="margin-top: 10px;"><?php echo htmlspecialchars($tournament['tournament_title']); ?></h3>
@@ -63,7 +67,7 @@ $status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'upcoming'
             ?>
                 <div style="text-align: center; grid-column: 1/-1; padding: 40px;">
                     <i class="fas fa-info-circle" style="font-size: 48px; color: #6D94C5; margin-bottom: 20px;"></i>
-                    <p>No <?php echo $status_filter; ?> tournaments at the moment.</p>
+                    <p>No <?php echo $status_filter == 'all' ? '' : $status_filter; ?> tournaments at the moment.</p>
                 </div>
             <?php endif; ?>
         </div>

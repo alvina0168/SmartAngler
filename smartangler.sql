@@ -1,7 +1,7 @@
 -- =========================================================
 -- DATABASE INITIALIZATION
 -- =========================================================
-CREATE DATABASE IF NOT EXISTS smartangler;
+CREATE DATABASE smartangler;
 USE smartangler;
 
 -- =========================================================
@@ -26,7 +26,7 @@ VALUES
 ('user2@smartangler.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Tan Mei Ling','0198877665','angler','active','profile3.jpg');
 
 -- =========================================================
--- TABLE: TOURNAMENT (Created without station_id FK first)
+-- TABLE: TOURNAMENT
 -- =========================================================
 CREATE TABLE TOURNAMENT (
   tournament_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,7 +45,6 @@ CREATE TABLE TOURNAMENT (
   bank_account_name VARCHAR(100),
   bank_account_holder VARCHAR(100),
   bank_qr VARCHAR(255),
-  station_id INT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   status ENUM('upcoming','ongoing','completed','cancelled') DEFAULT 'upcoming',
@@ -54,6 +53,21 @@ CREATE TABLE TOURNAMENT (
 ) ENGINE=InnoDB;
 
 -- =========================================================
+-- INSERT TOURNAMENT DATA
+-- =========================================================
+INSERT INTO TOURNAMENT (
+  user_id, tournament_title, tournament_date, location, description,
+  start_time, end_time, tournament_fee, max_participants, image, status,
+  created_by, bank_account_number, bank_account_name, bank_account_holder
+) VALUES
+(1, 'Sabah Fishing Championship', '2025-10-27', 'Kota Kinabalu Jetty - https://goo.gl/maps/abcd1234',
+ 'Annual fishing competition with great prizes.', '07:00:00', '17:00:00',
+ 50.00, 50, 'pond2.jpg', 'ongoing', 1, '1234567890', 'Maybank SmartAngler', 'Admin John'),
+(1, 'Lake Angler Fest', '2025-11-20', 'Taman Tasik Perdana - https://goo.gl/maps/efgh5678',
+ 'Fun lake fishing event with multiple categories.', '08:00:00', '16:00:00',
+ 30.00, 30, 'pond2.jpg', 'upcoming', 1, '9876543210', 'CIMB SmartAngler', 'Admin John');
+ 
+ -- =========================================================
 -- TABLE: WEIGHING_STATION
 -- =========================================================
 CREATE TABLE WEIGHING_STATION (
@@ -67,21 +81,6 @@ CREATE TABLE WEIGHING_STATION (
 ) ENGINE=InnoDB;
 
 -- =========================================================
--- INSERT TOURNAMENT DATA
--- =========================================================
-INSERT INTO TOURNAMENT (
-  user_id, tournament_title, tournament_date, location, description,
-  start_time, end_time, tournament_fee, max_participants, image, status,
-  created_by, bank_account_number, bank_account_name, bank_account_holder, station_id
-) VALUES
-(1, 'Sabah Fishing Championship', '2025-10-27', 'Kota Kinabalu Jetty - https://goo.gl/maps/abcd1234',
- 'Annual fishing competition with great prizes.', '07:00:00', '17:00:00',
- 50.00, 50, 'pond2.png', 'ongoing', 1, '1234567890', 'Maybank SmartAngler', 'Admin John', 1),
-(1, 'Lake Angler Fest', '2025-11-20', 'Taman Tasik Perdana - https://goo.gl/maps/efgh5678',
- 'Fun lake fishing event with multiple categories.', '08:00:00', '16:00:00',
- 30.00, 30, 'pond2.jpg', 'upcoming', 1, '9876543210', 'CIMB SmartAngler', 'Admin John', 2);
-
--- =========================================================
 -- INSERT WEIGHING_STATION DATA
 -- =========================================================
 INSERT INTO WEIGHING_STATION (tournament_id, station_name, marshal_name, status, notes) VALUES
@@ -90,13 +89,6 @@ INSERT INTO WEIGHING_STATION (tournament_id, station_name, marshal_name, status,
 (1, 'S3', 'Mike Johnson', 'active', 'Backup station near parking area'),
 (2, 'Station A', 'Sarah Lee', 'active', 'East side of the lake'),
 (2, 'Station B', 'David Wong', 'active', 'West side near pavilion');
-
--- =========================================================
--- ADD FOREIGN KEY CONSTRAINT TO TOURNAMENT.station_id
--- =========================================================
-ALTER TABLE TOURNAMENT 
-ADD CONSTRAINT fk_tournament_station 
-FOREIGN KEY (station_id) REFERENCES WEIGHING_STATION(station_id) ON DELETE SET NULL;
 
 -- =========================================================
 -- TABLE: ZONE 
@@ -284,7 +276,6 @@ CREATE TABLE SAVED (
   tournament_id INT NOT NULL,
   user_id INT NOT NULL,
   is_saved BOOLEAN DEFAULT TRUE,
-  saved_date DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
   UNIQUE KEY unique_save (tournament_id, user_id)
@@ -304,7 +295,6 @@ CREATE TABLE NOTIFICATION (
   tournament_id INT,
   title VARCHAR(255),
   message TEXT,
-  is_read BOOLEAN DEFAULT FALSE,
   sent_date DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
@@ -327,7 +317,6 @@ CREATE TABLE SPONSOR (
   contact_phone VARCHAR(20),
   contact_email VARCHAR(100),
   sponsored_amount DECIMAL(10,2),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -346,7 +335,6 @@ CREATE TABLE TOURNAMENT_PRIZE (
   prize_ranking VARCHAR(20),
   prize_description TEXT,
   prize_value DECIMAL(10,2),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
   FOREIGN KEY (sponsor_id) REFERENCES SPONSOR(sponsor_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
