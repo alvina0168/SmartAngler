@@ -141,12 +141,6 @@ include '../includes/header.php';
                             title="View">
                             <i class="fas fa-eye"></i>
                         </a>
-
-                            <a href="editTournament.php?id=<?php echo $tournament['tournament_id']; ?>" 
-                            class="btn btn-success btn-sm" 
-                            title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
                             <button type="button"
                                     onclick="deleteTournament(<?php echo $tournament['tournament_id']; ?>)" 
                                     class="btn btn-danger btn-sm" 

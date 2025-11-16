@@ -21,8 +21,8 @@ CREATE TABLE USER (
 
 INSERT INTO USER (email, password, full_name, phone_number, role, status, profile_image)
 VALUES
-('admin@smartangler.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Admin John','0112233445','admin','active','profile1.jpg'),
-('user1@smartangler.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Ahmad Ali','0123344556','angler','active','profile2.jpg'),
+('admin@smartangler.com','admin123','Admin John','0112233445','admin','active','profile1.png'),
+('user1@smartangler.com','user123','Ahmad Ali','0123344556','angler','active','profile2.jpg'),
 ('user2@smartangler.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Tan Mei Ling','0198877665','angler','active','profile3.jpg');
 
 -- =========================================================
@@ -62,11 +62,11 @@ INSERT INTO TOURNAMENT (
 ) VALUES
 (1, 'Sabah Fishing Championship', '2025-10-27', 'Kota Kinabalu Jetty - https://goo.gl/maps/abcd1234',
  'Annual fishing competition with great prizes.', '07:00:00', '17:00:00',
- 50.00, 50, 'pond2.jpg', 'ongoing', 1, '1234567890', 'Maybank SmartAngler', 'Admin John'),
+ 50.00, 50, 'pond2.jpg', 'ongoing', 1, '1234567890', 'Maybank', 'Admin John'),
 (1, 'Lake Angler Fest', '2025-11-20', 'Taman Tasik Perdana - https://goo.gl/maps/efgh5678',
  'Fun lake fishing event with multiple categories.', '08:00:00', '16:00:00',
- 30.00, 30, 'pond2.jpg', 'upcoming', 1, '9876543210', 'CIMB SmartAngler', 'Admin John');
- 
+ 30.00, 30, 'pond2.jpg', 'upcoming', 1, '9876543210', 'CIMB', 'Admin John');
+  
  -- =========================================================
 -- TABLE: WEIGHING_STATION
 -- =========================================================

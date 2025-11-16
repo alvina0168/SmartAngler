@@ -95,14 +95,14 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </li>
 
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/notifications.php" class="<?php echo $current_page == 'notifications.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/notification/notificationList.php" class="<?php echo $current_page == 'notifications.php' ? 'active' : ''; ?>">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
 
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/my-profile.php" class="<?php echo $current_page == 'my-profile.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/profile/profile.php" class="<?php echo $current_page == 'my-profile.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user"></i>
                     <span>My Profile</span>
                 </a>
@@ -123,17 +123,21 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
         <div class="top-bar">
             <div class="top-bar-left">
                 <h1><?php echo isset($page_title) ? $page_title : 'Dashboard'; ?></h1>
-                <p><?php echo isset($page_description) ? $page_description : 'Manage your tournaments and settings'; ?></p>
             </div>
             <div class="top-bar-right">
                 <div class="user-profile">
                     <div class="user-avatar">
-                        <?php echo strtoupper(substr($current_user['full_name'], 0, 1)); ?>
+                        <?php if (!empty($current_user['profile_image']) && file_exists(__DIR__ . '/../../' . $current_user['profile_image'])): ?>
+                            <img src="<?php echo SITE_URL . '/' . $current_user['profile_image']; ?>" alt="Profile Image" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($current_user['full_name'], 0, 1)); ?>
+                        <?php endif; ?>
                     </div>
                     <div class="user-info">
                         <div class="user-name"><?php echo htmlspecialchars($current_user['full_name']); ?></div>
-                        <div class="user-role">Administrator</div>
-                    </div>
+                    <div class="user-role">Administrator</div>
+                </div>
+
                 </div>
             </div>
         </div>
