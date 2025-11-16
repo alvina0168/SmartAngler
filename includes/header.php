@@ -17,8 +17,26 @@ checkSessionTimeout();
 
 // Get current user if logged in
 $currentUser = null;
+$savedCount = 0;
+$notificationCount = 0;
+
 if (isLoggedIn()) {
     $currentUser = getCurrentUser($db);
+    
+    // Get saved tournaments count for anglers
+    if (!isAdmin()) {
+        $savedCountQuery = "SELECT COUNT(*) as count FROM SAVED 
+                           WHERE user_id = ? AND is_saved = 1";
+        $savedResult = $db->fetchOne($savedCountQuery, [$_SESSION['user_id']]);
+        $savedCount = $savedResult ? $savedResult['count'] : 0;
+        
+        // Get unread notifications count (last 7 days)
+        $notifCountQuery = "SELECT COUNT(*) as count FROM NOTIFICATION 
+                           WHERE user_id = ? 
+                           AND sent_date > DATE_SUB(NOW(), INTERVAL 7 DAY)";
+        $notifResult = $db->fetchOne($notifCountQuery, [$_SESSION['user_id']]);
+        $notificationCount = $notifResult ? $notifResult['count'] : 0;
+    }
 }
 
 // Get page title
@@ -32,6 +50,104 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Icon Badges Styling */
+        .icon-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(109, 148, 197, 0.08);
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-link:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+        
+        .icon-link i {
+            font-size: 18px;
+        }
+        
+        .icon-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            background: #E74C3C;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .icon-link.saved-icon:hover {
+            background: #F39C12;
+        }
+        
+        .icon-link.notif-icon .icon-badge {
+            background: #E74C3C;
+        }
+        
+        .icon-link.saved-icon .icon-badge {
+            background: #F39C12;
+        }
+        
+        /* Dropdown separator */
+        .dropdown-separator {
+            height: 1px;
+            background: var(--secondary-light);
+            margin: 8px 0;
+        }
+        
+        /* Mobile responsive for icons */
+        @media (max-width: 992px) {
+            .icon-link {
+                width: 100%;
+                height: auto;
+                border-radius: 8px;
+                padding: 12px 16px;
+                justify-content: flex-start;
+                gap: 12px;
+                margin-bottom: 8px;
+            }
+            
+            .icon-link i {
+                font-size: 16px;
+            }
+            
+            .icon-badge {
+                position: static;
+                margin-left: auto;
+            }
+            
+            .icon-link span {
+                font-weight: 600;
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Modern Navigation Bar -->
@@ -75,17 +191,37 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                 
                 <?php if (isLoggedIn()): ?>
                     <?php if (isAdmin()): ?>
+                        <!-- Admin Panel Link -->
                         <li class="nav-item">
-                            <a href="<?php echo SITE_URL; ?>/admin/dashboard.php" class="nav-link">
+                            <a href="<?php echo SITE_URL; ?>/admin/index.php" class="nav-link">
                                 <i class="fas fa-user-shield"></i>
                                 <span>Admin Panel</span>
                             </a>
                         </li>
                     <?php else: ?>
+                        <!-- Saved Tournaments Icon (Anglers Only) -->
                         <li class="nav-item">
-                            <a href="<?php echo SITE_URL; ?>/user/dashboard.php" class="nav-link">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span>Dashboard</span>
+                            <a href="<?php echo SITE_URL; ?>/pages/saved-tournaments.php" 
+                               class="icon-link saved-icon" 
+                               title="Saved Tournaments">
+                                <i class="fas fa-bookmark"></i>
+                                <?php if ($savedCount > 0): ?>
+                                    <span class="icon-badge"><?php echo $savedCount; ?></span>
+                                <?php endif; ?>
+                                <span style="display: none;">Saved</span>
+                            </a>
+                        </li>
+                        
+                        <!-- Notifications Icon (Anglers Only) -->
+                        <li class="nav-item">
+                            <a href="<?php echo SITE_URL; ?>/pages/notifications.php" 
+                               class="icon-link notif-icon" 
+                               title="Notifications">
+                                <i class="fas fa-bell"></i>
+                                <?php if ($notificationCount > 0): ?>
+                                    <span class="icon-badge"><?php echo $notificationCount > 99 ? '99+' : $notificationCount; ?></span>
+                                <?php endif; ?>
+                                <span style="display: none;">Notifications</span>
                             </a>
                         </li>
                     <?php endif; ?>
@@ -94,7 +230,13 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                     <li class="nav-item user-dropdown">
                         <div class="user-profile">
                             <div class="user-avatar">
-                                <i class="fas fa-user-circle"></i>
+                                <?php if (!empty($currentUser['profile_image']) && file_exists(__DIR__ . '/../assets/images/profiles/' . $currentUser['profile_image'])): ?>
+                                    <img src="<?php echo SITE_URL . '/assets/images/profiles/' . $currentUser['profile_image']; ?>" 
+                                         alt="Profile" 
+                                         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                <?php else: ?>
+                                    <i class="fas fa-user-circle"></i>
+                                <?php endif; ?>
                             </div>
                             <span class="user-name"><?php echo htmlspecialchars($currentUser['full_name'] ?? 'User'); ?></span>
                             <i class="fas fa-chevron-down dropdown-arrow"></i>
@@ -103,12 +245,23 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                             <a href="<?php echo SITE_URL; ?>/user/profile.php" class="dropdown-item">
                                 <i class="fas fa-user"></i> My Profile
                             </a>
+                            
+                            <?php if (!isAdmin()): ?>
+                                <!-- Dashboard for Anglers (moved to dropdown) -->
+                                <a href="<?php echo SITE_URL; ?>/user/dashboard.php" class="dropdown-item">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a>
+                            <?php endif; ?>
+                            
+                            <div class="dropdown-separator"></div>
+                            
                             <a href="<?php echo SITE_URL; ?>/pages/logout.php" class="dropdown-item logout">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </div>
                     </li>
                 <?php else: ?>
+                    <!-- Guest User - Login/Register Buttons -->
                     <li class="nav-item">
                         <a href="<?php echo SITE_URL; ?>/pages/login.php" class="nav-btn btn-login">
                             <i class="fas fa-sign-in-alt"></i>
@@ -206,4 +359,14 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                 userDropdown.classList.remove('active');
             });
         }
+        
+        // Show icon labels in mobile menu
+        window.addEventListener('resize', () => {
+            const iconLabels = document.querySelectorAll('.icon-link span');
+            if (window.innerWidth <= 992) {
+                iconLabels.forEach(label => label.style.display = 'block');
+            } else {
+                iconLabels.forEach(label => label.style.display = 'none');
+            }
+        });
     </script>

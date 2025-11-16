@@ -296,14 +296,21 @@ CREATE TABLE NOTIFICATION (
   title VARCHAR(255),
   message TEXT,
   sent_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  read_status TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = unread, 1 = read',
   FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
+  FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
+  INDEX idx_user_read (user_id, read_status)
 ) ENGINE=InnoDB;
 
+-- =========================================================
+-- SAMPLE NOTIFICATION DATA (Working Examples)
+-- =========================================================
+
+-- Example 1: Unread notification (default read_status = 0)
 INSERT INTO NOTIFICATION (user_id, tournament_id, title, message)
 VALUES
-(2,1,'Registration Approved','Your registration for Sabah Fishing Championship has been approved!'),
-(3,2,'Upcoming Tournament','Lake Angler Fest will begin soon. Prepare your gear!');
+(2, 1, 'Registration Approved', 'Your registration for the Sabah Fishing Championship has been approved!');
+
 
 -- =========================================================
 -- TABLE: SPONSOR
