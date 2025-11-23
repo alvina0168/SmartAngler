@@ -5,291 +5,16 @@ $page_title = 'Home';
 include 'includes/header.php';
 ?>
 
-<!-- Hero Section -->
+<!-- Top Section -->
 <section class="hero">
     <div class="container">
-        <h1>Compete, Track, and Win<br>with <span>SmartAngler!</span></h1>
+        <h1>Compete, Track and Win<br>with <span>SmartAngler!</span></h1>
         <p>SmartAngler makes fishing competitions easy! Create and join tournaments, log your catches, and compete with anglers for great prizes!</p>
     </div>
 </section>
 
-<style>
-.account-type-section {
-    background: linear-gradient(135deg, #6D94C5 0%, #3D5A80 100%);
-    padding: 80px 20px;
-    text-align: center;
-    color: white;
-}
-
-.account-type-container {
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.account-type-title {
-    font-size: 36px;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
-
-.account-type-subtitle {
-    font-size: 18px;
-    margin-bottom: 50px;
-    opacity: 0.9;
-}
-
-.account-type-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.account-card {
-    background: white;
-    border-radius: 15px;
-    padding: 40px 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-}
-
-.account-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-}
-
-.account-card-icon {
-    font-size: 60px;
-    margin-bottom: 20px;
-}
-
-.account-card-title {
-    font-size: 28px;
-    font-weight: bold;
-    color: #2C3E50;
-    margin-bottom: 15px;
-}
-
-.account-card-description {
-    font-size: 15px;
-    color: #7F8C8D;
-    margin-bottom: 25px;
-    line-height: 1.6;
-}
-
-.account-card-button {
-    display: inline-block;
-    padding: 15px 40px;
-    background: #6D94C5;
-    color: white;
-    text-decoration: none;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 16px;
-    transition: background 0.3s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.account-card-button:hover {
-    background: #5A7BA8;
-}
-
-.angler-card .account-card-icon {
-    color: #3498DB;
-}
-
-.admin-card .account-card-icon {
-    color: #E67E22;
-}
-
-/* Modal Styles */
-.admin-request-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 15px;
-    padding: 40px;
-    max-width: 600px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.modal-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 30px;
-    color: #7F8C8D;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-}
-
-.modal-close:hover {
-    color: #E74C3C;
-}
-
-.modal-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.modal-header h2 {
-    color: #2C3E50;
-    font-size: 28px;
-    margin-bottom: 10px;
-}
-
-.modal-header p {
-    color: #7F8C8D;
-    font-size: 15px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #2C3E50;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #E0E0E0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-    box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #6D94C5;
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-.form-group small {
-    display: block;
-    margin-top: 5px;
-    color: #7F8C8D;
-    font-size: 12px;
-}
-
-.file-upload-area {
-    border: 2px dashed #E0E0E0;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.file-upload-area:hover {
-    border-color: #6D94C5;
-    background: #F8F9FA;
-}
-
-.file-upload-area i {
-    font-size: 40px;
-    color: #6D94C5;
-    margin-bottom: 10px;
-}
-
-.file-upload-area p {
-    margin: 0;
-    color: #7F8C8D;
-    font-size: 14px;
-}
-
-.file-preview {
-    margin-top: 10px;
-    padding: 10px;
-    background: #F8F9FA;
-    border-radius: 5px;
-    display: none;
-}
-
-.file-preview img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.submit-button {
-    width: 100%;
-    padding: 15px;
-    background: #6D94C5;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    margin-top: 10px;
-}
-
-.submit-button:hover {
-    background: #5A7BA8;
-}
-
-.submit-button:disabled {
-    background: #BDC3C7;
-    cursor: not-allowed;
-}
-
-.alert {
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.alert-success {
-    background: #D5F4E6;
-    color: #27AE60;
-    border: 1px solid #27AE60;
-}
-
-.alert-error {
-    background: #FADBD8;
-    color: #E74C3C;
-    border: 1px solid #E74C3C;
-}
-</style>
-
-<!-- Account Type Selection Section -->
+<?php if (!isLoggedIn()): ?>
+<!-- Account Type Selection Section - Only visible when NOT logged in -->
 <section class="account-type-section">
     <div class="account-type-container">
         <h1 class="account-type-title">Welcome to SmartAngler</h1>
@@ -305,7 +30,7 @@ include 'includes/header.php';
                 <p class="account-card-description">
                     Join fishing tournaments, track your catches, and compete with other anglers in your area.
                 </p>
-                <a href="pages/login.php" class="account-card-button">
+                <a href="pages/authentication/login.php" class="account-card-button">
                     <i class="fas fa-sign-in-alt"></i> Login as Angler
                 </a>
             </div>
@@ -339,7 +64,7 @@ include 'includes/header.php';
         
         <div id="alertMessage"></div>
         
-        <form id="adminRequestForm" method="POST" action="pages/send_admin_request.php" enctype="multipart/form-data">
+        <form id="adminRequestForm" method="POST" action="pages/authentication/send_admin_request.php" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="name">Full Name *</label>
                 <input type="text" id="name" name="name" required placeholder="Enter your full name">
@@ -460,7 +185,7 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
     const formData = new FormData(this);
     
     // Send request
-    fetch('pages/send_admin_request.php', {
+    fetch('pages/authentication/send_admin_request.php', {
         method: 'POST',
         body: formData
     })
@@ -502,6 +227,7 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
     });
 });
 </script>
+<?php endif; ?>
 
 <!-- Features Section -->
 <section class="features">
@@ -568,7 +294,7 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
                                 <i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars(substr($tournament['location'], 0, 50)); ?>...<br>
                                 <i class="fas fa-dollar-sign"></i> RM <?php echo number_format($tournament['tournament_fee'], 2); ?>
                             </p>
-                            <a href="pages/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" class="btn btn-primary">View Details</a>
+                            <a href="pages/tournament/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" class="btn btn-primary">View Details</a>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -579,17 +305,8 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
         </div>
 
         <div style="text-align: center; margin-top: 40px;">
-            <a href="pages/tournaments.php" class="btn btn-secondary">View All Tournaments</a>
+            <a href="pages/tournament/tournaments.php" class="btn btn-secondary">View All Tournaments</a>
         </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section style="padding: 100px 0; background: linear-gradient(135deg, #CBDCEB 0%, #6D94C5 100%); text-align: center; color: white;">
-    <div class="container">
-        <h2 style="font-size: 36px; margin-bottom: 20px;">Ready to Join the Competition?</h2>
-        <p style="font-size: 18px; margin-bottom: 30px;">Sign up now and start your angling journey with SmartAngler!</p>
-        <a href="pages/register.php" class="btn btn-primary">REGISTER NOW</a>
     </div>
 </section>
 

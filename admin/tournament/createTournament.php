@@ -219,7 +219,7 @@ include '../includes/header.php';
 
             <div class="form-group">
                 <label>Payment QR Code</label>
-                <label for="qrUpload" class="file-upload">
+                <label for="qrUpload" class="file-upload qr-upload">
                     <i class="fas fa-qrcode"></i>
                     <p><strong>Click to upload QR code</strong> or drag and drop</p>
                     <p>Upload your bank QR code for easy payment</p>
@@ -237,7 +237,7 @@ include '../includes/header.php';
             </div>
 
             <div class="form-group">
-                <label for="imageUpload" class="file-upload">
+                <label for="imageUpload" class="file-upload image-upload">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p><strong>Click to upload</strong> or drag and drop</p>
                     <p>PNG, JPG, GIF up to 5MB</p>
@@ -259,25 +259,11 @@ include '../includes/header.php';
 </div>
 
 <script>
-// Tournament image upload preview
-document.getElementById('imageUpload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const label = document.querySelector('.file-upload');
-        label.innerHTML = `
-            <i class="fas fa-check-circle" style="color: var(--color-success);"></i>
-            <p><strong>${file.name}</strong></p>
-            <p>Click to change file</p>
-        `;
-    }
-});
-
 // QR code upload preview
 document.getElementById('qrUpload').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
-        const labels = document.querySelectorAll('.file-upload');
-        const qrLabel = labels[1]; // Second file upload is QR code
+        const qrLabel = document.querySelector('.file-upload.qr-upload');
         qrLabel.innerHTML = `
             <i class="fas fa-check-circle" style="color: var(--color-success);"></i>
             <p><strong>${file.name}</strong></p>
@@ -286,8 +272,21 @@ document.getElementById('qrUpload').addEventListener('change', function(e) {
     }
 });
 
-// Drag and drop for tournament image
-const dropZone = document.querySelector('.file-upload');
+// Tournament image upload preview
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const imgLabel = document.querySelector('.file-upload.image-upload');
+        imgLabel.innerHTML = `
+            <i class="fas fa-check-circle" style="color: var(--color-success);"></i>
+            <p><strong>${file.name}</strong></p>
+            <p>Click to change file</p>
+        `;
+    }
+});
+
+// Drag and drop only for tournament image
+const dropZone = document.querySelector('.file-upload.image-upload');
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropZone.addEventListener(eventName, preventDefaults, false);
 });

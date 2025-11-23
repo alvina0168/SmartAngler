@@ -22,7 +22,10 @@ if (!$spot_result || mysqli_num_rows($spot_result) == 0) {
 
 $spot = mysqli_fetch_assoc($spot_result);
 
-$page_title = 'Edit Spot #' . $spot_id;
+// Use spot_number for display
+$spot_number = $spot['spot_number'];
+
+$page_title = 'Edit Spot #' . $spot_number;
 $page_description = 'Update spot information';
 
 $error = '';
@@ -31,13 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $latitude = sanitize($_POST['latitude'] ?? '');
     $longitude = sanitize($_POST['longitude'] ?? '');
     $spot_status = sanitize($_POST['spot_status']);
-    
+
     $update_query = "UPDATE FISHING_SPOT SET 
                      latitude = " . ($latitude ? "'$latitude'" : "NULL") . ",
                      longitude = " . ($longitude ? "'$longitude'" : "NULL") . ",
                      spot_status = '$spot_status'
                      WHERE spot_id = '$spot_id'";
-    
+
     if (mysqli_query($conn, $update_query)) {
         $_SESSION['success'] = 'Spot updated successfully!';
         redirect(SITE_URL . '/admin/zone/viewZone.php?id=' . $spot['zone_id']);
@@ -54,7 +57,7 @@ include '../includes/header.php';
 
 <div class="form-container">
     <h2 class="form-header-title">
-        <i class="fas fa-edit"></i> Edit Spot #<?php echo $spot_id; ?>
+        <i class="fas fa-edit"></i> Edit Spot #<?php echo $spot_number; ?>
     </h2>
     <p class="form-header-subtitle">Zone: <?php echo htmlspecialchars($spot['zone_name']); ?></p>
 
@@ -78,6 +81,7 @@ include '../includes/header.php';
                 <select name="spot_status" class="form-control" required>
                     <option value="available" <?php echo ($spot['spot_status'] == 'available') ? 'selected' : ''; ?>>Available</option>
                     <option value="booked" <?php echo ($spot['spot_status'] == 'booked') ? 'selected' : ''; ?>>Booked</option>
+                    <option value="occupied" <?php echo ($spot['spot_status'] == 'occupied') ? 'selected' : ''; ?>>Occupied</option>
                     <option value="maintenance" <?php echo ($spot['spot_status'] == 'maintenance') ? 'selected' : ''; ?>>Maintenance</option>
                     <option value="cancelled" <?php echo ($spot['spot_status'] == 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                 </select>
@@ -151,7 +155,7 @@ let marker = null;
 
 if (hasCoords) {
     marker = L.marker([existingLat, existingLng], { draggable: true }).addTo(map);
-    marker.bindPopup('<b>Spot #<?php echo $spot_id; ?></b>').openPopup();
+    marker.bindPopup('<b>Spot #<?php echo $spot_number; ?></b>').openPopup();
     
     marker.on('dragend', function(e) {
         const lat = e.target.getLatLng().lat.toFixed(8);
@@ -177,7 +181,7 @@ map.on('click', function(e) {
     document.getElementById('displayLat').textContent = lat;
     document.getElementById('displayLng').textContent = lng;
     
-    marker.bindPopup('<b>Spot #<?php echo $spot_id; ?></b>').openPopup();
+    marker.bindPopup('<b>Spot #<?php echo $spot_number; ?></b>').openPopup();
     
     marker.on('dragend', function(e) {
         const newLat = e.target.getLatLng().lat.toFixed(8);

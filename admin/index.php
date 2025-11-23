@@ -6,12 +6,13 @@ include 'includes/header.php';
 // Get statistics
 $stats_queries = [
     'tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT",
-    'users' => "SELECT COUNT(*) as total FROM USER WHERE role = 'angler'",
+    'active_tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing'",
     'pending' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION WHERE approval_status = 'pending'",
-    'catches' => "SELECT COUNT(*) as total FROM FISH_CATCH",
+    'recent_registrations' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION WHERE DATE(registration_date) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)",
     'upcoming' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'upcoming'",
     'ongoing' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing'",
-    'completed' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'completed'"
+    'completed' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'completed'",
+    'total_participants' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION WHERE approval_status = 'approved'"
 ];
 
 $stats = [];
@@ -20,9 +21,21 @@ foreach ($stats_queries as $key => $query) {
     $stats[$key] = mysqli_fetch_assoc($result)['total'];
 }
 
-// Get recent tournaments
-$recent_tournaments_query = "SELECT * FROM TOURNAMENT ORDER BY created_at DESC LIMIT 5";
-$recent_tournaments = mysqli_query($conn, $recent_tournaments_query);
+// Get recent activity (last 10 registrations)
+$recent_activity_query = "
+    SELECT 
+        tr.registration_date,
+        tr.approval_status,
+        u.full_name,
+        t.tournament_title,
+        t.tournament_id
+    FROM TOURNAMENT_REGISTRATION tr
+    JOIN USER u ON tr.user_id = u.user_id
+    JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
+    ORDER BY tr.registration_date DESC
+    LIMIT 10
+";
+$recent_activity = mysqli_query($conn, $recent_activity_query);
 ?>
 
 <!-- Welcome Section -->
@@ -47,20 +60,27 @@ $recent_tournaments = mysqli_query($conn, $recent_tournaments_query);
             <div class="stat-number"><?php echo $stats['tournaments']; ?></div>
             <div class="stat-title">Total Tournaments</div>
             <div class="stat-trend">
-                <span class="trend-up"><i class="fas fa-arrow-up"></i> Active</span>
+                <span class="trend-neutral">
+                    <i class="fas fa-chart-bar"></i> 
+                    <?php echo $stats['upcoming']; ?> upcoming, <?php echo $stats['completed']; ?> completed
+                </span>
             </div>
         </div>
     </div>
 
     <div class="stat-card-large">
-        <div class="stat-card-icon users">
-            <i class="fas fa-users"></i>
+        <div class="stat-card-icon ongoing">
+            <i class="fas fa-play-circle"></i>
         </div>
         <div class="stat-card-content">
-            <div class="stat-number"><?php echo $stats['users']; ?></div>
-            <div class="stat-title">Registered Anglers</div>
+            <div class="stat-number"><?php echo $stats['active_tournaments']; ?></div>
+            <div class="stat-title">Active Tournaments</div>
             <div class="stat-trend">
-                <span class="trend-neutral"><i class="fas fa-user-check"></i> Members</span>
+                <?php if ($stats['active_tournaments'] > 0): ?>
+                    <span class="trend-success"><i class="fas fa-circle"></i> Live now</span>
+                <?php else: ?>
+                    <span class="trend-neutral"><i class="fas fa-pause-circle"></i> None active</span>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -83,79 +103,86 @@ $recent_tournaments = mysqli_query($conn, $recent_tournaments_query);
     </div>
 
     <div class="stat-card-large">
-        <div class="stat-card-icon catches">
-            <i class="fas fa-fish"></i>
+        <div class="stat-card-icon users">
+            <i class="fas fa-user-plus"></i>
         </div>
         <div class="stat-card-content">
-            <div class="stat-number"><?php echo $stats['catches']; ?></div>
-            <div class="stat-title">Total Catches</div>
+            <div class="stat-number"><?php echo $stats['recent_registrations']; ?></div>
+            <div class="stat-title">New Registrations</div>
             <div class="stat-trend">
-                <span class="trend-up"><i class="fas fa-chart-line"></i> Growing</span>
+                <span class="trend-up"><i class="fas fa-calendar-week"></i> Last 7 days</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Two Column Layout -->
+<!-- Two Column Layout: Recent Activity (Left) + Tournament Status (Right) -->
 <div class="dashboard-two-col">
-    <!-- Recent Tournaments -->
+
+    <!-- Left Column: Recent Activity -->
     <div class="dashboard-section">
         <div class="section-header-modern">
             <div>
                 <h2 class="section-title-modern">
-                    <i class="fas fa-trophy"></i>
-                    Recent Tournaments
+                    <i class="fas fa-bell"></i>
+                    Recent Activity
                 </h2>
-                <p class="section-subtitle">Your latest fishing competitions</p>
+                <p class="section-subtitle">Latest registration activity</p>
             </div>
-            <a href="tournament/tournamentList.php" class="btn btn-primary btn-sm">
-                View All <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-
-        <div class="tournaments-list">
-            <?php if (mysqli_num_rows($recent_tournaments) > 0): ?>
-                <?php while ($tournament = mysqli_fetch_assoc($recent_tournaments)): ?>
-                    <div class="tournament-card-mini">
-                        <div class="tournament-mini-date">
-                            <div class="mini-date-day"><?php echo date('d', strtotime($tournament['tournament_date'])); ?></div>
-                            <div class="mini-date-month"><?php echo strtoupper(date('M', strtotime($tournament['tournament_date']))); ?></div>
-                        </div>
-                        <div class="tournament-mini-content">
-                            <h4 class="tournament-mini-title"><?php echo htmlspecialchars($tournament['tournament_title']); ?></h4>
-                            <div class="tournament-mini-meta">
-                                <span><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars(substr($tournament['location'], 0, 25)) . '...'; ?></span>
-                                <span><i class="fas fa-users"></i> Max: <?php echo $tournament['max_participants']; ?></span>
-                            </div>
-                        </div>
-                        <div class="tournament-mini-actions">
-                            <span class="badge badge-<?php echo $tournament['status']; ?>"><?php echo ucfirst($tournament['status']); ?></span>
-                            <div class="mini-action-btns">
-                                <a href="<?php echo SITE_URL; ?>/pages/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" 
-                                   class="btn-icon" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="tournament/editTournament.php?id=<?php echo $tournament['tournament_id']; ?>" 
-                                   class="btn-icon" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="empty-state-mini">
-                    <i class="fas fa-trophy"></i>
-                    <p>No tournaments yet</p>
-                    <a href="tournament/createTournament.php" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Create Tournament
-                    </a>
-                </div>
+            <?php if ($stats['pending'] > 0): ?>
+                <a href="tournament/manageParticipants.php" class="btn btn-warning btn-sm">
+                    <i class="fas fa-user-check"></i> Review Pending
+                </a>
             <?php endif; ?>
         </div>
+
+        <div class="activity-feed">
+    <?php if (mysqli_num_rows($recent_activity) > 0): ?>
+        <?php while ($activity = mysqli_fetch_assoc($recent_activity)): ?>
+            <div class="activity-card">
+                <div class="activity-icon <?php echo $activity['approval_status']; ?>">
+                    <?php 
+                    if ($activity['approval_status'] == 'approved') echo '<i class="fas fa-check-circle"></i>';
+                    elseif ($activity['approval_status'] == 'pending') echo '<i class="fas fa-hourglass-half"></i>';
+                    else echo '<i class="fas fa-times-circle"></i>';
+                    ?>
+                </div>
+                <div class="activity-details">
+                    <div class="activity-user">
+                        <strong><?php echo htmlspecialchars($activity['full_name']); ?></strong>
+                        registered for 
+                        <a href="<?php echo SITE_URL; ?>/admin/tournament/viewTournament.php?id=<?php echo $activity['tournament_id']; ?>">
+    <?php echo htmlspecialchars($activity['tournament_title']); ?>
+</a>
+
+                    </div>
+                    <div class="activity-meta">
+                        <span class="badge badge-<?php echo $activity['approval_status']; ?>">
+                            <?php echo ucfirst($activity['approval_status']); ?>
+                        </span>
+                        <span class="activity-time">
+                            <?php 
+                            $time_diff = time() - strtotime($activity['registration_date']);
+                            if ($time_diff < 3600) echo floor($time_diff / 60) . ' min ago';
+                            elseif ($time_diff < 86400) echo floor($time_diff / 3600) . ' hours ago';
+                            else echo floor($time_diff / 86400) . ' days ago';
+                            ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <div class="empty-state-mini">
+            <i class="fas fa-bell-slash"></i>
+            <p>No recent activity</p>
+        </div>
+    <?php endif; ?>
+</div>
+
     </div>
 
-    <!-- Tournament Status Overview -->
+    <!-- Right Column: Tournament Status & Quick Stats -->
     <div class="dashboard-section">
         <div class="section-header-modern">
             <div>
@@ -200,7 +227,7 @@ $recent_tournaments = mysqli_query($conn, $recent_tournaments_query);
                 </div>
                 <div class="status-content">
                     <div class="status-number"><?php echo $stats['completed']; ?></div>
-                    <div class="stat-label">Completed</div>
+                    <div class="status-label">Completed</div>
                     <div class="status-bar">
                         <div class="status-bar-fill" style="width: <?php echo $stats['tournaments'] > 0 ? ($stats['completed'] / $stats['tournaments'] * 100) : 0; ?>%;"></div>
                     </div>
@@ -216,14 +243,15 @@ $recent_tournaments = mysqli_query($conn, $recent_tournaments_query);
             </div>
             <div class="summary-item">
                 <i class="fas fa-users"></i>
-                <span><?php echo $stats['users']; ?> Anglers</span>
+                <span><?php echo $stats['total_participants']; ?> Participants</span>
             </div>
             <div class="summary-item">
-                <i class="fas fa-fish"></i>
-                <span><?php echo $stats['catches']; ?> Catches</span>
+                <i class="fas fa-user-check"></i>
+                <span><?php echo $stats['recent_registrations']; ?> New (7d)</span>
             </div>
         </div>
     </div>
+
 </div>
 
 <?php include 'includes/footer.php'; ?>

@@ -109,7 +109,7 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </li>
 
             <li class="logout-btn">
-                <a href="<?php echo SITE_URL; ?>/pages/logout.php" onclick="return confirm('Are you sure you want to logout?')">
+                <a href="<?php echo SITE_URL; ?>/pages/authentication/logout.php" onclick="return confirm('Are you sure you want to logout?')">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>

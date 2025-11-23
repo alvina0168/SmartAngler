@@ -174,7 +174,7 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                 </li>
                 
                 <li class="nav-item">
-                    <a href="<?php echo SITE_URL; ?>/pages/tournaments.php" 
+                    <a href="<?php echo SITE_URL; ?>/pages/tournament/tournaments.php" 
                        class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'tournaments.php' ? 'active' : ''; ?>">
                         <i class="fas fa-trophy"></i>
                         <span>Tournaments</span>
@@ -182,7 +182,7 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                 </li>
                 
                 <li class="nav-item">
-                    <a href="<?php echo SITE_URL; ?>/pages/calendar.php" 
+                    <a href="<?php echo SITE_URL; ?>/pages/calendar/calendar.php" 
                        class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'calendar.php' ? 'active' : ''; ?>">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Calendar</span>
@@ -201,7 +201,7 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                     <?php else: ?>
                         <!-- Saved Tournaments Icon (Anglers Only) -->
                         <li class="nav-item">
-                            <a href="<?php echo SITE_URL; ?>/pages/saved-tournaments.php" 
+                            <a href="<?php echo SITE_URL; ?>/pages/saved/saved-tournaments.php" 
                                class="icon-link saved-icon" 
                                title="Saved Tournaments">
                                 <i class="fas fa-bookmark"></i>
@@ -214,7 +214,7 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                         
                         <!-- Notifications Icon (Anglers Only) -->
                         <li class="nav-item">
-                            <a href="<?php echo SITE_URL; ?>/pages/notifications.php" 
+                            <a href="<?php echo SITE_URL; ?>/pages/notification/notifications.php" 
                                class="icon-link notif-icon" 
                                title="Notifications">
                                 <i class="fas fa-bell"></i>
@@ -242,20 +242,20 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                             <i class="fas fa-chevron-down dropdown-arrow"></i>
                         </div>
                         <div class="dropdown-menu">
-                            <a href="<?php echo SITE_URL; ?>/user/profile.php" class="dropdown-item">
+                            <a href="<?php echo SITE_URL; ?>/pages/profile/profile.php" class="dropdown-item">
                                 <i class="fas fa-user"></i> My Profile
                             </a>
                             
                             <?php if (!isAdmin()): ?>
                                 <!-- Dashboard for Anglers (moved to dropdown) -->
-                                <a href="<?php echo SITE_URL; ?>/user/dashboard.php" class="dropdown-item">
+                                <a href="<?php echo SITE_URL; ?>/pages/dashboard/myDashboard.php" class="dropdown-item">
                                     <i class="fas fa-tachometer-alt"></i> Dashboard
                                 </a>
                             <?php endif; ?>
                             
                             <div class="dropdown-separator"></div>
                             
-                            <a href="<?php echo SITE_URL; ?>/pages/logout.php" class="dropdown-item logout">
+                            <a href="<?php echo SITE_URL; ?>/pages/authentication/logout.php" class="dropdown-item logout">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </div>
@@ -263,13 +263,13 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                 <?php else: ?>
                     <!-- Guest User - Login/Register Buttons -->
                     <li class="nav-item">
-                        <a href="<?php echo SITE_URL; ?>/pages/login.php" class="nav-btn btn-login">
+                        <a href="<?php echo SITE_URL; ?>/pages/authentication/login.php" class="nav-btn btn-login">
                             <i class="fas fa-sign-in-alt"></i>
                             <span>Login</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="<?php echo SITE_URL; ?>/pages/register.php" class="nav-btn btn-register">
+                        <a href="<?php echo SITE_URL; ?>/pages/authentication/register.php" class="nav-btn btn-register">
                             <i class="fas fa-user-plus"></i>
                             <span>Register</span>
                         </a>

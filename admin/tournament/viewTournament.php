@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $bank_account_number = mysqli_real_escape_string($conn, $_POST['bank_account_number']);
     $bank_account_holder = mysqli_real_escape_string($conn, $_POST['bank_account_holder']);
     
+    // Base update query
     $update_query = "
         UPDATE TOURNAMENT SET 
             tournament_title='$tournament_title',
@@ -58,6 +59,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             bank_account_holder='$bank_account_holder'
         WHERE tournament_id='$tournament_id'
     ";
+
+    // Handle tournament image upload
+    if (!empty($_FILES['tournament_image']['name'])) {
+        $image_name = time() . '_' . basename($_FILES['tournament_image']['name']);
+        $target_dir = "../../assets/images/tournaments/";
+        $target_file = $target_dir . $image_name;
+
+        if (move_uploaded_file($_FILES['tournament_image']['tmp_name'], $target_file)) {
+            $update_query = str_replace("WHERE tournament_id='$tournament_id'", ", image='$image_name' WHERE tournament_id='$tournament_id'", $update_query);
+        } else {
+            $_SESSION['error'] = "Failed to upload tournament image.";
+        }
+    }
+
+    // Handle bank QR image upload
+    if (!empty($_FILES['bank_qr_image']['name'])) {
+        $qr_name = time() . '_' . basename($_FILES['bank_qr_image']['name']);
+        $qr_dir = "../../assets/images/qrcodes/";
+        $qr_file = $qr_dir . $qr_name;
+
+        if (move_uploaded_file($_FILES['bank_qr_image']['tmp_name'], $qr_file)) {
+            $update_query = str_replace("WHERE tournament_id='$tournament_id'", ", bank_qr='$qr_name' WHERE tournament_id='$tournament_id'", $update_query);
+        } else {
+            $_SESSION['error'] = "Failed to upload QR image.";
+        }
+    }
 
     if (mysqli_query($conn, $update_query)) {
         $_SESSION['success'] = 'Tournament updated successfully!';
@@ -93,19 +120,21 @@ include '../includes/header.php';
 ?>
 
 <link rel="stylesheet" href="../../assets/css/admin-style.css">
-
 <style>
+/* Edit mode */
 .edit-mode .view-only { display: none; }
 .edit-mode .edit-only { display: block; }
 .view-only { display: block; }
 .edit-only { display: none; }
 
+/* Grid layout */
 .two-column-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
 }
 
+/* Images */
 .image-preview {
     width: 100%;
     max-height: 400px;
@@ -114,183 +143,195 @@ include '../includes/header.php';
     box-shadow: var(--shadow-md);
 }
 
+.qr-image {
+    display: block;
+    margin: 1rem 0 1rem 0;
+    width: auto;
+    height: 30rem;
+    max-width: none;
+    max-height: none;
+    object-fit: unset;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.qr-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 200px;
+    width: 200px;
+    margin: 1rem 0 1rem 0;
+    background: var(--color-cream-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    font-size: 3rem;
+    color: var(--color-gray-400);
+}
+
+/* Target only labels inside the Payment Info section */
+.section .form-group label {
+    font-weight: 700;       
+    font-size: 0.9rem;      
+    color: #1c4987;      
+}
+
 @media(max-width:768px){
     .two-column-grid { grid-template-columns: 1fr; }
 }
 </style>
 
- <!-- Top Bar -->
- <div class="top-bar">
-        <div class="top-bar-left">
-            <h1>Tournament Details</h1>
-            <p>View and manage tournament information</p>
-        </div>
-
-        <div class="top-bar-right">
-            <button type="button" class="btn btn-secondary" onclick="toggleEditMode()" id="toggleEditBtn">
-                <i class="fas fa-edit"></i> Edit Mode
-            </button>
-            <a href="tournamentList.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-        </div>
+<div class="top-bar">
+    <div class="top-bar-left">
+        <h1>Tournament Details</h1>
+        <p>View and manage tournament information</p>
     </div>
+    <div class="top-bar-right">
+        <button type="button" class="btn btn-secondary" onclick="toggleEditMode()" id="toggleEditBtn">
+            <i class="fas fa-edit"></i> Edit Mode
+        </button>
+        <a href="tournamentList.php" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
 
-<!-- Content -->
-    <div class="content-container">
+<div class="content-container">
 
-        <!-- Alerts -->
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= $_SESSION['success']; ?></div>
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
+    <!-- Alerts -->
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= $_SESSION['success']; ?></div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= $_SESSION['error']; ?></div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= $_SESSION['error']; ?></div>
-            <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
+    <form method="POST" id="tournamentForm" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="update_tournament">
 
-        <form method="POST" id="tournamentForm">
-            <input type="hidden" name="action" value="update_tournament">
-
-            <!-- Quick Actions -->
-            <div class="section">
-                <div class="dashboard-stats">
-
-                    <a href="../Participant/manageParticipants.php?id=<?= $tournament_id ?>" class="stat-card success" style="text-decoration:none;">
-                        <div class="stat-header">
-                            <div>
-                                <div class="stat-label">View Participants</div>
-                                <div class="stat-value"><?= $tournament['total_registrations'] ?></div>
-                            </div>
-                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <!-- Quick Actions -->
+        <div class="section">
+            <div class="dashboard-stats">
+                <a href="../Participant/manageParticipants.php?id=<?= $tournament_id ?>" class="stat-card success" style="text-decoration:none;">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">View Participants</div>
+                            <div class="stat-value"><?= $tournament['total_registrations'] ?></div>
                         </div>
-                    </a>
-
-                    <a href="../Result/viewResults.php?id=<?= $tournament_id ?>" class="stat-card info" style="text-decoration:none;">
-                        <div class="stat-header">
-                            <div>
-                                <div class="stat-label">View Results</div>
-                                <div class="stat-value"><i class="fas fa-trophy"></i></div>
-                            </div>
-                            <div class="stat-icon"><i class="fas fa-medal"></i></div>
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    </div>
+                </a>
+                <a href="../Result/viewResults.php?id=<?= $tournament_id ?>" class="stat-card info" style="text-decoration:none;">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-label">View Results</div>
+                            <div class="stat-value"><i class="fas fa-trophy"></i></div>
                         </div>
-                    </a>
+                        <div class="stat-icon"><i class="fas fa-medal"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tournament Info -->
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title"><i class="fas fa-info-circle"></i> Tournament Information</h3>
+                <div class="edit-only">
+                    <button class="btn btn-success"><i class="fas fa-save"></i> Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelEdit()"><i class="fas fa-times"></i> Cancel</button>
                 </div>
             </div>
 
-            <!-- Tournament Info -->
-            <div class="section">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-info-circle"></i> Tournament Information</h3>
+            <div class="two-column-grid">
+                <!-- LEFT COLUMN -->
+                <div>
+                    <div class="form-group">
+                        <label>Tournament Title</label>
+                        <div class="view-only"><?= htmlspecialchars($tournament['tournament_title']) ?></div>
+                        <div class="edit-only"><input type="text" name="tournament_title" class="form-control" value="<?= htmlspecialchars($tournament['tournament_title']) ?>"></div>
+                    </div>
 
-                    <div class="edit-only">
-                        <button class="btn btn-success"><i class="fas fa-save"></i> Save</button>
-                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()"><i class="fas fa-times"></i> Cancel</button>
+                    <div class="form-group">
+                        <label>Tournament Date</label>
+                        <div class="view-only"><?= date('l, d F Y', strtotime($tournament['tournament_date'])) ?></div>
+                        <div class="edit-only"><input type="date" name="tournament_date" class="form-control" value="<?= $tournament['tournament_date'] ?>"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Start Time</label>
+                        <div class="view-only"><?= date('g:i A', strtotime($tournament['start_time'])) ?></div>
+                        <div class="edit-only"><input type="time" name="start_time" class="form-control" value="<?= $tournament['start_time'] ?>"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <div class="view-only"><?= date('g:i A', strtotime($tournament['end_time'])) ?></div>
+                        <div class="edit-only"><input type="time" name="end_time" class="form-control" value="<?= $tournament['end_time'] ?>"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Location</label>
+                        <div class="view-only"><?= htmlspecialchars($tournament['location']) ?></div>
+                        <div class="edit-only"><input type="text" name="location" class="form-control" value="<?= htmlspecialchars($tournament['location']) ?>"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Registration Fee</label>
+                        <div class="view-only">RM <?= number_format($tournament['tournament_fee'], 2) ?></div>
+                        <div class="edit-only"><input type="number" step="0.01" name="tournament_fee" class="form-control" value="<?= $tournament['tournament_fee'] ?>"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <div class="view-only">
+                            <span class="badge badge-<?= $tournament['status'] ?>"><?= ucfirst($tournament['status']); ?></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="two-column-grid">
-
-                    <!-- LEFT COLUMN -->
-                    <div>
-
-                        <!-- Title -->
-                        <div class="form-group">
-                            <label>Tournament Title</label>
-                            <div class="view-only"><div class="info-value"><?= htmlspecialchars($tournament['tournament_title']) ?></div></div>
-                            <div class="edit-only"><input type="text" name="tournament_title" class="form-control" value="<?= htmlspecialchars($tournament['tournament_title']) ?>"></div>
-                        </div>
-
-                        <!-- Date -->
-                        <div class="form-group">
-                            <label>Tournament Date</label>
-                            <div class="view-only"><?= date('l, d F Y', strtotime($tournament['tournament_date'])) ?></div>
-                            <div class="edit-only"><input type="date" name="tournament_date" class="form-control" value="<?= $tournament['tournament_date'] ?>"></div>
-                        </div>
-
-                        <!-- Times -->
-                        <div class="form-group">
-                            <label>Start Time</label>
-                            <div class="view-only"><?= date('g:i A', strtotime($tournament['start_time'])) ?></div>
-                            <div class="edit-only"><input type="time" name="start_time" class="form-control" value="<?= $tournament['start_time'] ?>"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>End Time</label>
-                            <div class="view-only"><?= date('g:i A', strtotime($tournament['end_time'])) ?></div>
-                            <div class="edit-only"><input type="time" name="end_time" class="form-control" value="<?= $tournament['end_time'] ?>"></div>
-                        </div>
-
-                        <!-- Location -->
-                        <div class="form-group">
-                            <label>Location</label>
-                            <div class="view-only"><?= htmlspecialchars($tournament['location']) ?></div>
-                            <div class="edit-only"><input type="text" name="location" class="form-control" value="<?= htmlspecialchars($tournament['location']) ?>"></div>
-                        </div>
-
-                        <!-- Fee -->
-                        <div class="form-group">
-                            <label>Registration Fee</label>
-                            <div class="view-only">RM <?= number_format($tournament['tournament_fee'], 2) ?></div>
-                            <div class="edit-only"><input type="number" step="0.01" name="tournament_fee" class="form-control" value="<?= $tournament['tournament_fee'] ?>"></div>
-                        </div>
-
-                        <!-- Status -->
-                        <div class="form-group">
-                            <label>Status</label>
-                            <div class="view-only">
-                                <span class="badge badge-<?= $tournament['status'] ?>"><?= ucfirst($tournament['status']); ?></span>
-                            </div>
-                            
-                        </div>
-
+                <!-- RIGHT COLUMN -->
+                <div>
+                     <!-- Organizer -->
+                     <div class="form-group">
+                        <label>Organized By</label>
+                        <div><?= $tournament['organizer_name'] ?: "Admin" ?></div>
                     </div>
 
-                    <!-- RIGHT COLUMN -->
-                    <div>
-
-                        <!-- Image -->
-                        <div class="form-group">
-                            <label>Tournament Image</label>
-
-                            <?php if ($tournament['image']): ?>
-                                <img src="../../assets/images/tournaments/<?= htmlspecialchars($tournament['image']) ?>" class="image-preview">
-                            <?php else: ?>
-                                <div class="image-preview" style="display:flex;align-items:center;justify-content:center;background:var(--color-cream-light);">
-                                    <i class="fas fa-image" style="font-size:3rem;color:var(--color-gray-400);"></i>
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="edit-only" style="margin-top:1rem;">
-                                <a href="editTournament.php?id=<?= $tournament_id ?>" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-upload"></i> Change Image
-                                </a>
+                    <div class="form-group">
+                        <label>Created On</label>
+                        <div><?= date("d F Y, g:i A", strtotime($tournament['created_at'])) ?></div>
+                    </div>
+                    
+                    <!-- Tournament Image -->
+                    <div class="form-group">
+                        <label>Tournament Image</label>
+                        <?php if ($tournament['image']): ?>
+                            <img src="../../assets/images/tournaments/<?= htmlspecialchars($tournament['image']) ?>" class="image-preview">
+                        <?php else: ?>
+                            <div class="image-preview" style="display:flex;align-items:center;justify-content:center;background:var(--color-cream-light);">
+                                <i class="fas fa-image" style="font-size:3rem;color:var(--color-gray-400);"></i>
                             </div>
+                        <?php endif; ?>
+                        <div class="edit-only" style="margin-top:1rem;">
+                            <input type="file" name="tournament_image" class="form-control">
                         </div>
-
-                        <!-- Organizer -->
-                        <div class="form-group">
-                            <label>Organized By</label>
-                            <div><?= $tournament['organizer_name'] ?: "Admin" ?></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Created On</label>
-                            <div><?= date("d F Y, g:i A", strtotime($tournament['created_at'])) ?></div>
-                        </div>
-
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Payment Info -->
-            <div class="section">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Payment Information</h3>
-                </div>
+        <!-- Payment Info -->
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title"><i class="fas fa-credit-card"></i> Payment Information</h3>
+            </div>
 
-                <div class="two-column-grid">
+            <div class="two-column-grid">
+                <!-- LEFT: Bank Details -->
+                <div>
                     <div class="form-group">
                         <label>Bank Name</label>
                         <div class="view-only"><?= htmlspecialchars($tournament['bank_account_name']) ?></div>
@@ -302,44 +343,50 @@ include '../includes/header.php';
                         <div class="view-only"><?= htmlspecialchars($tournament['bank_account_number']) ?></div>
                         <div class="edit-only"><input type="text" name="bank_account_number" class="form-control" value="<?= htmlspecialchars($tournament['bank_account_number']) ?>"></div>
                     </div>
+
+                    <div class="form-group">
+                        <label>Account Holder </label>
+                        <div class="view-only"><?= htmlspecialchars($tournament['bank_account_holder']) ?></div>
+                        <div class="edit-only"><input type="text" name="bank_account_holder" class="form-control" value="<?= htmlspecialchars($tournament['bank_account_holder']) ?>"></div>
+                    </div>
                 </div>
 
+                <!-- RIGHT: QR Code -->
                 <div class="form-group">
-                    <label>Account Holder</label>
-                    <div class="view-only"><?= htmlspecialchars($tournament['bank_account_holder']) ?></div>
-                    <div class="edit-only"><input type="text" name="bank_account_holder" class="form-control" value="<?= htmlspecialchars($tournament['bank_account_holder']) ?>"></div>
-                </div>
-
-                <?php if (!empty($tournament['bank_qr'])): ?>
-                <div style="text-align:center;padding:2rem;background:var(--color-cream-light);border-radius:var(--radius-md);">
-                    <img src="../../assets/images/qrcodes/<?= htmlspecialchars($tournament['bank_qr']) ?>" style="max-width:200px;border-radius:var(--radius-md);">
-                </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Description -->
-            <div class="section">
-                <div class="section-header">
-                    <h3 class="section-title"><i class="fas fa-align-left"></i> Description</h3>
-                </div>
-
-                <div class="view-only">
-                    <p style="line-height:1.7;color:var(--color-gray-700);"><?= nl2br(htmlspecialchars($tournament['description'])) ?></p>
-                </div>
-
-                <div class="edit-only">
-                    <textarea class="form-control" name="description" rows="6"><?= htmlspecialchars($tournament['description']) ?></textarea>
+                    <label>Bank QR Image</label>
+                    <?php if ($tournament['bank_qr']): ?>
+                        <img src="../../assets/images/qrcodes/<?= htmlspecialchars($tournament['bank_qr']) ?>" class="qr-image">
+                    <?php else: ?>
+                        <div class="qr-placeholder"><i class="fas fa-qrcode"></i></div>
+                    <?php endif; ?>
+                    <div class="edit-only" style="margin-top:1rem;">
+                        <input type="file" name="bank_qr_image" class="form-control">
+                    </div>
                 </div>
             </div>
+        </div>
 
-        </form>
-    </div>
+        <!-- Description -->
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title"><i class="fas fa-align-left"></i> Description</h3>
+            </div>
+
+            <div class="view-only">
+                <p style="line-height:1.7;color:var(--color-gray-700);"><?= nl2br(htmlspecialchars($tournament['description'])) ?></p>
+            </div>
+
+            <div class="edit-only">
+                <textarea class="form-control" name="description" rows="6"><?= htmlspecialchars($tournament['description']) ?></textarea>
+            </div>
+        </div>
+    </form>
+</div>
 
 <script>
 function toggleEditMode(){
     const form = document.getElementById("tournamentForm");
     const btn = document.getElementById("toggleEditBtn");
-
     if(form.classList.contains("edit-mode")){
         cancelEdit();
     } else {
@@ -347,11 +394,9 @@ function toggleEditMode(){
         btn.innerHTML = '<i class="fas fa-eye"></i> View Mode';
     }
 }
-
 function cancelEdit(){
     const form = document.getElementById("tournamentForm");
     const btn = document.getElementById("toggleEditBtn");
-
     form.classList.remove("edit-mode");
     form.reset();
     btn.innerHTML = '<i class="fas fa-edit"></i> Edit Mode';

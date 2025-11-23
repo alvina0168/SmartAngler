@@ -1,11 +1,11 @@
 -- =========================================================
--- DATABASE INITIALIZATION
+-- DATABASE INITIALIZATION - FIXED VERSION
 -- =========================================================
-CREATE DATABASE smartangler;
+CREATE DATABASE IF NOT EXISTS smartangler;
 USE smartangler;
 
 -- =========================================================
--- TABLE: USER
+-- TABLE: USER (FIXED - Added missing comma)
 -- =========================================================
 CREATE TABLE USER (
   user_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -13,17 +13,20 @@ CREATE TABLE USER (
   password VARCHAR(255) NOT NULL,
   full_name VARCHAR(100),
   phone_number VARCHAR(20),
+  address TEXT,
   role ENUM('admin','angler') DEFAULT 'angler',
   status ENUM('active','inactive') DEFAULT 'active',
   profile_image VARCHAR(255),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reset_token VARCHAR(255) NULL,
+  reset_expiry DATETIME NULL
 ) ENGINE=InnoDB;
 
 INSERT INTO USER (email, password, full_name, phone_number, role, status, profile_image)
 VALUES
 ('admin@smartangler.com','admin123','Admin John','0112233445','admin','active','profile1.png'),
-('user1@smartangler.com','user123','Ahmad Ali','0123344556','angler','active','profile2.jpg'),
-('user2@smartangler.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Tan Mei Ling','0198877665','angler','active','profile3.jpg');
+('user1@smartangler.com','user123','Ahmad Ali','0123344556','angler','active','profile2.png'),
+('alvinaao0168@gmail.com','nana2003','Alvina Alphonsus','0178373970','angler','active','profile.png');
 
 -- =========================================================
 -- TABLE: TOURNAMENT
@@ -52,22 +55,19 @@ CREATE TABLE TOURNAMENT (
   FOREIGN KEY (created_by) REFERENCES USER(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- =========================================================
--- INSERT TOURNAMENT DATA
--- =========================================================
 INSERT INTO TOURNAMENT (
   user_id, tournament_title, tournament_date, location, description,
-  start_time, end_time, tournament_fee, max_participants, image, status,
-  created_by, bank_account_number, bank_account_name, bank_account_holder
+  start_time, end_time, tournament_fee, max_participants, image,
+  created_by, bank_account_number, bank_account_name, bank_account_holder, bank_qr 
 ) VALUES
 (1, 'Sabah Fishing Championship', '2025-10-27', 'Kota Kinabalu Jetty - https://goo.gl/maps/abcd1234',
- 'Annual fishing competition with great prizes.', '07:00:00', '17:00:00',
- 50.00, 50, 'pond2.jpg', 'ongoing', 1, '1234567890', 'Maybank', 'Admin John'),
+ 'Participants must catch fish using legal fishing rods and techniques only. No nets, traps, or outside help is allowed.', 
+ '07:00:00', '17:00:00', 50.00, 50, 'pond1.jpg', 1, '1234567890', 'Maybank', 'Admin John', 'QR1.jpg'),
 (1, 'Lake Angler Fest', '2025-11-20', 'Taman Tasik Perdana - https://goo.gl/maps/efgh5678',
- 'Fun lake fishing event with multiple categories.', '08:00:00', '16:00:00',
- 30.00, 30, 'pond2.jpg', 'upcoming', 1, '9876543210', 'CIMB', 'Admin John');
+ 'Participants must catch fish using legal fishing rods and techniques only. No nets, traps, or outside help is allowed.', 
+ '08:00:00', '16:00:00', 30.00, 30, 'pond2.jpg', 1, '9876543210', 'CIMB', 'Admin John', 'QR1.jpg');
   
- -- =========================================================
+-- =========================================================
 -- TABLE: WEIGHING_STATION
 -- =========================================================
 CREATE TABLE WEIGHING_STATION (
@@ -80,15 +80,11 @@ CREATE TABLE WEIGHING_STATION (
     FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- =========================================================
--- INSERT WEIGHING_STATION DATA
--- =========================================================
-INSERT INTO WEIGHING_STATION (tournament_id, station_name, marshal_name, status, notes) VALUES
-(1, 'S1', 'John Doe', 'active', 'Main station at north jetty'),
-(1, 'S2', 'Jane Smith', 'active', 'Secondary station at south dock'),
-(1, 'S3', 'Mike Johnson', 'active', 'Backup station near parking area'),
-(2, 'Station A', 'Sarah Lee', 'active', 'East side of the lake'),
-(2, 'Station B', 'David Wong', 'active', 'West side near pavilion');
+INSERT INTO WEIGHING_STATION (tournament_id, station_name, marshal_name, notes) VALUES
+(1, 'S1', 'John Doe', 'Main station KRPV'),
+(1, 'S2', 'Jane Smith', 'Secondary station KRPV'),
+(2, 'Station A', 'Sarah Lee', 'East side of the lake'),
+(2, 'Station B', 'David Wong','West side near pavilion');
 
 -- =========================================================
 -- TABLE: ZONE 
@@ -108,52 +104,74 @@ CREATE TABLE ZONE (
 INSERT INTO ZONE (tournament_id, zone_name, zone_description)
 VALUES
 (1, 'Zone A', 'Main jetty area with 20 spots.'),
-(1, 'Zone B', 'East dock fishing zone.'),
-(2, 'Zone Alpha', 'North lake side.'),
-(2, 'Zone Beta', 'Shady corner area.');
+(1, 'Zone B', 'East dock fishing zone.');
 
 -- =========================================================
--- TABLE: FISHING_SPOT
+-- TABLE: FISHING_SPOT (WITH spot_number and reserved status)
 -- =========================================================
 CREATE TABLE FISHING_SPOT (
   spot_id INT AUTO_INCREMENT PRIMARY KEY,
   zone_id INT NOT NULL,
+  spot_number INT NOT NULL,
   latitude DECIMAL(10,8),
   longitude DECIMAL(11,8),
-  spot_status ENUM('available','booked','cancelled','maintenance') DEFAULT 'available',
+  spot_status ENUM('available','reserved','occupied','cancelled','maintenance') DEFAULT 'available',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (zone_id) REFERENCES ZONE(zone_id) ON DELETE CASCADE
+  FOREIGN KEY (zone_id) REFERENCES ZONE(zone_id) ON DELETE CASCADE,
+  INDEX idx_zone_status (zone_id, spot_status)
 ) ENGINE=InnoDB;
 
-INSERT INTO FISHING_SPOT (zone_id, latitude, longitude, spot_status)
-VALUES
-(1, 5.98765432, 116.07654321, 'available'),
-(1, 5.98765499, 116.07654400, 'booked'),
-(2, 5.98800000, 116.07700000, 'available'),
-(3, 3.13400000, 101.68500000, 'maintenance');
+-- Insert sample fishing spots for Zone A (zone_id = 1)
+INSERT INTO FISHING_SPOT (zone_id, spot_number, latitude, longitude, spot_status) VALUES
+(1, 1, 5.62071000, 116.32570010, 'available'),
+(1, 2, 5.62066247, 116.32572055, 'available'),
+(1, 3, 5.62062510, 116.32573128, 'available'),
+(1, 4, 5.62058240, 116.32574469, 'available'),
+(1, 5, 5.62055303, 116.32575542, 'available'),
+(1, 6, 5.62051566, 116.32576883, 'available'),
+(1, 7, 5.62046495, 116.32577688, 'available'),
+(1, 8, 5.62042491, 116.32578492, 'available'),
+(1, 9, 5.62037953, 116.32580906, 'available'),
+(1, 10, 5.62033949, 116.32582784, 'available');
+
+-- Insert sample fishing spots for Zone B (zone_id = 2)
+INSERT INTO FISHING_SPOT (zone_id, spot_number, latitude, longitude, spot_status) VALUES
+(2, 1, 5.62118833, 116.32595658, 'available'),
+(2, 2, 5.62122837, 116.32597804, 'available'),
+(2, 3, 5.62127642, 116.32599682, 'available'),
+(2, 4, 5.62131646, 116.32600754, 'available'),
+(2, 5, 5.62135917, 116.32602364, 'available'),
+(2, 6, 5.62141255, 116.32604778, 'available'),
+(2, 7, 5.62146861, 116.32606924, 'available'),
+(2, 8, 5.62151665, 116.32609069, 'available'),
+(2, 9, 5.62156203, 116.32610947, 'available'),
+(2, 10, 5.62160207, 116.32612556, 'available');
 
 -- =========================================================
--- TABLE: TOURNAMENT_REGISTRATION
+-- TABLE: TOURNAMENT_REGISTRATION (COMPLETE with all fields)
 -- =========================================================
 CREATE TABLE TOURNAMENT_REGISTRATION (
   registration_id INT AUTO_INCREMENT PRIMARY KEY,
   tournament_id INT NOT NULL,
   user_id INT NOT NULL,
   spot_id INT,
+  full_name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  phone_number VARCHAR(20) NOT NULL,
+  emergency_contact VARCHAR(20),
+  address TEXT,
   registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
   payment_proof VARCHAR(255),
   approval_status ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
   approved_date DATETIME,
+  rejection_reason TEXT,
   notes TEXT,
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (spot_id) REFERENCES FISHING_SPOT(spot_id) ON DELETE SET NULL
+  FOREIGN KEY (spot_id) REFERENCES FISHING_SPOT(spot_id) ON DELETE SET NULL,
+  INDEX idx_approval_status (approval_status),
+  INDEX idx_tournament_user (tournament_id, user_id)
 ) ENGINE=InnoDB;
-
-INSERT INTO TOURNAMENT_REGISTRATION (tournament_id, user_id, spot_id, payment_proof, approval_status, approved_date)
-VALUES
-(1,2,1,'payment1.jpg','approved','2025-10-20 10:30:00'),
-(2,3,3,'payment2.jpg','pending',NULL);
 
 -- =========================================================
 -- TABLE: FISH_CATCH
@@ -161,6 +179,7 @@ VALUES
 CREATE TABLE FISH_CATCH (
     catch_id INT PRIMARY KEY AUTO_INCREMENT,
     station_id INT NOT NULL,
+    registration_id INT NOT NULL,
     user_id INT NOT NULL,
     fish_species VARCHAR(100) NOT NULL,
     fish_weight DECIMAL(10,2) NOT NULL,
@@ -169,27 +188,14 @@ CREATE TABLE FISH_CATCH (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (station_id) REFERENCES WEIGHING_STATION(station_id) ON DELETE CASCADE,
+    FOREIGN KEY (registration_id) REFERENCES TOURNAMENT_REGISTRATION(registration_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
     INDEX idx_station (station_id),
+    INDEX idx_registration (registration_id),
     INDEX idx_user (user_id),
     INDEX idx_catch_time (catch_time),
     INDEX idx_weight (fish_weight)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO FISH_CATCH (station_id, user_id, fish_species, fish_weight, catch_time, notes) VALUES
--- Tournament 1 - Station S1
-(1, 2, 'ALUR ALUR', 5.50, '2025-10-27 08:30:00', 'Biggest catch of the morning session'),
-(1, 2, 'IKAN MSIN', 3.25, '2025-10-27 10:15:00', 'Caught near the mangroves'),
--- Tournament 1 - Station S2
-(2, 2, 'BAWAL', 6.20, '2025-10-27 11:30:00', 'Caught using live bait'),
-(2, 2, 'JENAHAK', 2.90, '2025-10-27 14:20:00', NULL),
-
--- Tournament 2 - Station A
-(4, 3, 'TILAPIA', 2.30, '2025-11-20 10:15:00', 'Good quality tilapia'),
-(4, 3, 'KELAH', 3.80, '2025-11-20 12:30:00', NULL),
--- Tournament 2 - Station B
-(5, 3, 'KELI', 1.90, '2025-11-20 10:45:00', NULL),
-(5, 3, 'TOMAN', 6.40, '2025-11-20 14:00:00', 'Biggest catch at Station B');
 
 -- =========================================================
 -- TABLE: CATEGORY
@@ -200,12 +206,6 @@ CREATE TABLE CATEGORY (
   number_of_ranking INT DEFAULT 3,
   description TEXT
 ) ENGINE=InnoDB;
-
-INSERT INTO CATEGORY (category_name, number_of_ranking, description)
-VALUES
-('Heaviest Catch',3,'Winner based on single fish with the highest weight'),
-('Most Fish',3,'Winner with the highest number of fish caught'),
-('Longest Fish',3,'Winner with the longest fish measurement');
 
 -- =========================================================
 -- TABLE: RESULT
@@ -226,11 +226,6 @@ CREATE TABLE RESULT (
   FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-INSERT INTO RESULT (tournament_id, user_id, catch_id, category_id, ranking_position, total_fish_count, result_status)
-VALUES
-(1,2,1,1,1,2,'final'),
-(2,3,3,2,2,1,'ongoing');
-
 -- =========================================================
 -- TABLE: REVIEW
 -- =========================================================
@@ -246,11 +241,6 @@ CREATE TABLE REVIEW (
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
-
-INSERT INTO REVIEW (tournament_id, user_id, rating, review_text, review_image, is_anonymous)
-VALUES
-(1,2,5,'Amazing event! Great prizes.','review1.jpg',FALSE),
-(2,3,4,'Good experience, but weather was hot.','review2.jpg',TRUE);
 
 -- =========================================================
 -- TABLE: CALENDAR
@@ -281,11 +271,6 @@ CREATE TABLE SAVED (
   UNIQUE KEY unique_save (tournament_id, user_id)
 ) ENGINE=InnoDB;
 
-INSERT INTO SAVED (tournament_id, user_id, is_saved)
-VALUES
-(1,2,TRUE),
-(2,3,TRUE);
-
 -- =========================================================
 -- TABLE: NOTIFICATION
 -- =========================================================
@@ -303,16 +288,6 @@ CREATE TABLE NOTIFICATION (
 ) ENGINE=InnoDB;
 
 -- =========================================================
--- SAMPLE NOTIFICATION DATA (Working Examples)
--- =========================================================
-
--- Example 1: Unread notification (default read_status = 0)
-INSERT INTO NOTIFICATION (user_id, tournament_id, title, message)
-VALUES
-(2, 1, 'Registration Approved', 'Your registration for the Sabah Fishing Championship has been approved!');
-
-
--- =========================================================
 -- TABLE: SPONSOR
 -- =========================================================
 CREATE TABLE SPONSOR (
@@ -326,11 +301,6 @@ CREATE TABLE SPONSOR (
   sponsored_amount DECIMAL(10,2),
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
-
-INSERT INTO SPONSOR (tournament_id, sponsor_name, sponsor_logo, sponsor_description, contact_phone, contact_email, sponsored_amount)
-VALUES
-(1,'Shimano Malaysia','shimano_logo.jpg','Leading fishing gear sponsor.','0122233445','info@shimano.com',5000.00),
-(2,'Daiwa Sports','daiwa_logo.jpg','Supporting sustainable angling tournaments.','0177788990','contact@daiwa.com',3000.00);
 
 -- =========================================================
 -- TABLE: TOURNAMENT_PRIZE
@@ -346,18 +316,13 @@ CREATE TABLE TOURNAMENT_PRIZE (
   FOREIGN KEY (sponsor_id) REFERENCES SPONSOR(sponsor_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
-INSERT INTO TOURNAMENT_PRIZE (tournament_id, sponsor_id, prize_ranking, prize_description, prize_value)
-VALUES
-(1,1,'1st','RM1000 + Shimano Reel + Trophy',1000.00),
-(1,2,'2nd','RM500 + Daiwa Voucher',500.00),
-(2,2,'1st','RM700 + Shimano Starter Pack',700.00);
-
 -- =========================================================
 -- VIEW: v_spot_details (for admin reporting)
 -- =========================================================
 CREATE OR REPLACE VIEW v_spot_details AS
 SELECT 
   fs.spot_id,
+  fs.spot_number,
   fs.spot_status,
   z.zone_name,
   t.tournament_title,
@@ -367,4 +332,13 @@ JOIN ZONE z ON fs.zone_id = z.zone_id
 JOIN TOURNAMENT t ON z.tournament_id = t.tournament_id
 LEFT JOIN TOURNAMENT_REGISTRATION tr ON fs.spot_id = tr.spot_id
 LEFT JOIN USER u ON tr.user_id = u.user_id;
+
+-- =========================================================
+-- CREATE DIRECTORY FOR PAYMENT PROOFS
+-- =========================================================
+-- IMPORTANT: Manually create this directory:
+-- /assets/images/payments/
+-- Set permissions: chmod 777 /assets/images/payments/
+
+COMMIT;
 

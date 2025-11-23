@@ -11,7 +11,7 @@ define('DB_NAME', 'smartangler');
 
 // Site Configuration
 define('SITE_NAME', 'SmartAngler');
-define('SITE_URL', 'http://localhost/smartangler');
+define('SITE_URL', 'http://localhost/SmartAngler');
 
 // Session Configuration
 define('SESSION_TIMEOUT', 3600); // 1 hour in seconds
