@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
@@ -76,14 +77,18 @@ include '../includes/header.php';
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<!-- Back Button -->
-<div class="text-right mb-3">
-    <a href="zoneList.php" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Back to Zones
-    </a>
-    <a href="editZone.php?id=<?php echo $zone_id; ?>" class="btn btn-primary">
-        <i class="fas fa-edit"></i> Edit Zone
-    </a>
+<!-- Back & Edit Buttons -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <div>
+        <a href="zoneList.php" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Zones
+        </a>
+    </div>
+    <div>
+        <a href="editZone.php?id=<?php echo $zone_id; ?>" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Edit Zone
+        </a>
+    </div>
 </div>
 
 <!-- Zone Header -->
@@ -109,64 +114,39 @@ include '../includes/header.php';
 
 <!-- Zone Statistics -->
 <div class="dashboard-stats">
-    <div class="stat-card">
+    <?php 
+    $stat_colors = ['total'=>'blue','available'=>'success','occupied'=>'primary','maintenance'=>'info'];
+    foreach($stat_colors as $key=>$color):
+    ?>
+    <div class="stat-card <?php echo $color==='blue'?'':$color; ?>">
         <div class="stat-header">
             <div>
-                <div class="stat-value"><?php echo $stats['total']; ?></div>
-                <div class="stat-label">Total Spots</div>
+                <div class="stat-value"><?php echo $stats[$key]; ?></div>
+                <div class="stat-label"><?php echo ucfirst($key); ?></div>
             </div>
             <div class="stat-icon">
-                <i class="fas fa-map-pin"></i>
+                <?php
+                    switch($key){
+                        case 'total': echo '<i class="fas fa-map-pin"></i>'; break;
+                        case 'available': echo '<i class="fas fa-check-circle"></i>'; break;
+                        case 'occupied': echo '<i class="fas fa-users"></i>'; break;
+                        case 'maintenance': echo '<i class="fas fa-tools"></i>'; break;
+                    }
+                ?>
             </div>
         </div>
     </div>
-
-    <div class="stat-card success">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value"><?php echo $stats['available']; ?></div>
-                <div class="stat-label">Available</div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="stat-card occupied">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value"><?php echo $stats['occupied']; ?></div>
-                <div class="stat-label">Occupied</div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-users"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="stat-card info">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value"><?php echo $stats['maintenance']; ?></div>
-                <div class="stat-label">Maintenance</div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-tools"></i>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
 <!-- Map View -->
 <div class="section">
     <div class="section-header">
         <h2 class="section-title">
-            <i class="fas fa-map"></i>
-            Spots Map View
+            <i class="fas fa-map"></i> Spots Map View
         </h2>
     </div>
-    <div id="spotsMap" style="width: 100%; height: 500px; border-radius: var(--radius-md); border: 3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
+    <div id="spotsMap" style="width:100%; height:500px; border-radius: var(--radius-md); border:3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
 </div>
 
 <!-- Add New Spots Section -->
@@ -174,11 +154,8 @@ include '../includes/header.php';
     <h3>
         <i class="fas fa-plus-circle"></i> Add New Fishing Spots
     </h3>
-
     <form method="POST" id="addSpotsForm">
-        <p style="margin-bottom: 1rem;">
-            Click on the map to add new spots. Drag markers to adjust coordinates.
-        </p>
+        <p style="margin-bottom:1rem;">Click on the map to add new spots. Drag markers to adjust coordinates.</p>
         <table class="table">
             <thead>
                 <tr>
@@ -192,7 +169,6 @@ include '../includes/header.php';
                 <tr><td colspan="4" style="text-align:center;color:var(--color-gray-600);">Click on the map to add spots</td></tr>
             </tbody>
         </table>
-
         <input type="hidden" name="new_spots" id="newSpotsInput">
         <button type="submit" class="btn btn-success" id="addSpotsBtn" disabled>
             <i class="fas fa-plus"></i> Add New Spots
@@ -200,19 +176,18 @@ include '../includes/header.php';
     </form>
 </div>
 
-<!-- Spots Table -->
+<!-- Spots Table with Multi-Select -->
 <div class="section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-list"></i>
-            All Spots (<?php echo $stats['total']; ?>)
-        </h2>
+    <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 class="section-title"><i class="fas fa-list"></i> All Spots (<?php echo $stats['total']; ?>)</h2>
+        <button id="deleteSelectedBtn" class="btn btn-danger"><i class="fas fa-trash"></i> Delete Selected</button>
     </div>
 
-    <?php if (mysqli_num_rows($spots_result) > 0): ?>
+    <?php if(mysqli_num_rows($spots_result) > 0): ?>
         <table class="table">
             <thead>
                 <tr>
+                    <th style="width:40px; text-align:center;"><input type="checkbox" id="selectAllSpots"></th>
                     <th>Spot Number</th>
                     <th>Latitude</th>
                     <th>Longitude</th>
@@ -222,43 +197,35 @@ include '../includes/header.php';
                 </tr>
             </thead>
             <tbody>
-                <?php while ($spot = mysqli_fetch_assoc($spots_result)): ?>
-                    <tr>
-                        <td><strong>#<?php echo $spot['spot_number']; ?></strong></td>
-                        <td style="font-family: 'Courier New', monospace; font-size: 0.875rem;">
-                            <?php echo !empty($spot['latitude']) ? $spot['latitude'] : '-'; ?>
-                        </td>
-                        <td style="font-family: 'Courier New', monospace; font-size: 0.875rem;">
-                            <?php echo !empty($spot['longitude']) ? $spot['longitude'] : '-'; ?>
-                        </td>
-                        <td>
-                            <span class="badge badge-<?php 
-                                switch($spot['spot_status']){
-                                    case 'available': echo 'success'; break;
-                                    case 'occupied': echo 'primary'; break;
-                                    case 'maintenance': echo 'info'; break;
-                                    default: echo 'secondary';
-                                } 
-                            ?>">
-                                <?php echo strtoupper($spot['spot_status']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <?php echo !empty($spot['booked_by']) ? htmlspecialchars($spot['booked_by']) : '-'; ?>
-                        </td>
-                        <td>
-                            <div class="action-btns">
-                                <a href="editSpot.php?id=<?php echo $spot['spot_id']; ?>" 
-                                   class="btn btn-success btn-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button onclick="deleteSpot(<?php echo $spot['spot_id']; ?>)" 
-                                        class="btn btn-danger btn-sm" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                <?php 
+                mysqli_data_seek($spots_result,0);
+                while($spot = mysqli_fetch_assoc($spots_result)):
+                ?>
+                <tr id="spotRow<?php echo $spot['spot_id']; ?>">
+                    <td style="text-align:center;">
+                        <input type="checkbox" class="selectSpot" data-id="<?php echo $spot['spot_id']; ?>">
+                    </td>
+                    <td><strong>#<?php echo $spot['spot_number']; ?></strong></td>
+                    <td style="font-family:'Courier New', monospace;"><?php echo $spot['latitude'] ?: '-'; ?></td>
+                    <td style="font-family:'Courier New', monospace;"><?php echo $spot['longitude'] ?: '-'; ?></td>
+                    <td>
+                        <span class="badge badge-<?php 
+                            switch($spot['spot_status']){
+                                case 'available': echo 'success'; break;
+                                case 'occupied': echo 'primary'; break;
+                                case 'maintenance': echo 'info'; break;
+                                default: echo 'secondary';
+                            }
+                        ?>"><?php echo strtoupper($spot['spot_status']); ?></span>
+                    </td>
+                    <td><?php echo $spot['booked_by'] ?: '-'; ?></td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="editSpot.php?id=<?php echo $spot['spot_id']; ?>" class="btn btn-success btn-sm"><i class="fas fa-edit"></i></a>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteSpotSingle(<?php echo $spot['spot_id']; ?>)"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
@@ -266,7 +233,7 @@ include '../includes/header.php';
         <div class="empty-state">
             <i class="fas fa-map-marker-alt"></i>
             <h3>No Spots in This Zone</h3>
-            <p>No fishing spots have been added to this zone yet</p>
+            <p>No fishing spots have been added yet</p>
         </div>
     <?php endif; ?>
 </div>
@@ -274,29 +241,23 @@ include '../includes/header.php';
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// --- MAP ---
 const spotsMap = L.map('spotsMap').setView([4.2105, 101.9758], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19
-}).addTo(spotsMap);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:19 }).addTo(spotsMap);
 
-// Existing spots markers
+// Existing markers
+let spotMarkers = [];
 const existingSpots = [
-<?php 
-mysqli_data_seek($spots_result, 0);
-while ($spot = mysqli_fetch_assoc($spots_result)):
-    if(!empty($spot['latitude']) && !empty($spot['longitude'])):
-?>
-{number: <?php echo $spot['spot_number']; ?>, lat: <?php echo $spot['latitude']; ?>, lng: <?php echo $spot['longitude']; ?>, status: '<?php echo $spot['spot_status']; ?>'},
-<?php 
-    endif;
-endwhile; 
-?>
+<?php mysqli_data_seek($spots_result,0); while($spot = mysqli_fetch_assoc($spots_result)):
+if(!empty($spot['latitude']) && !empty($spot['longitude'])): ?>
+{spot_id:<?php echo $spot['spot_id']; ?>, number:<?php echo $spot['spot_number']; ?>, lat:<?php echo $spot['latitude']; ?>, lng:<?php echo $spot['longitude']; ?>, status:'<?php echo $spot['spot_status']; ?>'},
+<?php endif; endwhile; ?>
 ];
 
-existingSpots.forEach(spot=>{
-    const marker = L.marker([spot.lat, spot.lng]).addTo(spotsMap);
-    marker.bindPopup(`<b>Spot #${spot.number}</b><br>Status: ${spot.status}`);
+existingSpots.forEach(s=>{
+    const marker = L.marker([s.lat,s.lng]).addTo(spotsMap);
+    marker.bindPopup(`<b>Spot #${s.number}</b><br>Status: ${s.status}`);
+    spotMarkers.push({spot_id:s.spot_id, leafletMarker:marker});
 });
 
 if(existingSpots.length>0){
@@ -304,12 +265,12 @@ if(existingSpots.length>0){
     spotsMap.fitBounds(bounds,{padding:[50,50]});
 }
 
-// Add new spots logic with continuous spot_number
-let newSpots = [];
-let maxSpotNumber = <?php 
-    $max_result = mysqli_query($conn, "SELECT MAX(spot_number) AS max_number FROM FISHING_SPOT WHERE zone_id = '$zone_id'");
-    $max_row = mysqli_fetch_assoc($max_result);
-    echo $max_row['max_number'] ?? 0;
+// --- Add new spots ---
+let newSpots=[];
+let maxSpotNumber = <?php
+$max_result = mysqli_query($conn,"SELECT MAX(spot_number) AS max_number FROM FISHING_SPOT WHERE zone_id='$zone_id'");
+$max_row=mysqli_fetch_assoc($max_result);
+echo $max_row['max_number'] ?? 0;
 ?>;
 
 const addSpotsForm = document.getElementById('addSpotsForm');
@@ -321,57 +282,98 @@ spotsMap.on('click', function(e){
     const lat = e.latlng.lat.toFixed(8);
     const lng = e.latlng.lng.toFixed(8);
 
-    maxSpotNumber++; // increment spot_number for new spot
-
-    const marker = L.marker([lat,lng], { draggable: true }).addTo(spotsMap);
+    maxSpotNumber++;
+    const marker = L.marker([lat,lng], {draggable:true}).addTo(spotsMap);
     marker.bindPopup(`New Spot #${maxSpotNumber}`).openPopup();
 
-    const spot = { lat, lng, marker, spot_number: maxSpotNumber };
+    const spot={lat,lng,marker,spot_number:maxSpotNumber};
     newSpots.push(spot);
     updateNewSpotsTable();
 
     marker.on('dragend', function(ev){
-        const idx = newSpots.findIndex(s => s.marker === marker);
-        newSpots[idx].lat = ev.target.getLatLng().lat.toFixed(8);
-        newSpots[idx].lng = ev.target.getLatLng().lng.toFixed(8);
+        const idx=newSpots.findIndex(s=>s.marker===marker);
+        newSpots[idx].lat=ev.target.getLatLng().lat.toFixed(8);
+        newSpots[idx].lng=ev.target.getLatLng().lng.toFixed(8);
         updateNewSpotsTable();
     });
 });
 
 function updateNewSpotsTable(){
-    newSpotsTable.innerHTML = '';
-    newSpots.forEach((s)=>{
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>#${s.spot_number}</td>
-            <td>${s.lat}</td>
-            <td>${s.lng}</td>
-            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeNewSpot(${s.spot_number})"><i class="fas fa-trash"></i></button></td>
-        `;
+    newSpotsTable.innerHTML='';
+    newSpots.forEach(s=>{
+        const row=document.createElement('tr');
+        row.innerHTML=`<td>#${s.spot_number}</td><td>${s.lat}</td><td>${s.lng}</td>
+        <td><button type="button" class="btn btn-danger btn-sm" onclick="removeNewSpot(${s.spot_number})"><i class="fas fa-trash"></i></button></td>`;
         newSpotsTable.appendChild(row);
     });
-    if(newSpots.length === 0){
-        newSpotsTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-gray-600);">Click on the map to add spots</td></tr>';
+    if(newSpots.length===0){
+        newSpotsTable.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--color-gray-600);">Click on the map to add spots</td></tr>';
     }
-    newSpotsInput.value = JSON.stringify(newSpots.map(s => ({lat:s.lat,lng:s.lng,spot_number:s.spot_number})));
-    addSpotsBtn.disabled = newSpots.length === 0;
+    newSpotsInput.value=JSON.stringify(newSpots.map(s=>({lat:s.lat,lng:s.lng,spot_number:s.spot_number})));
+    addSpotsBtn.disabled=newSpots.length===0;
 }
-
-function removeNewSpot(spotNumber){
-    const index = newSpots.findIndex(s => s.spot_number === spotNumber);
-    if(index !== -1){
-        spotsMap.removeLayer(newSpots[index].marker);
-        newSpots.splice(index,1);
+function removeNewSpot(number){
+    const idx=newSpots.findIndex(s=>s.spot_number===number);
+    if(idx!==-1){
+        spotsMap.removeLayer(newSpots[idx].marker);
+        newSpots.splice(idx,1);
         updateNewSpotsTable();
     }
 }
 
-
-function deleteSpot(id){
-    if(confirm('Are you sure you want to delete this spot?')){
-        window.location.href = 'deleteSpot.php?id='+id+'&zone_id=<?php echo $zone_id; ?>';
+// --- DELETE SINGLE ---
+function deleteSpotSingle(id){
+    if(confirm('Delete this spot?')){
+        fetch(`deleteSpot.php?id=${id}&ajax=1`)
+        .then(res=>res.json())
+        .then(data=>{
+            if(data.success){
+                document.getElementById(`spotRow${id}`).remove();
+                const markerObj=spotMarkers.find(m=>m.spot_id==id);
+                if(markerObj){
+                    spotsMap.removeLayer(markerObj.leafletMarker);
+                    spotMarkers=spotMarkers.filter(m=>m.spot_id!=id);
+                }
+            } else alert(data.message);
+        });
     }
 }
+
+// --- DELETE MULTI ---
+document.getElementById('deleteSelectedBtn').addEventListener('click', async function(){
+    const selected=Array.from(document.querySelectorAll('.selectSpot:checked')).map(cb=>cb.dataset.id);
+    if(selected.length===0){ alert('No spots selected'); return; }
+    if(confirm(`Delete ${selected.length} spots?`)){
+        const promises=selected.map(id=>fetch(`deleteSpot.php?id=${id}&ajax=1`).then(r=>r.json()));
+        const results=await Promise.all(promises);
+        results.forEach((data,index)=>{
+            const id=selected[index];
+            if(data.success){
+                const row=document.getElementById(`spotRow${id}`);
+                if(row) row.remove();
+                const markerObj=spotMarkers.find(m=>m.spot_id==id);
+                if(markerObj){
+                    spotsMap.removeLayer(markerObj.leafletMarker);
+                    spotMarkers=spotMarkers.filter(m=>m.spot_id!=id);
+                }
+            } else alert(`Failed to delete spot #${id}: ${data.message}`);
+        });
+        document.getElementById('selectAllSpots').checked=false;
+    }
+});
+
+// --- SELECT ALL ---
+const selectAllCheckbox=document.getElementById('selectAllSpots');
+selectAllCheckbox.addEventListener('change',function(){
+    document.querySelectorAll('.selectSpot').forEach(cb=>cb.checked=this.checked);
+});
+document.querySelectorAll('.selectSpot').forEach(cb=>{
+    cb.addEventListener('change',function(){
+        if(!this.checked) selectAllCheckbox.checked=false;
+        else if(document.querySelectorAll('.selectSpot:checked').length===document.querySelectorAll('.selectSpot').length)
+            selectAllCheckbox.checked=true;
+    });
+});
 </script>
 
 <?php include '../includes/footer.php'; ?>

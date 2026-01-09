@@ -56,47 +56,82 @@ $success = '';
 
 // Handle form submission (Insert Catch)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'insert') {
+
     $angler_id_input = sanitize($_POST['angler_id']);
     $fish_species = sanitize($_POST['fish_species']);
     $fish_weight = sanitize($_POST['fish_weight']);
     $catch_time_only = sanitize($_POST['catch_time']);
     $notes = sanitize($_POST['notes'] ?? '');
-    
-    // Extract user_id from angler_id (remove 'A' prefix and leading zeros)
-    $user_id = intval(str_replace('A', '', $angler_id_input));
-    
-    if (empty($angler_id_input) || empty($fish_species) || empty($fish_weight) || empty($catch_time_only)) {
+
+    // Extract user_id from Angler ID (A001 -> 1)
+    $user_id = intval(ltrim(str_replace('A', '', strtoupper($angler_id_input)), '0'));
+
+    /* =======================
+       VALIDATION
+    ======================== */
+    if (
+        empty($angler_id_input) ||
+        empty($fish_species) ||
+        empty($fish_weight) ||
+        empty($catch_time_only)
+    ) {
         $error = 'Please fill in all required fields';
     } elseif (!is_numeric($fish_weight) || $fish_weight <= 0) {
         $error = 'Fish weight must be a positive number';
     } elseif ($user_id <= 0) {
         $error = 'Invalid Angler ID';
     } else {
-        // Verify user exists and is approved for this tournament
-        $verify_query = "
-            SELECT u.user_id 
-            FROM USER u
-            JOIN TOURNAMENT_REGISTRATION tr ON u.user_id = tr.user_id
-            WHERE u.user_id = '$user_id'
-            AND tr.tournament_id = '{$station['tournament_id']}'
-            AND tr.approval_status = 'approved'
+
+        /* =======================
+           GET REGISTRATION ID
+        ======================== */
+        $reg_query = "
+            SELECT registration_id
+            FROM TOURNAMENT_REGISTRATION
+            WHERE user_id = '$user_id'
+            AND tournament_id = '{$station['tournament_id']}'
+            AND approval_status = 'approved'
+            LIMIT 1
         ";
-        $verify_result = mysqli_query($conn, $verify_query);
-        
-        if (mysqli_num_rows($verify_result) == 0) {
-            $error = 'Angler ID not found or not approved for this tournament';
+        $reg_result = mysqli_query($conn, $reg_query);
+
+        if (!$reg_result || mysqli_num_rows($reg_result) == 0) {
+            $error = 'Angler is not registered or not approved for this tournament';
         } else {
-            // Combine tournament date with catch time
+
+            $registration = mysqli_fetch_assoc($reg_result);
+            $registration_id = $registration['registration_id'];
+
+            // Combine tournament date + catch time
             $catch_datetime = $station['tournament_date'] . ' ' . $catch_time_only . ':00';
-            
+
+            /* =======================
+               INSERT FISH CATCH
+            ======================== */
             $insert_query = "
-                INSERT INTO FISH_CATCH (station_id, user_id, fish_species, fish_weight, catch_time, notes, created_at)
-                VALUES ('$station_id', '$user_id', '$fish_species', '$fish_weight', '$catch_datetime', '$notes', NOW())
+                INSERT INTO FISH_CATCH (
+                    station_id,
+                    user_id,
+                    registration_id,
+                    fish_species,
+                    fish_weight,
+                    catch_time,
+                    notes,
+                    created_at
+                ) VALUES (
+                    '$station_id',
+                    '$user_id',
+                    '$registration_id',
+                    '$fish_species',
+                    '$fish_weight',
+                    '$catch_datetime',
+                    '$notes',
+                    NOW()
+                )
             ";
-            
+
             if (mysqli_query($conn, $insert_query)) {
-                $success = 'Fish catch recorded successfully!';
-                // Reload page to show new catch
+                $_SESSION['success'] = 'Fish catch recorded successfully!';
                 header("Location: " . $_SERVER['PHP_SELF'] . "?station_id=" . $station_id);
                 exit;
             } else {
@@ -105,6 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         }
     }
 }
+
 
 // Get all catches for this station
 $catches_query = "
@@ -303,7 +339,7 @@ include '../includes/header.php';
 </style>
 
 <!-- Back Button -->
-<div class="text-right mb-3">
+<div style="margin-bottom: 1rem;">
     <a href="stationList.php?tournament_id=<?php echo $station['tournament_id']; ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Stations
     </a>

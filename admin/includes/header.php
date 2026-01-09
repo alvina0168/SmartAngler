@@ -52,62 +52,55 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
 
         <!-- Navigation Menu -->
         <ul class="sidebar-menu">
+            <!-- Dashboard -->
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/index.php" class="<?php echo $current_page == 'index.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/index.php" class="<?php echo $current_page == 'index.php' && $current_folder == 'admin' ? 'active' : ''; ?>">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
 
+            <!-- Tournament -->
             <li>
-                <a href="<?php echo SITE_URL; ?>./admin/tournament/tournamentList.php" class="<?php echo ($current_page == 'tournamentList.php' || $current_folder == 'tournament') ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/tournament/tournamentList.php" class="<?php echo $current_folder == 'tournament' ? 'active' : ''; ?>">
                     <i class="fas fa-trophy"></i>
                     <span>Tournament</span>
                 </a>
             </li>
 
+            <!-- Create Fishing Spot -->
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/zone/zoneList.php" class="<?php echo $current_page == 'zoneList.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/zone/zoneList.php" class="<?php echo $current_folder == 'zone' ? 'active' : ''; ?>">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>Create Fishing Spot</span>
                 </a>
             </li>
 
+            <!-- Notifications -->
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/catch/selectTournament.php" class="<?php echo $current_page == 'selectTournament.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-fish"></i>
-                    <span>Fish Catch Record</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="<?php echo SITE_URL; ?>/admin/prize-management.php" class="<?php echo $current_page == 'prize-management.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-gift"></i>
-                    <span>Prize Management</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="<?php echo SITE_URL; ?>/admin/sponsor-management.php" class="<?php echo $current_page == 'sponsor-management.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-handshake"></i>
-                    <span>Sponsor Management</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="<?php echo SITE_URL; ?>/admin/notification/notificationList.php" class="<?php echo $current_page == 'notifications.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/notification/notificationList.php" class="<?php echo $current_folder == 'notification' ? 'active' : ''; ?>">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
 
+            <!-- Review -->
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/profile/profile.php" class="<?php echo $current_page == 'my-profile.php' ? 'active' : ''; ?>">
+                <a href="<?php echo SITE_URL; ?>/admin/review/reviewList.php" class="<?php echo $current_folder == 'review' ? 'active' : ''; ?>">
+                    <i class="fas fa-star"></i>
+                    <span>Review</span>
+                </a>
+            </li>
+
+            <!-- My Profile -->
+            <li>
+                <a href="<?php echo SITE_URL; ?>/admin/profile/profile.php" class="<?php echo $current_folder == 'profile' ? 'active' : ''; ?>">
                     <i class="fas fa-user"></i>
                     <span>My Profile</span>
                 </a>
             </li>
 
+            <!-- Logout -->
             <li class="logout-btn">
                 <a href="<?php echo SITE_URL; ?>/pages/authentication/logout.php" onclick="return confirm('Are you sure you want to logout?')">
                     <i class="fas fa-sign-out-alt"></i>
@@ -135,9 +128,8 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                     </div>
                     <div class="user-info">
                         <div class="user-name"><?php echo htmlspecialchars($current_user['full_name']); ?></div>
-                    <div class="user-role">Administrator</div>
-                </div>
-
+                        <div class="user-role">Administrator</div>
+                    </div>
                 </div>
             </div>
         </div>

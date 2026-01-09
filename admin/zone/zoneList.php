@@ -24,6 +24,23 @@ $zones_result = mysqli_query($conn, $zones_query);
 include '../includes/header.php';
 ?>
 
+<style>
+.table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.table tbody tr:hover {
+    background-color: #e3f2fd;
+}
+.action-btns {
+    display: flex;
+    gap: 0.5rem;
+}
+.action-btns button, .action-btns a {
+    pointer-events: all; /* allows clicking buttons without triggering row click */
+}
+</style>
+
 <!-- Create Button -->
 <div class="text-right mb-3">
     <a href="createFishingSpot.php" class="create-btn">
@@ -57,7 +74,7 @@ include '../includes/header.php';
             </thead>
             <tbody>
                 <?php while ($zone = mysqli_fetch_assoc($zones_result)): ?>
-                    <tr>
+                    <tr onclick="window.location.href='viewZone.php?id=<?php echo $zone['zone_id']; ?>'">
                         <!-- Zone Name -->
                         <td>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -134,15 +151,7 @@ include '../includes/header.php';
                         <!-- Actions -->
                         <td>
                             <div class="action-btns">
-                                <a href="viewZone.php?id=<?php echo $zone['zone_id']; ?>" 
-                                   class="btn btn-primary btn-sm" title="View Spots">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="editZone.php?id=<?php echo $zone['zone_id']; ?>" 
-                                   class="btn btn-success btn-sm" title="Edit Zone">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button onclick="deleteZone(<?php echo $zone['zone_id']; ?>)" 
+                                <button onclick="event.stopPropagation(); deleteZone(<?php echo $zone['zone_id']; ?>)" 
                                         class="btn btn-danger btn-sm" title="Delete Zone">
                                     <i class="fas fa-trash"></i>
                                 </button>

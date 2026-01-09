@@ -406,9 +406,6 @@ try {
                     <i class="fas fa-redo"></i> Clear Filters
                 </a>
                 <?php endif; ?>
-                <a href="../tournament/tournaments.php" class="btn btn-primary">
-                    <i class="fas fa-search"></i> Browse Tournaments
-                </a>
             </div>
         </div>
         <?php endif; ?>

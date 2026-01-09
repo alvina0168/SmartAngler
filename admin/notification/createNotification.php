@@ -100,11 +100,6 @@ include '../includes/header.php';
 ?>
 
 <div class="form-container">
-    <h2 class="form-header-title">
-        <i class="fas fa-bell"></i> Create Tournament Notification
-    </h2>
-    <p class="form-header-subtitle">Send notification to all approved participants of a tournament</p>
-
     <?php if ($error): ?>
         <div class="alert alert-error">
             <i class="fas fa-exclamation-circle"></i>

@@ -53,40 +53,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 include '../includes/header.php';
 ?>
 
-<div class="form-container">
-    <h2 class="form-header-title">
-        <i class="fas fa-edit"></i> Edit Fishing Zone
-    </h2>
-    <p class="form-header-subtitle">Update zone information</p>
+<div class="section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-edit"></i> Edit Fishing Zone
+        </h2>
+        <p class="section-subtitle">Update zone information</p>
+    </div>
 
     <?php if ($error): ?>
         <div class="alert alert-error">
             <i class="fas fa-exclamation-circle"></i>
-            <span><?php echo $error; ?></span>
+            <?php echo $error; ?>
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="">
+    <form method="POST" action="" class="form">
+        <!-- Zone Information Section -->
         <div class="form-section">
-            <div class="section-title-form">
-                <i class="fas fa-info-circle"></i>
-                Zone Information
-            </div>
-            
+            <h3 class="form-section-title">
+                <i class="fas fa-info-circle"></i> Zone Information
+            </h3>
+
             <div class="form-group">
-                <label>Zone Name <span class="required">*</span></label>
-                <input type="text" name="zone_name" class="form-control" 
+                <label for="zone_name">Zone Name <span class="required">*</span></label>
+                <input type="text" name="zone_name" id="zone_name" class="form-control" 
                        value="<?php echo htmlspecialchars($zone['zone_name']); ?>" required>
             </div>
 
             <div class="form-group">
-                <label>Zone Description</label>
-                <textarea name="zone_description" class="form-control"><?php echo htmlspecialchars($zone['zone_description']); ?></textarea>
+                <label for="zone_description">Zone Description</label>
+                <textarea name="zone_description" id="zone_description" class="form-control" rows="4"><?php echo htmlspecialchars($zone['zone_description']); ?></textarea>
             </div>
 
             <div class="form-group">
-                <label>Linked Tournament</label>
-                <select name="tournament_id" class="form-control">
+                <label for="tournament_id">Linked Tournament</label>
+                <select name="tournament_id" id="tournament_id" class="form-control">
                     <option value="">-- No Tournament --</option>
                     <?php
                     $tournaments = mysqli_query($conn, "SELECT tournament_id, tournament_title FROM TOURNAMENT ORDER BY tournament_date DESC");
@@ -101,7 +103,8 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <div class="btn-group">
+        <!-- Buttons -->
+        <div class="form-actions">
             <a href="viewZone.php?id=<?php echo $zone_id; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>

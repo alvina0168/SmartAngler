@@ -38,14 +38,21 @@ $stations_result = mysqli_query($conn, $stations_query);
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
-<div class="text-right mb-3">
-    <a href="selectTournament.php" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Back to Tournaments
-    </a>
-    <a href="createStation.php?tournament_id=<?php echo $tournament_id; ?>" class="create-btn">
-        <i class="fas fa-plus-circle"></i> Add Station
-    </a>
+<!-- Header Buttons -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+    <!-- Back Button (Left) -->
+    <div>
+        <a href="<?php echo SITE_URL; ?>/admin/tournament/viewTournament.php?id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back 
+        </a>
+    </div>
+
+    <!-- Add Station Button (Right) -->
+    <div>
+        <a href="createStation.php?tournament_id=<?php echo $tournament_id; ?>" class="create-btn">
+            <i class="fas fa-plus-circle"></i> Add Station
+        </a>
+    </div>
 </div>
 
 <!-- Tournament Info -->
@@ -89,7 +96,9 @@ include '../includes/header.php';
             </thead>
             <tbody>
                 <?php while ($station = mysqli_fetch_assoc($stations_result)): ?>
-                    <tr>
+                    <tr style="cursor: pointer;" 
+                        onclick="window.location.href='catchList.php?station_id=<?php echo $station['station_id']; ?>'">
+                        
                         <!-- Station Name -->
                         <td>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -148,16 +157,17 @@ include '../includes/header.php';
                         <!-- Actions -->
                         <td>
                             <div class="action-btns">
-                                <a href="catchList.php?station_id=<?php echo $station['station_id']; ?>" 
-                                   class="btn btn-primary btn-sm" title="View Catches">
-                                    <i class="fas fa-list"></i>
-                                </a>
+                                <!-- Edit -->
                                 <a href="editStation.php?id=<?php echo $station['station_id']; ?>" 
-                                   class="btn btn-success btn-sm" title="Edit">
+                                   class="btn btn-success btn-sm" title="Edit" 
+                                   onclick="event.stopPropagation();">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                <!-- Delete -->
                                 <button onclick="deleteStation(<?php echo $station['station_id']; ?>)" 
-                                        class="btn btn-danger btn-sm" title="Delete">
+                                        class="btn btn-danger btn-sm" title="Delete" 
+                                        type="button"
+                                        onclick="event.stopPropagation();">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -172,9 +182,6 @@ include '../includes/header.php';
         <i class="fas fa-weight"></i>
         <h3>No Weighing Stations</h3>
         <p>Create weighing stations to start recording fish catches</p>
-        <a href="createStation.php?tournament_id=<?php echo $tournament_id; ?>" class="create-btn">
-            <i class="fas fa-plus"></i> Add First Station
-        </a>
     </div>
 <?php endif; ?>
 

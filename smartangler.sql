@@ -309,12 +309,15 @@ CREATE TABLE TOURNAMENT_PRIZE (
   prize_id INT AUTO_INCREMENT PRIMARY KEY,
   tournament_id INT NOT NULL,
   sponsor_id INT,
+  category_id INT, 
   prize_ranking VARCHAR(20),
   prize_description TEXT,
   prize_value DECIMAL(10,2),
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
-  FOREIGN KEY (sponsor_id) REFERENCES SPONSOR(sponsor_id) ON DELETE SET NULL
+  FOREIGN KEY (sponsor_id) REFERENCES SPONSOR(sponsor_id) ON DELETE SET NULL,
+  FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
 
 -- =========================================================
 -- VIEW: v_spot_details (for admin reporting)

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $station_name = sanitize($_POST['station_name']);
     $marshal_name = sanitize($_POST['marshal_name'] ?? '');
     $notes = sanitize($_POST['notes'] ?? '');
-    
+
     if (empty($station_name)) {
         $error = 'Station name is required';
     } else {
@@ -36,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             INSERT INTO WEIGHING_STATION (tournament_id, station_name, marshal_name, status, notes)
             VALUES ('$tournament_id', '$station_name', '$marshal_name', 'active', '$notes')
         ";
-        
         if (mysqli_query($conn, $insert_query)) {
             $_SESSION['success'] = 'Weighing station created successfully!';
             redirect(SITE_URL . '/admin/catch/stationList.php?tournament_id=' . $tournament_id);
@@ -49,54 +48,53 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 include '../includes/header.php';
 ?>
 
-<div class="form-container">
-    <h2 class="form-header-title">
+<!-- Back & Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <a href="<?php echo SITE_URL; ?>/admin/catch/stationList.php?tournament_id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+    <h2 style="margin: 0; color: var(--color-blue-primary); font-size: 1.5rem;">
         <i class="fas fa-weight"></i> Create Weighing Station
     </h2>
-    <p class="form-header-subtitle">
-        Tournament: <?php echo htmlspecialchars($tournament['tournament_title']); ?>
-    </p>
+</div>
+<p style="color: var(--color-gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+    Tournament: <strong><?php echo htmlspecialchars($tournament['tournament_title']); ?></strong>
+</p>
 
-    <?php if ($error): ?>
-        <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i>
-            <span><?php echo $error; ?></span>
-        </div>
-    <?php endif; ?>
+<?php if ($error): ?>
+    <div class="alert alert-error" style="margin-bottom: 1rem;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span><?php echo $error; ?></span>
+    </div>
+<?php endif; ?>
 
+<!-- Form Card -->
+<div class="section" style="padding: 1.5rem; background: var(--color-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
     <form method="POST" action="">
-        <!-- Station Information -->
-        <div class="form-section">
-            <div class="section-title-form">
-                <i class="fas fa-info-circle"></i>
-                Station Information
-            </div>
-            
-            <div class="form-group">
-                <label>Station Name <span class="required">*</span></label>
-                <input type="text" name="station_name" class="form-control" 
-                       placeholder="e.g., S1, S2, Station A" required>
-                <span class="hint">Give a unique name to identify this station</span>
-            </div>
-
-            <div class="form-group">
-                <label>Marshal Name</label>
-                <input type="text" name="marshal_name" class="form-control" 
-                       placeholder="e.g., John Doe">
-                <span class="hint">Person in charge of this station</span>
-            </div>
-
-            <div class="form-group">
-                <label>Notes</label>
-                <textarea name="notes" class="form-control" 
-                          placeholder="Any additional notes about this station..."></textarea>
-                <span class="hint">Optional notes or remarks</span>
-            </div>
+        <!-- Station Name -->
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="font-weight: 600;">Station Name <span style="color: red;">*</span></label>
+            <input type="text" name="station_name" class="form-control" placeholder="e.g., S1, S2, Station A" required>
+            <small class="form-hint">Give a unique name to identify this station</small>
         </div>
 
-        <!-- Form Actions -->
-        <div class="btn-group">
-            <a href="stationList.php?tournament_id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
+        <!-- Marshal Name -->
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="font-weight: 600;">Marshal Name</label>
+            <input type="text" name="marshal_name" class="form-control" placeholder="e.g., John Doe">
+            <small class="form-hint">Person in charge of this station</small>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="font-weight: 600;">Notes</label>
+            <textarea name="notes" class="form-control" placeholder="Any additional notes about this station..."></textarea>
+            <small class="form-hint">Optional notes or remarks</small>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <a href="<?php echo SITE_URL; ?>/admin/catch/stationList.php?tournament_id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
             <button type="submit" class="btn btn-primary">

@@ -47,7 +47,6 @@ try {
         'NOTIFICATION',
         'REVIEW',
         'RESULT',
-        'FISH_CATCH',
         'TOURNAMENT_PRIZE',
         'SPONSOR',
         'TOURNAMENT_REGISTRATION'

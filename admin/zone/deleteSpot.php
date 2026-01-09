@@ -3,22 +3,18 @@ session_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-if (!isset($_GET['id']) || !isset($_GET['zone_id'])) {
-    $_SESSION['error'] = 'Spot ID and Zone ID are required';
-    redirect(SITE_URL . '/admin/zone/zoneList.php');
+header('Content-Type: application/json');
+
+if(!isset($_GET['id'])){
+    echo json_encode(['success'=>false,'message'=>'Spot ID required']);
+    exit;
 }
 
-$spot_id = intval($_GET['id']);
-$zone_id = intval($_GET['zone_id']);
+$spot_id=intval($_GET['id']);
+$delete_query="DELETE FROM FISHING_SPOT WHERE spot_id='$spot_id'";
 
-// Delete spot
-$delete_query = "DELETE FROM FISHING_SPOT WHERE spot_id = '$spot_id'";
-
-if (mysqli_query($conn, $delete_query)) {
-    $_SESSION['success'] = 'Spot deleted successfully!';
+if(mysqli_query($conn,$delete_query)){
+    echo json_encode(['success'=>true]);
 } else {
-    $_SESSION['error'] = 'Failed to delete spot: ' . mysqli_error($conn);
+    echo json_encode(['success'=>false,'message'=>mysqli_error($conn)]);
 }
-
-redirect(SITE_URL . '/admin/zone/viewZone.php?id=' . $zone_id);
-?>
