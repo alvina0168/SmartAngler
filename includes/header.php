@@ -247,12 +247,16 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
                             </a>
                             
                             <?php if (!isAdmin()): ?>
-                                <!-- Dashboard for Anglers (moved to dropdown) -->
-                                <a href="<?php echo SITE_URL; ?>/pages/dashboard/myDashboard.php" class="dropdown-item">
-                                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                                </a>
-                            <?php endif; ?>
-                            
+    <!-- Dashboard for Anglers (moved to dropdown) -->
+    <a href="<?php echo SITE_URL; ?>/pages/dashboard/myDashboard.php" class="dropdown-item">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+    </a>
+    
+    <!-- My Reviews -->
+    <a href="<?php echo SITE_URL; ?>/pages/review/myReviews.php" class="dropdown-item">
+        <i class="fas fa-star"></i> My Reviews
+    </a>
+<?php endif; ?>
                             <div class="dropdown-separator"></div>
                             
                             <a href="<?php echo SITE_URL; ?>/pages/authentication/logout.php" class="dropdown-item logout">

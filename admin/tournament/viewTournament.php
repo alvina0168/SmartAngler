@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $location = mysqli_real_escape_string($conn, $_POST['location']);
     $tournament_fee = mysqli_real_escape_string($conn, $_POST['tournament_fee']);
     $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $tournament_rules = mysqli_real_escape_string($conn, $_POST['tournament_rules']);
     $status = mysqli_real_escape_string($conn, $_POST['status']);
     $bank_account_name = mysqli_real_escape_string($conn, $_POST['bank_account_name']);
     $bank_account_number = mysqli_real_escape_string($conn, $_POST['bank_account_number']);
@@ -52,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             location='$location',
             tournament_fee='$tournament_fee',
             description='$description',
+            tournament_rules='$tournament_rules',
             status='$status',
             bank_account_name='$bank_account_name',
             bank_account_number='$bank_account_number',
@@ -90,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     redirect(SITE_URL . '/admin/tournament/viewTournament.php?id=' . $tournament_id);
 }
 
-// Fetch tournament with statistics
+// Fetch tournament with statistics AND assigned zone_id
 $query = "
     SELECT t.*, u.full_name AS organizer_name,
         (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION WHERE tournament_id=t.tournament_id) AS total_registrations,
@@ -100,7 +102,10 @@ $query = "
         (SELECT COUNT(*) FROM FISH_CATCH fc JOIN WEIGHING_STATION ws ON fc.station_id=ws.station_id WHERE ws.tournament_id=t.tournament_id) AS catch_count,
         (SELECT COUNT(*) FROM REVIEW WHERE tournament_id=t.tournament_id) AS review_count,
         (SELECT COUNT(*) FROM SPONSOR WHERE tournament_id=t.tournament_id) AS sponsor_count,
-        (SELECT COUNT(*) FROM TOURNAMENT_PRIZE WHERE tournament_id=t.tournament_id) AS prize_count
+        (SELECT COUNT(DISTINCT tp.category_id) FROM TOURNAMENT_PRIZE tp WHERE tp.tournament_id=t.tournament_id) AS category_count,
+        (SELECT COUNT(*) FROM TOURNAMENT_PRIZE WHERE tournament_id=t.tournament_id) AS prize_count,
+        (SELECT zone_id FROM ZONE WHERE tournament_id=t.tournament_id LIMIT 1) AS assigned_zone_id,
+        (SELECT COUNT(*) FROM FISHING_SPOT fs JOIN ZONE z ON fs.zone_id = z.zone_id WHERE z.tournament_id=t.tournament_id) AS total_spots
     FROM TOURNAMENT t
     LEFT JOIN USER u ON t.created_by = u.user_id
     WHERE t.tournament_id='$tournament_id'
@@ -114,6 +119,17 @@ if (!$result || mysqli_num_rows($result) == 0) {
 }
 
 $tournament = mysqli_fetch_assoc($result);
+
+// Fetch selected categories with their prizes
+$categories_query = "
+    SELECT DISTINCT c.*, 
+           (SELECT COUNT(*) FROM TOURNAMENT_PRIZE WHERE tournament_id='$tournament_id' AND category_id=c.category_id) as prize_count
+    FROM CATEGORY c
+    INNER JOIN TOURNAMENT_PRIZE tp ON c.category_id = tp.category_id
+    WHERE tp.tournament_id = '$tournament_id'
+    ORDER BY c.category_id
+";
+$categories_result = mysqli_query($conn, $categories_query);
 
 $page_title = $tournament['tournament_title'];
 
@@ -178,17 +194,31 @@ include '../includes/header.php';
             </a>
 
             <!-- Fishing Spots -->
-            <a href="../zone/zoneList.php?tournament_id=<?= $tournament_id ?>" class="management-card">
-                <div class="management-card-header">
-                    <div class="management-card-icon">
-                        <i class="fas fa-map-marked-alt"></i>
+            <?php if (!empty($tournament['assigned_zone_id'])): ?>
+                <a href="../zone/viewZone.php?id=<?= $tournament['assigned_zone_id'] ?>" class="management-card">
+                    <div class="management-card-header">
+                        <div class="management-card-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div class="management-card-title">Fishing Spots</div>
                     </div>
-                    <div class="management-card-title">Fishing Spots</div>
+                    <div class="management-card-stats">
+                        <span><strong><?= $tournament['total_spots'] ?></strong> spots available</span>
+                    </div>
+                </a>
+            <?php else: ?>
+                <div class="management-card" style="opacity: 0.6; cursor: not-allowed;">
+                    <div class="management-card-header">
+                        <div class="management-card-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div class="management-card-title">Fishing Spots</div>
+                    </div>
+                    <div class="management-card-stats">
+                        <span style="color: #dc3545;">No zone assigned</span>
+                    </div>
                 </div>
-                <div class="management-card-stats">
-                    <span><strong><?= $tournament['approved_count'] ?></strong> spots assigned</span>
-                </div>
-            </a>
+            <?php endif; ?>
 
             <!-- Catch Records -->
             <a href="../catch/stationList.php?tournament_id=<?= $tournament_id ?>" class="management-card">
@@ -205,7 +235,7 @@ include '../includes/header.php';
             </a>
 
             <!-- Results -->
-            <a href="../result/resultList.php?tournament_id=<?= $tournament_id ?>" class="management-card">
+            <a href="../result/viewResult.php?tournament_id=<?= $tournament_id ?>" class="management-card">
                 <div class="management-card-header">
                     <div class="management-card-icon">
                         <i class="fas fa-medal"></i>
@@ -341,6 +371,25 @@ include '../includes/header.php';
         <textarea name="description" class="form-control edit-only" rows="5" placeholder="Enter tournament description..."><?= htmlspecialchars($tournament['description']) ?></textarea>
     </div>
 
+    <!-- Tournament Rules -->
+    <div class="section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-gavel"></i>
+                Tournament Rules
+            </h3>
+        </div>
+        
+        <div class="info-value view-only" style="line-height: 1.7; color: #495057;">
+            <?php if (!empty($tournament['tournament_rules'])): ?>
+                <?= nl2br(htmlspecialchars($tournament['tournament_rules'])) ?>
+            <?php else: ?>
+                <span style="color: #999; font-style: italic;">No rules specified</span>
+            <?php endif; ?>
+        </div>
+        <textarea name="tournament_rules" class="form-control edit-only" rows="6" placeholder="Enter tournament rules and regulations..."><?= htmlspecialchars($tournament['tournament_rules']) ?></textarea>
+    </div>
+
     <!-- Payment Information -->
     <div class="section">
         <div class="section-header">
@@ -390,6 +439,87 @@ include '../includes/header.php';
         </div>
     </div>
 
+    <!-- Categories & Prizes Section -->
+    <div class="section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-trophy"></i>
+                Categories & Prizes
+            </h3>
+            <a href="../prize/managePrize.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary btn-sm">
+                <i class="fas fa-cog"></i> Manage Prizes
+            </a>
+        </div>
+
+        <?php if (mysqli_num_rows($categories_result) > 0): ?>
+            <div style="display: grid; gap: 1rem;">
+                <?php while ($category = mysqli_fetch_assoc($categories_result)): ?>
+                    <div style="background: white; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div>
+                                <h4 style="margin: 0 0 0.5rem 0; color: var(--color-blue-primary); font-size: 1.125rem;">
+                                    <?= htmlspecialchars($category['category_name']) ?>
+                                </h4>
+                                <p style="margin: 0; color: #6c757d; font-size: 0.875rem;">
+                                    <?= htmlspecialchars($category['description']) ?>
+                                </p>
+                            </div>
+                            <span style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; color: #495057; font-size: 0.875rem;">
+                                <?= $category['prize_count'] ?> prizes
+                            </span>
+                        </div>
+
+                        <?php
+                        // Fetch prizes for this category
+                        $prizes_query = "SELECT * FROM TOURNAMENT_PRIZE 
+                                        WHERE tournament_id = '$tournament_id' 
+                                        AND category_id = '{$category['category_id']}'
+                                        ORDER BY 
+                                            CASE prize_ranking
+                                                WHEN '1st' THEN 1
+                                                WHEN '2nd' THEN 2
+                                                WHEN '3rd' THEN 3
+                                                WHEN '4th' THEN 4
+                                                WHEN '5th' THEN 5
+                                                WHEN '6th' THEN 6
+                                                WHEN '7th' THEN 7
+                                                WHEN '8th' THEN 8
+                                                WHEN '9th' THEN 9
+                                                WHEN '10th' THEN 10
+                                                ELSE 99
+                                            END";
+                        $prizes_result = mysqli_query($conn, $prizes_query);
+                        ?>
+
+                        <?php if (mysqli_num_rows($prizes_result) > 0): ?>
+                            <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem;">
+                                <?php while ($prize = mysqli_fetch_assoc($prizes_result)): ?>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e9ecef;">
+                                        <div style="display: flex; gap: 1rem; align-items: center; flex: 1;">
+                                            <span style="font-weight: 700; color: #495057; min-width: 60px;"><?= htmlspecialchars($prize['prize_ranking']) ?></span>
+                                            <span style="color: #1a1a1a;"><?= htmlspecialchars($prize['prize_description']) ?></span>
+                                        </div>
+                                        <span style="font-weight: 700; color: #28a745; font-size: 1rem;">
+                                            RM <?= number_format($prize['prize_value'], 2) ?>
+                                        </span>
+                                    </div>
+                                <?php endwhile; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endwhile; ?>
+            </div>
+        <?php else: ?>
+            <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 12px;">
+                <i class="fas fa-trophy" style="font-size: 3rem; color: #dee2e6; margin-bottom: 1rem;"></i>
+                <p style="color: #6c757d; margin: 0;">No categories or prizes configured yet</p>
+                <a href="../prize/managePrize.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-plus"></i> Add Categories & Prizes
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+
     <!-- Sponsors Section -->
     <div class="section">
         <div class="section-header">
@@ -409,29 +539,6 @@ include '../includes/header.php';
             </div>
             <div style="text-align: right;">
                 <i class="fas fa-handshake" style="font-size: 2.5rem; color: var(--color-blue-primary); opacity: 0.3;"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- Prizes Section -->
-    <div class="section">
-        <div class="section-header">
-            <h3 class="section-title">
-                <i class="fas fa-gift"></i>
-                Prizes & Categories
-            </h3>
-            <a href="../prize/managePrize.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary btn-sm">
-                <i class="fas fa-cog"></i> Manage Prizes
-            </a>
-        </div>
-
-        <div style="padding: 1rem; background: #f8f9fa; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <div style="font-size: 2rem; font-weight: 700; color: #1a1a1a;"><?= $tournament['prize_count'] ?></div>
-                <div style="font-size: 0.875rem; color: #6c757d;">Total Prizes</div>
-            </div>
-            <div style="text-align: right;">
-                <i class="fas fa-trophy" style="font-size: 2.5rem; color: #ffa726; opacity: 0.3;"></i>
             </div>
         </div>
     </div>

@@ -2,46 +2,29 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-$page_title = 'Review Management';
+$page_title = 'All Reviews';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     redirect(SITE_URL . '/login.php');
 }
 
-if (!isset($_GET['tournament_id'])) {
-    $_SESSION['error'] = 'Tournament ID is missing!';
-    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
-}
-
-$tournament_id = intval($_GET['tournament_id']);
-
-// Fetch tournament info
-$tournament_query = "SELECT tournament_title FROM TOURNAMENT WHERE tournament_id = $tournament_id";
-$tournament_result = mysqli_query($conn, $tournament_query);
-
-if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
-    $_SESSION['error'] = 'Tournament not found!';
-    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
-}
-
-$tournament = mysqli_fetch_assoc($tournament_result);
-
 // Get filter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 
 // Build WHERE clause
-$where_clause = "r.tournament_id = $tournament_id";
+$where_clause = "1=1";
 if ($filter == 'pending') {
     $where_clause .= " AND r.admin_response IS NULL";
 } elseif ($filter == 'responded') {
     $where_clause .= " AND r.admin_response IS NOT NULL";
 }
 
-// Fetch reviews
+// Fetch all reviews
 $reviews_query = "
-    SELECT r.*, u.full_name, u.email
+    SELECT r.*, u.full_name, u.email, t.tournament_title, t.tournament_id
     FROM REVIEW r
     JOIN USER u ON r.user_id = u.user_id
+    JOIN TOURNAMENT t ON r.tournament_id = t.tournament_id
     WHERE $where_clause
     ORDER BY r.review_date DESC
 ";
@@ -55,12 +38,11 @@ $stats_query = "
         SUM(CASE WHEN admin_response IS NULL THEN 1 ELSE 0 END) as pending_reviews,
         SUM(CASE WHEN admin_response IS NOT NULL THEN 1 ELSE 0 END) as responded_reviews
     FROM REVIEW
-    WHERE tournament_id = $tournament_id
 ";
 $stats_result = mysqli_query($conn, $stats_query);
 $stats = mysqli_fetch_assoc($stats_result);
 
-// Handle NULL values
+// Handle NULL values when no reviews exist
 $stats['total_reviews'] = $stats['total_reviews'] ?? 0;
 $stats['avg_rating'] = $stats['avg_rating'] ?? 0;
 $stats['pending_reviews'] = $stats['pending_reviews'] ?? 0;
@@ -69,23 +51,13 @@ $stats['responded_reviews'] = $stats['responded_reviews'] ?? 0;
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
-<div style="margin-bottom: 1.5rem;">
-    <a href="../tournament/viewTournament.php?id=<?= $tournament_id ?>" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Back to Tournament
-    </a>
-</div>
-
 <!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
             <h2 class="section-title">
-                <i class="fas fa-star"></i> Review Management
+                </i> All Reviews
             </h2>
-            <p style="color: #6c757d; font-size: 0.875rem; margin-top: 0.25rem;">
-                <?= htmlspecialchars($tournament['tournament_title']) ?>
-            </p>
         </div>
     </div>
 
@@ -107,7 +79,7 @@ include '../includes/header.php';
                     <i class="fas fa-star"></i>
                 </div>
             </div>
-            <div class="stat-value"><?= number_format($stats['avg_rating'], 1) ?> <i class="fas fa-star" style="font-size: 1rem; color: #ff9800;"></i></div>
+            <div class="stat-value"><?= number_format($stats['avg_rating'], 1) ?></div>
             <div class="stat-label">Average Rating</div>
         </div>
 
@@ -134,13 +106,13 @@ include '../includes/header.php';
 
     <!-- Filter Tabs -->
     <div class="filter-tabs">
-        <a href="?tournament_id=<?= $tournament_id ?>&filter=all" class="filter-btn <?= $filter == 'all' ? 'active' : '' ?>">
+        <a href="?filter=all" class="filter-btn <?= $filter == 'all' ? 'active' : '' ?>">
             <i class="fas fa-list"></i> All Reviews
         </a>
-        <a href="?tournament_id=<?= $tournament_id ?>&filter=pending" class="filter-btn <?= $filter == 'pending' ? 'active' : '' ?>">
+        <a href="?filter=pending" class="filter-btn <?= $filter == 'pending' ? 'active' : '' ?>">
             <i class="fas fa-clock"></i> Pending Response
         </a>
-        <a href="?tournament_id=<?= $tournament_id ?>&filter=responded" class="filter-btn <?= $filter == 'responded' ? 'active' : '' ?>">
+        <a href="?filter=responded" class="filter-btn <?= $filter == 'responded' ? 'active' : '' ?>">
             <i class="fas fa-check"></i> Responded
         </a>
     </div>
@@ -151,6 +123,14 @@ include '../includes/header.php';
     <div class="section">
         <?php while ($review = mysqli_fetch_assoc($reviews_result)): ?>
             <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #e9ecef;">
+                <!-- Tournament Badge -->
+                <div style="margin-bottom: 1rem;">
+                    <a href="../tournament/viewTournament.php?id=<?= $review['tournament_id'] ?>" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #e3f2fd; border-radius: 20px; text-decoration: none; font-size: 0.875rem; font-weight: 600; color: var(--color-blue-primary);">
+                        <i class="fas fa-trophy"></i>
+                        <?= htmlspecialchars($review['tournament_title']) ?>
+                    </a>
+                </div>
+
                 <!-- Review Header -->
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
@@ -215,7 +195,7 @@ include '../includes/header.php';
                                 <i class="fas fa-edit"></i> Edit Response
                             </a>
                             <button type="button" 
-                                    onclick="if(confirm('Delete this response?')) { window.location.href='deleteResponse.php?id=<?= $review['review_id'] ?>&tournament_id=<?= $tournament_id ?>'; }"
+                                    onclick="if(confirm('Delete this response?')) { window.location.href='deleteResponse.php?id=<?= $review['review_id'] ?>&redirect=all'; }"
                                     class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash"></i> Delete Response
                             </button>
@@ -235,7 +215,7 @@ include '../includes/header.php';
             <?php elseif ($filter == 'responded'): ?>
                 No reviews have been responded to yet
             <?php else: ?>
-                This tournament has no reviews yet
+                No reviews have been submitted yet
             <?php endif; ?>
         </p>
     </div>

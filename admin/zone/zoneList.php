@@ -167,9 +167,6 @@ include '../includes/header.php';
         <i class="fas fa-map-marked-alt"></i>
         <h3>No Fishing Zones Created</h3>
         <p>Start by creating your first fishing zone with spots</p>
-        <a href="createFishingSpot.php" class="create-btn">
-            <i class="fas fa-plus"></i> Create First Fishing Zone
-        </a>
     </div>
 <?php endif; ?>
 

@@ -2,6 +2,11 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
+// Check admin access
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    redirect(SITE_URL . '/login.php');
+}
+
 $page_title = 'Create Fishing Zone';
 $page_description = 'Create a fishing zone and add spots';
 
@@ -10,7 +15,6 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $zone_name = sanitize($_POST['zone_name']);
     $zone_description = sanitize($_POST['zone_description'] ?? '');
-    $tournament_id = sanitize($_POST['tournament_id'] ?? '');
     $spots_data = json_decode($_POST['spots_data'], true);
     
     if (empty($zone_name)) {
@@ -18,24 +22,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (empty($spots_data)) {
         $error = 'Please add at least one spot by clicking on the map';
     } else {
-        // Insert zone first
-        $insert_zone = "INSERT INTO ZONE (zone_name, zone_description, tournament_id, created_at) 
-                        VALUES ('$zone_name', '$zone_description', " . ($tournament_id ? "'$tournament_id'" : "NULL") . ", NOW())";
+        // Insert zone (without tournament_id - zones are not assigned to tournaments at creation)
+        $insert_zone = "INSERT INTO ZONE (zone_name, zone_description, created_at) 
+                        VALUES ('$zone_name', '$zone_description', NOW())";
         
         if (mysqli_query($conn, $insert_zone)) {
             $zone_id = mysqli_insert_id($conn);
             
-            // Insert all spots
+            // Insert all spots with sequential numbering
+            $spot_number = 1;
             $added_count = 0;
+            
             foreach ($spots_data as $spot) {
                 $lat = sanitize($spot['lat']);
                 $lng = sanitize($spot['lng']);
                 
-                $insert_spot = "INSERT INTO FISHING_SPOT (zone_id, latitude, longitude, spot_status, created_at) 
-                                VALUES ('$zone_id', '$lat', '$lng', 'available', NOW())";
+                $insert_spot = "INSERT INTO FISHING_SPOT (zone_id, spot_number, latitude, longitude, spot_status, created_at) 
+                                VALUES ('$zone_id', '$spot_number', '$lat', '$lng', 'available', NOW())";
                 
                 if (mysqli_query($conn, $insert_spot)) {
                     $added_count++;
+                    $spot_number++;
                 }
             }
             
@@ -53,127 +60,211 @@ include '../includes/header.php';
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<div class="form-container">
-    <h2 class="form-header-title">
-        <i class="fas fa-map-marked-alt"></i> Create Fishing Zone
-    </h2>
-    <p class="form-header-subtitle">Create a new fishing zone and add spots by clicking on the map</p>
+<style>
+#spotMap {
+    width: 100%;
+    height: 500px;
+    border-radius: 12px;
+    border: 3px solid var(--color-blue-primary);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-input-wrapper .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.search-input-wrapper input {
+    padding-left: 2.5rem;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 0.25rem;
+}
+
+.search-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f1f1;
+    transition: background 0.2s;
+}
+
+.search-result-item:hover {
+    background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-title {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+}
+
+.search-result-address {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.search-loading {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+}
+</style>
+
+<!-- Back Button -->
+<div style="margin-bottom: 1.5rem;">
+    <a href="zoneList.php" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Zones
+    </a>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h3 class="section-title">
+            <i class="fas fa-map-marked-alt"></i> Create Fishing Zone
+        </h3>
+    </div>
 
     <?php if ($error): ?>
         <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i>
-            <span><?php echo $error; ?></span>
+            <i class="fas fa-exclamation-circle"></i> <?= $error ?>
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="" id="createSpotsForm">
+    <form method="POST" id="createZoneForm">
         <!-- Zone Information -->
-        <div class="form-section">
-            <div class="section-title-form">
-                <i class="fas fa-info-circle"></i>
-                Zone Information
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Fishing Zone Name <span class="required">*</span></label>
-                    <input type="text" name="zone_name" class="form-control" 
-                           placeholder="e.g., Zone A, Pond 1" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Link to Tournament (Optional)</label>
-                    <select name="tournament_id" class="form-control">
-                        <option value="">-- Select Tournament --</option>
-                        <?php
-                        $tournaments = mysqli_query($conn, "SELECT tournament_id, tournament_title FROM TOURNAMENT ORDER BY tournament_date DESC");
-                        while ($t = mysqli_fetch_assoc($tournaments)):
-                        ?>
-                            <option value="<?php echo $t['tournament_id']; ?>">
-                                <?php echo htmlspecialchars($t['tournament_title']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Zone Description</label>
-                <textarea name="zone_description" class="form-control" 
-                          placeholder="Describe this fishing zone..."></textarea>
-            </div>
+        <div class="form-group">
+            <label>Fishing Zone Name <span class="required">*</span></label>
+            <input type="text" name="zone_name" class="form-control" placeholder="Zone Name" required>
         </div>
 
-        <!-- Map Section -->
-        <div class="form-section">
-            <div class="section-title-form">
-                <i class="fas fa-map-marker-alt"></i>
-                Add Fishing Spots (Click on Map)
-            </div>
-            
-            <div style="background: var(--color-blue-light); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
-                <i class="fas fa-info-circle"></i>
-                <strong>Instructions:</strong> Click anywhere on the map to add fishing spots. Right-click on a marker to remove it.
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-                <!-- Map -->
-                <div>
-                    <div id="spotMap" style="width: 100%; height: 400px; border-radius: var(--radius-md); border: 3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
+        <div class="form-group">
+            <label>Zone Description</label>
+            <textarea name="zone_description" class="form-control" rows="3" placeholder="Describe this fishing zone..."></textarea>
+        </div>
+
+        <!-- Instructions Alert -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Instructions:</strong> Use the search box to find a location, then click on the map to add fishing spots. Right-click on a marker to remove it. You can also drag markers to adjust positions.
+        </div>
+
+        <!-- Location Search -->
+        <div class="form-group">
+            <label>
+                <i class="fas fa-search"></i> Search Location
+            </label>
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           id="locationSearch" 
+                           class="form-control" 
+                           placeholder="Search for location"
+                           autocomplete="off">
                 </div>
-                
-                <!-- Coordinates Panel -->
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div>
-                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Current Latitude</label>
-                        <input type="text" id="currentLat" class="form-control" readonly placeholder="Click on map">
-                    </div>
-                    <div>
-                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Current Longitude</label>
-                        <input type="text" id="currentLng" class="form-control" readonly placeholder="Click on map">
-                    </div>
-                    
-                    <button type="button" class="btn btn-danger" onclick="clearAllSpots()" style="margin-top: auto;">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <small style="color: #6c757d; display: block; margin-top: 0.5rem;">
+                <i class="fas fa-lightbulb"></i> Tip: Try searching "Tawau", "Kota Kinabalu", or specific landmark names
+            </small>
+        </div>
+
+        <!-- Map and Coordinates Grid -->
+        <div class="info-grid" style="margin-bottom: 1.5rem;">
+            <!-- Map -->
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="fas fa-map"></i> Add Fishing Spots (Click on Map)
+                </label>
+                <div id="spotMap"></div>
+            </div>
+            
+            <!-- Coordinates Panel -->
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Current Latitude</label>
+                    <input type="text" id="currentLat" class="form-control" readonly placeholder="Click on map">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Current Longitude</label>
+                    <input type="text" id="currentLng" class="form-control" readonly placeholder="Click on map">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Zoom Level</label>
+                    <input type="text" id="zoomLevel" class="form-control" readonly value="10">
+                </div>
+                <div style="margin-top: auto;">
+                    <button type="button" class="btn btn-danger" onclick="clearAllSpots()" style="width: 100%;">
                         <i class="fas fa-trash"></i> Clear All Spots
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Spots Table -->
-            <div style="margin-top: 2rem;">
-                <h3 style="color: var(--color-blue-primary); margin-bottom: 1rem;">
-                    <i class="fas fa-list"></i> Added Spots (<span id="spotCount">0</span>)
-                </h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Spot ID</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="spotsTableBody">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: var(--color-gray-600);">
-                                No spots added yet. Click on the map to add spots.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- Spots Table -->
+        <div style="margin-top: 2rem;">
+            <h4 style="color: var(--color-blue-primary); margin-bottom: 1rem; font-size: 1.125rem;">
+                <i class="fas fa-list"></i> Added Spots (<span id="spotCount">0</span>)
+            </h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th width="100">Spot #</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th width="120">Status</th>
+                        <th width="100">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="spotsTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #6c757d; padding: 2rem;">
+                            <i class="fas fa-map-marker-alt" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.5rem;"></i>
+                            No spots added yet. Click on the map to add spots.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- Hidden input for spots data -->
         <input type="hidden" name="spots_data" id="spotsData">
 
         <!-- Form Actions -->
-        <div class="btn-group">
+        <div class="form-actions">
             <a href="zoneList.php" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
-            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+            <button type="submit" class="btn btn-success" id="submitBtn" disabled>
                 <i class="fas fa-check"></i> Create Zone
             </button>
         </div>
@@ -183,8 +274,8 @@ include '../includes/header.php';
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Initialize map
-const map = L.map('spotMap').setView([4.2105, 101.9758], 6);
+// Initialize map centered on Sabah, Malaysia
+const map = L.map('spotMap').setView([5.4164, 116.0553], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
@@ -193,6 +284,134 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 let spots = [];
 let spotCounter = 0;
+let searchMarker = null;
+
+// Update zoom level display
+map.on('zoomend', function() {
+    document.getElementById('zoomLevel').value = map.getZoom();
+});
+
+// Location Search using Nominatim with better error handling
+const searchInput = document.getElementById('locationSearch');
+const searchResults = document.getElementById('searchResults');
+let searchTimeout;
+
+searchInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    clearTimeout(searchTimeout);
+    
+    if (query.length < 3) {
+        searchResults.style.display = 'none';
+        return;
+    }
+    
+    searchResults.innerHTML = '<div class="search-loading"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+    searchResults.style.display = 'block';
+    
+    searchTimeout = setTimeout(() => {
+        // Add User-Agent and referer headers for better API compliance
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ' Malaysia')}&limit=10&addressdetails=1`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Search results:', data); // Debug log
+            
+            if (data.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="search-loading">
+                        <i class="fas fa-info-circle"></i> No results found for "${query}"
+                        <br><small>Try searching for: Tawau, Kota Kinabalu, Sandakan, etc.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            searchResults.innerHTML = '';
+            
+            data.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                
+                // Get better display name
+                const placeName = result.name || result.display_name.split(',')[0];
+                const address = result.display_name;
+                
+                item.innerHTML = `
+                    <div class="search-result-title">
+                        <i class="fas fa-map-marker-alt" style="color: var(--color-blue-primary); margin-right: 0.5rem;"></i>
+                        ${placeName}
+                    </div>
+                    <div class="search-result-address">${address}</div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    
+                    // Zoom to location
+                    map.setView([lat, lng], 16);
+                    
+                    // Remove previous search marker
+                    if (searchMarker) {
+                        map.removeLayer(searchMarker);
+                    }
+                    
+                    // Add temporary marker at searched location
+                    searchMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'search-marker',
+                            html: '<div style="background: #ff4444; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        })
+                    }).addTo(map);
+                    
+                    searchMarker.bindPopup(`
+                        <b>📍 ${placeName}</b><br>
+                        <small>${address}</small><br>
+                        <small style="color: #28a745;"><i class="fas fa-info-circle"></i> Click on map to add spots here</small>
+                    `).openPopup();
+                    
+                    // Clear search
+                    searchInput.value = placeName;
+                    searchResults.style.display = 'none';
+                    
+                    // Update coordinates display
+                    document.getElementById('currentLat').value = lat.toFixed(8);
+                    document.getElementById('currentLng').value = lng.toFixed(8);
+                });
+                
+                searchResults.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            searchResults.innerHTML = `
+                <div class="search-loading" style="color: #dc3545;">
+                    <i class="fas fa-exclamation-triangle"></i> Search error. Please try again.
+                    <br><small>Error: ${error.message}</small>
+                    <br><small style="color: #6c757d; margin-top: 0.5rem; display: block;">You can still click directly on the map to add spots.</small>
+                </div>
+            `;
+        });
+    }, 800); // Increased delay to 800ms
+});
+
+// Close search results when clicking outside
+document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.style.display = 'none';
+    }
+});
 
 // Update spot count display
 function updateSpotCount() {
@@ -212,12 +431,12 @@ function addSpotToTable(spot) {
     const row = document.createElement('tr');
     row.id = `spot-row-${spot.id}`;
     row.innerHTML = `
-        <td><strong>#${String(spot.id).padStart(3, '0')}</strong></td>
+        <td><strong>Spot ${spot.number}</strong></td>
         <td>${spot.lat}</td>
         <td>${spot.lng}</td>
-        <td><span class="badge badge-success">AVAILABLE</span></td>
+        <td><span class="badge badge-success">Available</span></td>
         <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeSpot(${spot.id})" title="Delete">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeSpot(${spot.id})" title="Delete Spot">
                 <i class="fas fa-trash"></i>
             </button>
         </td>
@@ -237,9 +456,31 @@ function removeSpotFromTable(spotId) {
     // Add "no spots" row if table is empty
     const tbody = document.getElementById('spotsTableBody');
     if (tbody.children.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--color-gray-600);">No spots added yet. Click on the map to add spots.</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; color: #6c757d; padding: 2rem;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.5rem;"></i>
+                    No spots added yet. Click on the map to add spots.
+                </td>
+            </tr>
+        `;
     }
+    
+    // Renumber remaining spots
+    renumberSpots();
     updateSpotCount();
+}
+
+// Renumber spots sequentially
+function renumberSpots() {
+    spots.forEach((spot, index) => {
+        spot.number = index + 1;
+        const row = document.getElementById(`spot-row-${spot.id}`);
+        if (row) {
+            row.cells[0].innerHTML = `<strong>Spot ${spot.number}</strong>`;
+        }
+        spot.marker.setPopupContent(`<b>Spot ${spot.number}</b><br>Lat: ${spot.lat}<br>Lng: ${spot.lng}`);
+    });
 }
 
 // Click event - add new spot
@@ -249,18 +490,20 @@ map.on('click', function(e) {
     
     spotCounter++;
     const spotId = spotCounter;
+    const spotNumber = spots.length + 1;
     
     // Create marker
     const marker = L.marker([lat, lng], {
         draggable: true,
-        title: `Spot ${spotId}`
+        title: `Spot ${spotNumber}`
     }).addTo(map);
     
-    marker.bindPopup(`<b>Spot ${spotId}</b><br>Lat: ${lat}<br>Lng: ${lng}`).openPopup();
+    marker.bindPopup(`<b>Spot ${spotNumber}</b><br>Lat: ${lat}<br>Lng: ${lng}`).openPopup();
     
     // Store spot
     const spotData = {
         id: spotId,
+        number: spotNumber,
         lat: lat,
         lng: lng,
         marker: marker
@@ -299,9 +542,19 @@ map.on('click', function(e) {
                 row.cells[1].textContent = newLat;
                 row.cells[2].textContent = newLng;
             }
+            
+            // Update coordinates display
+            document.getElementById('currentLat').value = newLat;
+            document.getElementById('currentLng').value = newLng;
         }
         
-        marker.setPopupContent(`<b>Spot ${spotId}</b><br>Lat: ${newLat}<br>Lng: ${newLng}`);
+        marker.setPopupContent(`<b>Spot ${spot.number}</b><br>Lat: ${newLat}<br>Lng: ${newLng}`);
+    });
+    
+    // Click event - show coordinates
+    marker.on('click', function() {
+        document.getElementById('currentLat').value = spot.lat;
+        document.getElementById('currentLng').value = spot.lng;
     });
 });
 
@@ -329,7 +582,14 @@ function clearAllSpots() {
         spotCounter = 0;
         
         const tbody = document.getElementById('spotsTableBody');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--color-gray-600);">No spots added yet. Click on the map to add spots.</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; color: #6c757d; padding: 2rem;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.5rem;"></i>
+                    No spots added yet. Click on the map to add spots.
+                </td>
+            </tr>
+        `;
         
         document.getElementById('currentLat').value = '';
         document.getElementById('currentLng').value = '';
@@ -339,12 +599,15 @@ function clearAllSpots() {
 }
 
 // Form submission
-document.getElementById('createSpotsForm').addEventListener('submit', function(e) {
+document.getElementById('createZoneForm').addEventListener('submit', function(e) {
     if (spots.length === 0) {
         e.preventDefault();
         alert('Please add at least one spot by clicking on the map');
         return false;
     }
+    
+    // Sort spots by number and prepare data
+    spots.sort((a, b) => a.number - b.number);
     
     const spotsData = spots.map(spot => ({
         lat: spot.lat,
@@ -354,6 +617,7 @@ document.getElementById('createSpotsForm').addEventListener('submit', function(e
     document.getElementById('spotsData').value = JSON.stringify(spotsData);
 });
 
+// Add scale control
 L.control.scale().addTo(map);
 </script>
 

@@ -15,6 +15,16 @@ if (!isLoggedIn() || !isAdmin()) {
 // Get current user info
 $current_user = getUserInfo($_SESSION['user_id']);
 
+// Fallback if user info is null
+if (!$current_user || !is_array($current_user)) {
+    $current_user = [
+        'full_name' => 'Admin User',
+        'email' => $_SESSION['email'] ?? 'admin@smartangler.com',
+        'profile_image' => '',
+        'role' => 'admin'
+    ];
+}
+
 // Get current page for active menu highlighting
 $current_page = basename($_SERVER['PHP_SELF']);
 $current_folder = basename(dirname($_SERVER['PHP_SELF']));
@@ -86,9 +96,9 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
 
             <!-- Review -->
             <li>
-                <a href="<?php echo SITE_URL; ?>/admin/review/reviewList.php" class="<?php echo $current_folder == 'review' ? 'active' : ''; ?>">
+                <a href="<?= SITE_URL ?>/admin/review/allReviews.php" class="<?php echo $current_folder == 'review' ? 'active' : ''; ?>">
                     <i class="fas fa-star"></i>
-                    <span>Review</span>
+                    <span>Reviews</span>
                 </a>
             </li>
 
@@ -120,14 +130,14 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             <div class="top-bar-right">
                 <div class="user-profile">
                     <div class="user-avatar">
-                        <?php if (!empty($current_user['profile_image']) && file_exists(__DIR__ . '/../../' . $current_user['profile_image'])): ?>
-                            <img src="<?php echo SITE_URL . '/' . $current_user['profile_image']; ?>" alt="Profile Image" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                        <?php if (!empty($current_user['profile_image']) && file_exists(__DIR__ . '/../../assets/images/profiles/' . $current_user['profile_image'])): ?>
+                            <img src="<?php echo SITE_URL . '/assets/images/profiles/' . htmlspecialchars($current_user['profile_image']); ?>" alt="Profile" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
                         <?php else: ?>
-                            <?php echo strtoupper(substr($current_user['full_name'], 0, 1)); ?>
+                            <?php echo strtoupper(substr($current_user['full_name'] ?? 'A', 0, 1)); ?>
                         <?php endif; ?>
                     </div>
                     <div class="user-info">
-                        <div class="user-name"><?php echo htmlspecialchars($current_user['full_name']); ?></div>
+                        <div class="user-name"><?php echo htmlspecialchars($current_user['full_name'] ?? 'Admin User'); ?></div>
                         <div class="user-role">Administrator</div>
                     </div>
                 </div>

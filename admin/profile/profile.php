@@ -96,7 +96,6 @@ include '../includes/header.php';
 
 <div class="form-container">
     <h2 class="form-header-title"><i class="fas fa-user"></i> My Profile</h2>
-    <p class="form-header-subtitle">View and update your profile information</p>
 
     <?php if ($error): ?>
         <div class="alert alert-error">

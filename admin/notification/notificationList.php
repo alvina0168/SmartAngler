@@ -79,9 +79,6 @@ include '../includes/header.php';
         <i class="fas fa-bell"></i>
         <h3>No Notifications Yet</h3>
         <p>Create a notification or announcement to notify users.</p>
-        <a href="createNotification.php" class="create-btn">
-            <i class="fas fa-plus"></i> Create Notification
-        </a>
     </div>
 <?php endif; ?>
 

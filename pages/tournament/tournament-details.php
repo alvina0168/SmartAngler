@@ -33,7 +33,7 @@ $stmt->execute();
 $stmt->close();
 
 // Get tournament details with save and registration status
-$query = "SELECT t.*, u.full_name as organizer_name, u.email as organizer_email, u.phone_number as organizer_phone,
+$query = "SELECT t.*, u.full_name as organizer_name,
           (SELECT COUNT(*) FROM SAVED 
            WHERE tournament_id = t.tournament_id 
            AND user_id = ? 
@@ -100,46 +100,29 @@ include '../../includes/header.php';
 ?>
 
 <style>
-/* Tournament Status Badges */
 .badge {
     display: inline-block;
-    padding: 6px 16px;
-    border-radius: 20px;
+    padding: 8px 20px;
+    border-radius: 25px;
     font-weight: 600;
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.badge-upcoming {
-    background: #3498DB;
-    color: white;
-}
+.badge-upcoming { background: #3498DB; color: white; }
+.badge-ongoing { background: #F1C40F; color: #333; }
+.badge-completed { background: #2ECC71; color: white; }
+.badge-cancelled { background: #E74C3C; color: white; }
 
-.badge-ongoing {
-    background: #F1C40F;
-    color: #333;
-}
-
-.badge-completed {
-    background: #2ECC71;
-    color: white;
-}
-
-.badge-cancelled {
-    background: #E74C3C;
-    color: white;
-}
-
-/* Save Button */
 .save-details-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: white;
-    color: #6D94C5;
-    border: 2px solid #6D94C5;
+    color: #F39C12;
+    border: 2px solid #F39C12;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
@@ -148,22 +131,15 @@ include '../../includes/header.php';
 }
 
 .save-details-btn:hover {
-    background: #6D94C5;
-    color: white;
-}
-
-.save-details-btn.saved {
-    background: #FEF5E7;
-    border-color: #F39C12;
-    color: #F39C12;
-}
-
-.save-details-btn.saved:hover {
     background: #F39C12;
     color: white;
 }
 
-/* Status Messages */
+.save-details-btn.saved {
+    background: #F39C12;
+    color: white;
+}
+
 .status-message {
     padding: 15px;
     border-radius: 8px;
@@ -172,28 +148,21 @@ include '../../includes/header.php';
     margin-bottom: 15px;
 }
 
-.status-message.pending {
-    background: #FFF3CD;
-    color: #856404;
-    border: 2px solid #856404;
-}
+.status-message.pending { background: #FFF3CD; color: #856404; border: 2px solid #856404; }
+.status-message.approved { background: #D4EDDA; color: #155724; border: 2px solid #155724; }
+.status-message.rejected { background: #F8D7DA; color: #721C24; border: 2px solid #721C24; }
+.status-message.full { background: #F8D7DA; color: #721C24; border: 2px solid #721C24; }
 
-.status-message.approved {
-    background: #D4EDDA;
-    color: #155724;
-    border: 2px solid #155724;
-}
-
-.status-message.rejected {
-    background: #F8D7DA;
-    color: #721C24;
-    border: 2px solid #721C24;
-}
-
-.status-message.full {
-    background: #F8D7DA;
-    color: #721C24;
-    border: 2px solid #721C24;
+.detail-icon-box {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #6D94C5, #CBDCEB);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
 }
 </style>
 
@@ -206,42 +175,95 @@ include '../../includes/header.php';
             </a>
         </div>
 
-        <!-- Tournament Header -->
-        <div style="background: white; border-radius: 10px; padding: 30px; margin-bottom: 30px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
-                <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
-                     alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>" 
-                     style="width: 100%; border-radius: 10px; object-fit: cover;"
-                     onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
+        <!-- Tournament Header Card -->
+        <div style="background: white; border-radius: 16px; padding: 40px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <div style="display: grid; grid-template-columns: 400px 1fr; gap: 40px;">
+                <!-- Tournament Image -->
+                <div>
+                    <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
+                         alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>" 
+                         style="width: 100%; height: 400px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"
+                         onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
+                </div>
                 
+                <!-- Tournament Info -->
                 <div>
                     <span class="badge badge-<?php echo $tournament['status']; ?>">
                         <?php echo strtoupper($tournament['status']); ?>
                     </span>
                     
-                    <h1 style="color: #6D94C5; margin: 15px 0;"><?php echo htmlspecialchars($tournament['tournament_title']); ?></h1>
+                    <h1 style="color: #6D94C5; margin: 20px 0 10px 0; font-size: 36px; font-weight: 700;">
+                        <?php echo htmlspecialchars($tournament['tournament_title']); ?>
+                    </h1>
                     
-                    <p style="color: #666; line-height: 1.8; margin-bottom: 20px;">
-                        <?php echo nl2br(htmlspecialchars($tournament['description'])); ?>
+                    <p style="color: #999; font-size: 14px; margin-bottom: 30px;">
+                        <i class="fas fa-user-tie"></i> Organized by <?php echo htmlspecialchars($tournament['organizer_name']); ?>
                     </p>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div>
-                            <p><i class="fas fa-calendar" style="color: #6D94C5; margin-right: 10px;"></i><strong>Date:</strong> <?php echo formatDate($tournament['tournament_date']); ?></p>
-                            <p><i class="fas fa-clock" style="color: #6D94C5; margin-right: 10px;"></i><strong>Time:</strong> <?php echo formatTime($tournament['start_time']); ?> - <?php echo formatTime($tournament['end_time']); ?></p>
-                            <p><i class="fas fa-dollar-sign" style="color: #6D94C5; margin-right: 10px;"></i><strong>Fee:</strong> RM <?php echo number_format($tournament['tournament_fee'], 2); ?></p>
+                    <!-- Quick Info Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="detail-icon-box">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Date</div>
+                                <div style="font-weight: 600; color: #333;"><?php echo formatDate($tournament['tournament_date']); ?></div>
+                            </div>
                         </div>
-                        <div>
-                            <p><i class="fas fa-users" style="color: #6D94C5; margin-right: 10px;"></i><strong>Max Participants:</strong> <?php echo $tournament['max_participants']; ?></p>
-                            <p><i class="fas fa-user-check" style="color: #6D94C5; margin-right: 10px;"></i><strong>Registered:</strong> <?php echo $participants_data['registered']; ?></p>
-                            <p><i class="fas fa-map-marked-alt" style="color: #6D94C5; margin-right: 10px;"></i><strong>Spots Available:</strong> <?php echo $spots_data['available_spots']; ?>/<?php echo $spots_data['total_spots']; ?></p>
+
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="detail-icon-box">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Time</div>
+                                <div style="font-weight: 600; color: #333;"><?php echo formatTime($tournament['start_time']); ?> - <?php echo formatTime($tournament['end_time']); ?></div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="detail-icon-box">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Entry Fee</div>
+                                <div style="font-weight: 600; color: #333;">RM <?php echo number_format($tournament['tournament_fee'], 2); ?></div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="detail-icon-box">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Participants</div>
+                                <div style="font-weight: 600; color: #333;"><?php echo $participants_data['registered']; ?>/<?php echo $tournament['max_participants']; ?></div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="detail-icon-box">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Spots Available</div>
+                                <div style="font-weight: 600; color: #333;"><?php echo $spots_data['available_spots']; ?>/<?php echo $spots_data['total_spots']; ?></div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="detail-icon-box">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Location</div>
+                                <div style="font-weight: 600; color: #333; font-size: 13px; line-height: 1.4;">
+                                    <?php echo htmlspecialchars($tournament['location']); ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <p style="margin-bottom: 20px;">
-                        <i class="fas fa-map-marker-alt" style="color: #6D94C5; margin-right: 10px;"></i><strong>Location:</strong><br>
-                        <span style="margin-left: 30px;"><?php echo htmlspecialchars($tournament['location']); ?></span>
-                    </p>
                     
                     <!-- Registration Status Messages -->
                     <?php if ($tournament['user_registration_status']): ?>
@@ -261,14 +283,14 @@ include '../../includes/header.php';
                     <?php endif; ?>
                     
                     <!-- Action Buttons -->
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected') 
                                 && $tournament['status'] == 'upcoming' && !$isFull): ?>
-                            <a href="../../user/register-tournament.php?id=<?php echo $tournament_id; ?>" class="btn btn-primary">
+                            <a href="../../user/register-tournament.php?id=<?php echo $tournament_id; ?>" class="btn btn-primary" style="padding: 14px 28px; font-size: 15px;">
                                 <i class="fas fa-user-plus"></i> Register for Tournament
                             </a>
                         <?php elseif ($tournament['user_registration_status'] == 'approved'): ?>
-                            <a href="<?php echo SITE_URL; ?>/user/my-registrations.php" class="btn btn-primary">
+                            <a href="<?php echo SITE_URL; ?>/user/my-registrations.php" class="btn btn-primary" style="padding: 14px 28px; font-size: 15px;">
                                 <i class="fas fa-list-alt"></i> View My Registrations
                             </a>
                         <?php endif; ?>
@@ -278,7 +300,7 @@ include '../../includes/header.php';
                                     id="saveBtn"
                                     onclick="toggleSave(<?php echo $tournament_id; ?>)">
                                 <i class="<?php echo $tournament['is_saved'] > 0 ? 'fas' : 'far'; ?> fa-bookmark"></i>
-                                <span><?php echo $tournament['is_saved'] > 0 ? 'Saved' : 'Save for Later'; ?></span>
+                                <span><?php echo $tournament['is_saved'] > 0 ? 'Saved' : 'Save'; ?></span>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -286,42 +308,37 @@ include '../../includes/header.php';
             </div>
         </div>
         
-        <!-- Organizer Information -->
-        <div style="background: white; border-radius: 10px; padding: 30px; margin-bottom: 30px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-            <h3 style="color: #6D94C5; margin-bottom: 20px;"><i class="fas fa-user-tie"></i> Organizer Information</h3>
-            <p><strong>Name:</strong> <?php echo htmlspecialchars($tournament['organizer_name']); ?></p>
-            <p><strong>Email:</strong> <?php echo htmlspecialchars($tournament['organizer_email']); ?></p>
-            <p><strong>Phone:</strong> <?php echo htmlspecialchars($tournament['organizer_phone']); ?></p>
+        <!-- Description -->
+        <?php if (!empty($tournament['description'])): ?>
+        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <h3 style="color: #6D94C5; margin-bottom: 20px; font-size: 22px; font-weight: 700;">
+                <i class="fas fa-align-left"></i> Description
+            </h3>
+            <p style="color: #666; line-height: 1.8; font-size: 15px;">
+                <?php echo nl2br(htmlspecialchars($tournament['description'])); ?>
+            </p>
         </div>
+        <?php endif; ?>
 
-        <!-- Payment Information -->
-        <?php if (!empty($tournament['bank_account_name'])): ?>
-        <div style="background: white; border-radius: 10px; padding: 30px; margin-bottom: 30px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-            <h3 style="color: #6D94C5; margin-bottom: 20px;"><i class="fas fa-credit-card"></i> Payment Information</h3>
-            <div style="background: #F5EFE6; padding: 20px; border-radius: 8px; border-left: 4px solid #6D94C5;">
-                <p><strong>Bank Name:</strong> <?php echo htmlspecialchars($tournament['bank_account_name']); ?></p>
-                <p><strong>Account Number:</strong> <?php echo htmlspecialchars($tournament['bank_account_number']); ?></p>
-                <p><strong>Account Holder:</strong> <?php echo htmlspecialchars($tournament['bank_account_holder']); ?></p>
+        <!-- Tournament Rules -->
+        <?php if (!empty($tournament['tournament_rules'])): ?>
+        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <h3 style="color: #6D94C5; margin-bottom: 20px; font-size: 22px; font-weight: 700;">
+                <i class="fas fa-gavel"></i> Tournament Rules
+            </h3>
+            <div style="color: #666; line-height: 1.8; font-size: 15px;">
+                <?php echo nl2br(htmlspecialchars($tournament['tournament_rules'])); ?>
             </div>
-            
-            <?php if (!empty($tournament['bank_qr'])): ?>
-            <div style="text-align: center; margin-top: 20px;">
-                <p style="font-weight: 600; margin-bottom: 15px;">Scan QR Code to Pay</p>
-                <img src="<?php echo SITE_URL; ?>/assets/images/qrcodes/<?php echo htmlspecialchars($tournament['bank_qr']); ?>" 
-                     alt="Payment QR Code"
-                     style="max-width: 200px; border-radius: 8px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-            </div>
-            <?php endif; ?>
         </div>
         <?php endif; ?>
         
         <!-- Prizes -->
         <?php
-        $prizes_query = "SELECT tp.*, s.sponsor_name 
+        $prizes_query = "SELECT tp.*, c.category_name 
                          FROM TOURNAMENT_PRIZE tp 
-                         LEFT JOIN SPONSOR s ON tp.sponsor_id = s.sponsor_id 
+                         LEFT JOIN CATEGORY c ON tp.category_id = c.category_id 
                          WHERE tp.tournament_id = ? 
-                         ORDER BY tp.prize_ranking ASC";
+                         ORDER BY tp.category_id, tp.prize_ranking ASC";
         $stmt = $conn->prepare($prizes_query);
         $stmt->bind_param("i", $tournament_id);
         $stmt->execute();
@@ -329,24 +346,26 @@ include '../../includes/header.php';
         
         if ($prizes_result->num_rows > 0):
         ?>
-        <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-            <h3 style="color: #6D94C5; margin-bottom: 20px;"><i class="fas fa-gift"></i> Tournament Prizes</h3>
+        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <h3 style="color: #6D94C5; margin-bottom: 25px; font-size: 22px; font-weight: 700;">
+                <i class="fas fa-gift"></i> Tournament Prizes
+            </h3>
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Category</th>
                         <th>Rank</th>
                         <th>Prize Description</th>
                         <th>Value</th>
-                        <th>Sponsor</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($prize = $prizes_result->fetch_assoc()): ?>
                     <tr>
+                        <td><strong><?php echo htmlspecialchars($prize['category_name']); ?></strong></td>
                         <td><strong><?php echo htmlspecialchars($prize['prize_ranking']); ?></strong></td>
                         <td><?php echo htmlspecialchars($prize['prize_description']); ?></td>
-                        <td>RM <?php echo number_format($prize['prize_value'], 2); ?></td>
-                        <td><?php echo htmlspecialchars($prize['sponsor_name']); ?></td>
+                        <td style="font-weight: 600; color: #2ECC71;">RM <?php echo number_format($prize['prize_value'], 2); ?></td>
                     </tr>
                     <?php endwhile; ?>
                 </tbody>
@@ -356,6 +375,226 @@ include '../../includes/header.php';
         endif; 
         $stmt->close();
         ?>
+
+        <!-- Sponsors -->
+        <?php
+        $sponsors_query = "SELECT * FROM SPONSOR WHERE tournament_id = ? ORDER BY sponsored_amount DESC";
+        $stmt = $conn->prepare($sponsors_query);
+        $stmt->bind_param("i", $tournament_id);
+        $stmt->execute();
+        $sponsors_result = $stmt->get_result();
+        
+        if ($sponsors_result->num_rows > 0):
+        ?>
+        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <h3 style="color: #6D94C5; margin-bottom: 25px; font-size: 22px; font-weight: 700;">
+                <i class="fas fa-handshake"></i> Tournament Sponsors
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <?php while ($sponsor = $sponsors_result->fetch_assoc()): ?>
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; border: 2px solid #e9ecef;">
+                    <h4 style="color: #333; margin-bottom: 10px; font-size: 18px; font-weight: 700;">
+                        <?php echo htmlspecialchars($sponsor['sponsor_name']); ?>
+                    </h4>
+                    <?php if ($sponsor['sponsored_amount'] > 0): ?>
+                        <p style="color: #2ECC71; font-weight: 600; margin-bottom: 10px; font-size: 16px;">
+                            RM <?php echo number_format($sponsor['sponsored_amount'], 2); ?>
+                        </p>
+                    <?php endif; ?>
+                    <?php if (!empty($sponsor['sponsor_description'])): ?>
+                        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                            <?php echo htmlspecialchars($sponsor['sponsor_description']); ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+                <?php endwhile; ?>
+            </div>
+        </div>
+        <?php 
+        endif; 
+        $stmt->close();
+        ?>
+
+        <!-- Reviews Section -->
+        <?php
+        // Check if user can review
+        $can_review = false;
+        $has_reviewed = false;
+
+        if (isset($_SESSION['user_id']) && !isAdmin()) {
+            $user_id = $_SESSION['user_id'];
+            
+            $participation_query = "
+                SELECT tr.registration_id
+                FROM TOURNAMENT_REGISTRATION tr
+                WHERE tr.user_id = ? 
+                AND tr.tournament_id = ?
+                AND tr.approval_status = 'approved'
+            ";
+            $stmt = $conn->prepare($participation_query);
+            $stmt->bind_param("ii", $user_id, $tournament_id);
+            $stmt->execute();
+            $participation_result = $stmt->get_result();
+            $participated = $participation_result->num_rows > 0;
+            $stmt->close();
+            
+            $can_review = $participated && $tournament['status'] == 'completed';
+            
+            if ($can_review) {
+                $existing_review_query = "SELECT review_id FROM REVIEW WHERE user_id = ? AND tournament_id = ?";
+                $stmt = $conn->prepare($existing_review_query);
+                $stmt->bind_param("ii", $user_id, $tournament_id);
+                $stmt->execute();
+                $existing_review_result = $stmt->get_result();
+                $has_reviewed = $existing_review_result->num_rows > 0;
+                $stmt->close();
+            }
+        }
+
+        $reviews_query = "
+            SELECT r.*, u.full_name
+            FROM REVIEW r
+            LEFT JOIN USER u ON r.user_id = u.user_id
+            WHERE r.tournament_id = ?
+            ORDER BY r.review_date DESC
+            LIMIT 10
+        ";
+        $stmt = $conn->prepare($reviews_query);
+        $stmt->bind_param("i", $tournament_id);
+        $stmt->execute();
+        $reviews_result = $stmt->get_result();
+
+        $stats_query = "
+            SELECT 
+                COUNT(*) as total_reviews,
+                AVG(rating) as avg_rating
+            FROM REVIEW
+            WHERE tournament_id = ?
+        ";
+        $stmt_stats = $conn->prepare($stats_query);
+        $stmt_stats->bind_param("i", $tournament_id);
+        $stmt_stats->execute();
+        $stats_result = $stmt_stats->get_result();
+        $review_stats = $stats_result->fetch_assoc();
+        $stmt_stats->close();
+
+        $total_reviews = $review_stats['total_reviews'] ?? 0;
+        $avg_rating = $review_stats['avg_rating'] ?? 0;
+        ?>
+
+        <div style="background: white; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h3 style="color: #6D94C5; margin-bottom: 10px; font-size: 22px; font-weight: 700;">
+                        <i class="fas fa-star"></i> Reviews & Ratings
+                    </h3>
+                    <?php if ($total_reviews > 0): ?>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="display: flex; gap: 4px; font-size: 20px;">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <i class="fas fa-star" style="color: <?= $i <= round($avg_rating) ? '#ff9800' : '#dee2e6' ?>;"></i>
+                                <?php endfor; ?>
+                            </div>
+                            <span style="font-weight: 700; font-size: 20px; color: #495057;">
+                                <?= number_format($avg_rating, 1) ?>/5
+                            </span>
+                            <span style="color: #6c757d; font-size: 14px;">
+                                (<?= $total_reviews ?> <?= $total_reviews == 1 ? 'review' : 'reviews' ?>)
+                            </span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <?php if ($can_review): ?>
+                    <?php if ($has_reviewed): ?>
+                        <a href="<?= SITE_URL ?>/pages/review/myReviews.php" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View My Review
+                        </a>
+                    <?php else: ?>
+                        <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary">
+                            <i class="fas fa-star"></i> Write a Review
+                        </a>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($total_reviews > 0): ?>
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <?php while ($review = $reviews_result->fetch_assoc()): ?>
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #6D94C5, #CBDCEB); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px;">
+                                    <?php if ($review['is_anonymous']): ?>
+                                        <i class="fas fa-user-secret"></i>
+                                    <?php else: ?>
+                                        <?= strtoupper(substr($review['full_name'], 0, 1)) ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 3px;">
+                                        <?php if ($review['is_anonymous']): ?>
+                                            Anonymous User
+                                            <span style="font-size: 11px; background: #9e9e9e; color: white; padding: 3px 8px; border-radius: 10px; margin-left: 8px;">
+                                                <i class="fas fa-user-secret"></i> ANONYMOUS
+                                            </span>
+                                        <?php else: ?>
+                                            <?= htmlspecialchars($review['full_name']) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div style="font-size: 13px; color: #6c757d;">
+                                        <?= date('d M Y', strtotime($review['review_date'])) ?>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 3px; font-size: 16px;">
+                                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                                        <i class="fas fa-star" style="color: <?= $i <= $review['rating'] ? '#ff9800' : '#dee2e6' ?>;"></i>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+
+                            <div style="color: #495057; line-height: 1.7; font-size: 15px;">
+                                <?= nl2br(htmlspecialchars($review['review_text'])) ?>
+                            </div>
+
+                            <?php if (!empty($review['admin_response'])): ?>
+                                <div style="background: #e3f2fd; border-left: 4px solid #6D94C5; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                        <i class="fas fa-reply" style="color: #6D94C5;"></i>
+                                        <strong style="color: #6D94C5; font-size: 14px;">Admin Response</strong>
+                                        <span style="font-size: 13px; color: #6c757d;">
+                                            • <?= date('d M Y', strtotime($review['response_date'])) ?>
+                                        </span>
+                                    </div>
+                                    <div style="color: #495057; font-size: 14px; line-height: 1.6;">
+                                        <?= nl2br(htmlspecialchars($review['admin_response'])) ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+
+                <?php if ($total_reviews > 10): ?>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <p style="color: #6c757d; font-size: 14px;">
+                            Showing 10 of <?= $total_reviews ?> reviews
+                        </p>
+                    </div>
+                <?php endif; ?>
+            <?php else: ?>
+                <div style="text-align: center; padding: 40px 20px; color: #adb5bd;">
+                    <i class="fas fa-star" style="font-size: 48px; opacity: 0.5; margin-bottom: 15px;"></i>
+                    <p style="font-size: 14px; margin: 0;">
+                        No reviews yet. 
+                        <?php if ($can_review && !$has_reviewed): ?>
+                            <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" style="color: #6D94C5; font-weight: 600;">Be the first to review!</a>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <?php $stmt->close(); ?>
     </div>
 </div>
 
@@ -366,20 +605,16 @@ function toggleSave(tournamentId) {
     
     fetch('<?php echo SITE_URL; ?>/pages/tournament/toggle-save.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `tournament_id=${tournamentId}&action=${isSaved ? 'unsave' : 'save'}`
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             if (isSaved) {
-                // Unsaved state
                 button.classList.remove('saved');
-                button.innerHTML = '<i class="far fa-bookmark"></i><span>Save for Later</span>';
+                button.innerHTML = '<i class="far fa-bookmark"></i><span>Save</span>';
             } else {
-                // Saved state
                 button.classList.add('saved');
                 button.innerHTML = '<i class="fas fa-bookmark"></i><span>Saved</span>';
             }
