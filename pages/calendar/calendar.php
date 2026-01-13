@@ -38,337 +38,480 @@ include '../../includes/header.php';
 ?>
 
 <style>
-/* Calendar Container */
-.calendar-wrapper {
-    background: #F5EFE6;
-    min-height: 70vh;
-    padding: 30px 0;
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --sand: #F8F6F0;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
 }
 
-.calendar-container {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 3px 15px rgba(109, 148, 197, 0.1);
-    padding: 25px;
-    max-width: 1100px;
-    margin: 0 auto;
+/* Hero Section with Gradient */
+.calendar-hero {
+    background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
+    padding: 60px 0 100px;
+    position: relative;
 }
 
-/* Header */
-.calendar-header {
-    text-align: center;
-    margin-bottom: 20px;
+.hero-content {
+    max-width: 100%;
+    padding: 0 60px;
 }
 
-.calendar-header h1 {
-    color: #6D94C5;
-    font-size: 1.8rem;
-    font-weight: 700;
+.hero-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--white);
+    margin: 0 0 12px;
+}
+
+.hero-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
 }
 
-.calendar-header h1 i {
-    margin-right: 8px;
+
+/* Calendar Container - Full Width */
+.calendar-page {
+    background: var(--white);
+    padding: 40px 0 60px;
 }
 
-/* Month Navigation */
-.month-navigation {
+.calendar-container {
+    max-width: 100%;
+    padding: 0 60px;
+}
+
+/* Navigation Bar */
+.nav-bar {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 25px;
-    margin-bottom: 20px;
-    padding: 12px;
-    background: #CBDCEB;
-    border-radius: 8px;
+    padding: 20px 24px;
+    background: var(--white);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border);
 }
 
-.month-navigation .nav-btn {
-    background: #6D94C5;
-    color: white;
+.month-display {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ocean-blue);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    background: var(--ocean-light);
+    color: var(--white);
     border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-weight: 600;
     font-size: 14px;
     text-decoration: none;
-    transition: background 0.3s;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.month-navigation .nav-btn:hover {
-    background: #5a7ba8;
+.nav-btn:hover {
+    background: var(--ocean-blue);
 }
 
-.current-month {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #6D94C5;
-    min-width: 160px;
-    text-align: center;
+.btn-today {
+    background: #F3F4F6;
+    color: var(--ocean-blue);
+}
+
+.btn-today:hover {
+    background: var(--ocean-light);
+    color: var(--white);
 }
 
 /* Legend */
 .calendar-legend {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    padding: 8px;
-    background: #F5EFE6;
-    border-radius: 6px;
+    gap: 24px;
+    padding: 16px;
+    background: var(--sand);
+    border-radius: 12px;
+    margin-bottom: 24px;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #5a7ba8;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dark);
     font-weight: 600;
 }
 
-.legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
 }
 
-/* Calendar Table */
-.calendar {
+.dot-upcoming { background: var(--ocean-light); }
+.dot-ongoing { background: #F59E0B; }
+.dot-completed { background: #10B981; }
+
+/* Calendar Grid - Full Width */
+.calendar-grid {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border);
+}
+
+.calendar-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 6px;
+    border-spacing: 0;
 }
 
-.calendar th {
-    background: #6D94C5;
-    color: white;
-    padding: 8px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    border-radius: 6px;
+.calendar-table thead th {
+    padding: 16px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--sand);
 }
 
-.calendar td {
-    width: 14.28%;
-    height: 80px;
-    background: white;
-    border: 2px solid #CBDCEB;
-    border-radius: 6px;
+.calendar-table tbody td {
+    padding: 0;
+    height: 110px;
+    border: 1px solid var(--border);
+    background: var(--white);
     vertical-align: top;
-    padding: 6px;
-    transition: all 0.2s;
+    position: relative;
+    transition: all 0.2s ease;
 }
 
-.calendar td:hover {
-    border-color: #6D94C5;
-    box-shadow: 0 2px 8px rgba(109, 148, 197, 0.15);
+.calendar-table tbody td:hover {
+    background: var(--sand);
+    box-shadow: inset 0 0 0 2px var(--ocean-light);
 }
 
-.calendar td.empty-day {
-    background: #F5EFE6;
-    border-color: #E8DFCA;
+.calendar-table tbody td.empty-cell {
+    background: #FAFAFA;
+    border-color: #F3F4F6;
 }
 
-.calendar td.empty-day:hover {
+.calendar-table tbody td.empty-cell:hover {
+    background: #FAFAFA;
     box-shadow: none;
 }
 
-/* Today Highlight */
-.calendar td.today {
-    background: #CBDCEB;
-    border: 2px solid #6D94C5;
+/* Day Cell */
+.day-cell {
+    height: 100%;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Day Number */
 .day-number {
+    font-size: 16px;
     font-weight: 700;
-    font-size: 0.95rem;
-    color: #6D94C5;
-    margin-bottom: 5px;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Today Highlight */
+.calendar-table tbody td.today {
+    background: linear-gradient(135deg, rgba(8, 131, 149, 0.1) 0%, rgba(5, 191, 219, 0.1) 100%);
+    border: 2px solid var(--ocean-light);
 }
 
 .today .day-number {
-    color: #5a7ba8;
+    color: var(--ocean-blue);
 }
 
-.day-badge {
-    background: #6D94C5;
-    color: white;
-    font-size: 8px;
-    padding: 2px 5px;
-    border-radius: 6px;
-    font-weight: 600;
-    margin-left: 4px;
+.today-badge {
+    background: var(--ocean-light);
+    color: var(--white);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-/* Tournament Items */
-.tournament-item {
+/* Tournament List in Cell */
+.tournament-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.tournament-badge {
     display: block;
     padding: 4px 6px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 10px;
-    color: white;
+    font-weight: 600;
+    color: var(--white);
     text-decoration: none;
-    margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 500;
     transition: opacity 0.2s;
 }
 
-.tournament-item:hover {
-    opacity: 0.85;
+.tournament-badge:hover {
+    opacity: 0.8;
 }
 
-/* Status Colors */
-.status-upcoming {
-    background: #6D94C5;
-}
+.badge-upcoming { background: var(--ocean-light); }
+.badge-ongoing { background: #F59E0B; }
+.badge-completed { background: #10B981; }
 
-.status-ongoing {
-    background: #d4a574;
-}
-
-.status-completed {
-    background: #d9725d;
-}
-
-/* Tournament Count */
-.tournament-count {
+/* Tournament Count Badge */
+.event-count {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    background: #6D94C5;
-    color: white;
-    width: 18px;
-    height: 18px;
+    top: 8px;
+    right: 8px;
+    background: var(--ocean-blue);
+    color: var(--white);
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
+    box-shadow: 0 2px 6px rgba(10, 77, 104, 0.3);
+}
+
+/* Tournament Dots */
+.tournament-dots {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.tournament-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.dot-upcoming-mini { background: var(--ocean-light); }
+.dot-ongoing-mini { background: #F59E0B; }
+.dot-completed-mini { background: #10B981; }
+
+/* Weekend Styling */
+.calendar-table tbody td.weekend {
+    background: #FAFAFA;
 }
 
 /* Responsive */
+@media (max-width: 1400px) {
+    .calendar-container,
+    .filter-section,
+    .hero-content {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+}
+
 @media (max-width: 768px) {
-    .calendar-container {
-        padding: 15px;
+    .hero-title {
+        font-size: 36px;
     }
     
-    .calendar {
-        border-spacing: 4px;
+    .calendar-container,
+    .filter-section,
+    .hero-content {
+        padding-left: 20px;
+        padding-right: 20px;
     }
     
-    .calendar th, .calendar td {
-        height: 70px;
-        font-size: 10px;
-        padding: 5px;
+    .nav-bar {
+        flex-direction: column;
+        gap: 16px;
     }
     
-    .current-month {
-        font-size: 1.1rem;
-    }
-    
-    .tournament-item {
-        font-size: 9px;
-        padding: 3px 5px;
+    .calendar-table tbody td {
+        height: 90px;
     }
     
     .day-number {
-        font-size: 0.85rem;
+        font-size: 14px;
     }
+
 }
 </style>
 
-<div class="calendar-wrapper">
-    <div class="container">
-        <div class="calendar-container">
-            <!-- Header -->
-            <div class="calendar-header">
-                <h1>
-                    <i class="fas fa-calendar-alt"></i>
-                    Tournament Calendar
-                </h1>
-            </div>
+<!-- Hero Section -->
+<div class="calendar-hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Fishing Tournament Schedule</h1>
+        <p class="hero-subtitle">Track tournament dates and plan your next fishing challenge</p>
+    </div>
+</div>
 
-            <!-- Month Navigation -->
-            <div class="month-navigation">
+<!-- Calendar Page -->
+<div class="calendar-page">
+    <div class="calendar-container">
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <div class="month-display">
+                <?php echo date('F Y', strtotime("$year-$month-01")); ?>
+            </div>
+            <div class="nav-buttons">
                 <a href="?month=<?php echo $month == 1 ? 12 : $month-1; ?>&year=<?php echo $month == 1 ? $year-1 : $year; ?>" class="nav-btn">
-                    <i class="fas fa-chevron-left"></i> Previous
+                    <i class="fas fa-chevron-left"></i> Prev
                 </a>
-                <span class="current-month">
-                    <?php echo date('F Y', strtotime("$year-$month-01")); ?>
-                </span>
+                <a href="?" class="nav-btn btn-today">
+                    <i class="fas fa-calendar-day"></i> Today
+                </a>
                 <a href="?month=<?php echo $month == 12 ? 1 : $month+1; ?>&year=<?php echo $month == 12 ? $year+1 : $year; ?>" class="nav-btn">
                     Next <i class="fas fa-chevron-right"></i>
                 </a>
             </div>
+        </div>
 
-            <!-- Calendar Table -->
-            <table class="calendar">
-                <tr>
-                    <th>Mon</th>
-                    <th>Tue</th>
-                    <th>Wed</th>
-                    <th>Thu</th>
-                    <th>Fri</th>
-                    <th>Sat</th>
-                    <th>Sun</th>
-                </tr>
+        <!-- Legend -->
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-dot dot-upcoming"></span>
+                <span>Upcoming</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot dot-ongoing"></span>
+                <span>Ongoing</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot dot-completed"></span>
+                <span>Completed</span>
+            </div>
+        </div>
 
-                <?php
-                $day = 1;
-                $cells = 0;
-                while ($day <= $total_days):
-                    echo '<tr>';
-                    for ($i = 1; $i <= 7; $i++):
-                        $cells++;
-                        if ($cells < $start_weekday || $day > $total_days) {
-                            echo '<td class="empty-day"></td>';
-                        } else {
-                            // Check if this is today
-                            $is_today = ($day == $today && $month == $current_month && $year == $current_year);
-                            $today_class = $is_today ? 'today' : '';
+        <!-- Calendar Grid -->
+        <div class="calendar-grid">
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $day = 1;
+                    $cells = 0;
+                    while ($day <= $total_days):
+                        echo '<tr>';
+                        for ($i = 1; $i <= 7; $i++):
+                            $cells++;
+                            $is_weekend = ($i == 6 || $i == 7);
                             
-                            echo "<td class='{$today_class}'>";
-                            echo '<div class="day-number">';
-                            echo $day;
-                            if ($is_today) {
-                                echo '<span class="day-badge">TODAY</span>';
-                            }
-                            echo '</div>';
-                            
-                            if (isset($tournaments_by_day[$day])) {
-                                $count = count($tournaments_by_day[$day]);
-                                if ($count > 2) {
-                                    echo "<span class='tournament-count'>{$count}</span>";
+                            if ($cells < $start_weekday || $day > $total_days) {
+                                echo '<td class="empty-cell"></td>';
+                            } else {
+                                // Check if this is today
+                                $is_today = ($day == $today && $month == $current_month && $year == $current_year);
+                                $today_class = $is_today ? 'today' : '';
+                                $weekend_class = $is_weekend ? 'weekend' : '';
+                                
+                                echo "<td class='{$today_class} {$weekend_class}'>";
+                                echo '<div class="day-cell">';
+                                
+                                // Day number
+                                echo '<div class="day-number">';
+                                echo $day;
+                                if ($is_today) {
+                                    echo '<span class="today-badge">Today</span>';
+                                }
+                                echo '</div>';
+                                
+                                // Tournaments
+                                if (isset($tournaments_by_day[$day])) {
+                                    $count = count($tournaments_by_day[$day]);
+                                    
+                                    // Show count badge if more than 2
+                                    if ($count > 2) {
+                                        echo "<span class='event-count'>{$count}</span>";
+                                    }
+                                    
+                                    // Show first 2 tournaments as badges
+                                    echo '<div class="tournament-list">';
+                                    $shown = 0;
+                                    foreach ($tournaments_by_day[$day] as $t) {
+                                        if ($shown >= 2) break;
+                                        
+                                        $badge_class = '';
+                                        switch ($t['status']) {
+                                            case 'upcoming': $badge_class = 'badge-upcoming'; break;
+                                            case 'ongoing': $badge_class = 'badge-ongoing'; break;
+                                            case 'completed': $badge_class = 'badge-completed'; break;
+                                        }
+                                        
+                                        echo "<a href='" . SITE_URL . "/pages/tournament/tournament-details.php?id={$t['tournament_id']}' 
+                                                class='tournament-badge {$badge_class}' 
+                                                title='" . htmlspecialchars($t['tournament_title']) . "'>";
+                                        echo htmlspecialchars($t['tournament_title']);
+                                        echo "</a>";
+                                        $shown++;
+                                    }
+                                    echo '</div>';
+                                    
+                                    // Show dots for remaining tournaments
+                                    if ($count > 2) {
+                                        echo '<div class="tournament-dots">';
+                                        for ($j = 0; $j < min($count - 2, 5); $j++) {
+                                            $t = $tournaments_by_day[$day][$shown + $j];
+                                            $dot_class = '';
+                                            switch ($t['status']) {
+                                                case 'upcoming': $dot_class = 'dot-upcoming-mini'; break;
+                                                case 'ongoing': $dot_class = 'dot-ongoing-mini'; break;
+                                                case 'completed': $dot_class = 'dot-completed-mini'; break;
+                                            }
+                                            echo "<span class='tournament-dot {$dot_class}'></span>";
+                                        }
+                                        echo '</div>';
+                                    }
                                 }
                                 
-                                foreach ($tournaments_by_day[$day] as $t) {
-                                    $statusClass = '';
-                                    switch ($t['status']) {
-                                        case 'upcoming': $statusClass = 'status-upcoming'; break;
-                                        case 'ongoing': $statusClass = 'status-ongoing'; break;
-                                        case 'completed': $statusClass = 'status-completed'; break;
-                                    }
-                                    echo "<a href='" . SITE_URL . "/pages/tournament/tournament-details.php?id={$t['tournament_id']}' 
-                                            class='tournament-item {$statusClass}' 
-                                            title='" . htmlspecialchars($t['tournament_title']) . "'>";
-                                    echo htmlspecialchars($t['tournament_title']);
-                                    echo "</a>";
-                                }
+                                echo '</div>'; // .day-cell
+                                echo '</td>';
+                                $day++;
                             }
-                            echo '</td>';
-                            $day++;
-                        }
-                    endfor;
-                    echo '</tr>';
-                endwhile;
-                ?>
+                        endfor;
+                        echo '</tr>';
+                    endwhile;
+                    ?>
+                </tbody>
             </table>
         </div>
     </div>
