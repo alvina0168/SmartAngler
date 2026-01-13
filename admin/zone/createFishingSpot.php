@@ -171,12 +171,6 @@ include '../includes/header.php';
             <textarea name="zone_description" class="form-control" rows="3" placeholder="Describe this fishing zone..."></textarea>
         </div>
 
-        <!-- Instructions Alert -->
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            <strong>Instructions:</strong> Use the search box to find a location, then click on the map to add fishing spots. Right-click on a marker to remove it. You can also drag markers to adjust positions.
-        </div>
-
         <!-- Location Search -->
         <div class="form-group">
             <label>
@@ -193,9 +187,6 @@ include '../includes/header.php';
                 </div>
                 <div id="searchResults" class="search-results"></div>
             </div>
-            <small style="color: #6c757d; display: block; margin-top: 0.5rem;">
-                <i class="fas fa-lightbulb"></i> Tip: Try searching "Tawau", "Kota Kinabalu", or specific landmark names
-            </small>
         </div>
 
         <!-- Map and Coordinates Grid -->

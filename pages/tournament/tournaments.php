@@ -323,7 +323,7 @@ $tournaments = $db->fetchAll($sql, $params);
         <!-- Page Header -->
         <div style="margin-bottom: 32px;">
             <h1 style="font-size: 28px; font-weight: 700; color: #222222; margin: 0 0 8px 0;">
-                <?php echo count($tournaments); ?> Fishing Tournaments
+                <?php?> Fishing Tournaments
                 <?php echo !empty($search_query) ? ' for "' . htmlspecialchars($search_query) . '"' : ''; ?>
             </h1>
             <p style="color: #717171; font-size: 15px; margin: 0;">

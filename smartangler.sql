@@ -261,6 +261,7 @@ CREATE TABLE TOURNAMENT_PRIZE (
   prize_ranking VARCHAR(20) NOT NULL,
   prize_description TEXT NOT NULL,
   prize_value DECIMAL(10,2) DEFAULT 0.00,
+  target_weight DECIMAL(10,2) DEFAULT NULL, -- Added for exact-weight categories
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE,
   FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -283,13 +284,3 @@ LEFT JOIN TOURNAMENT_REGISTRATION tr ON fs.spot_id = tr.spot_id
 LEFT JOIN USER u ON tr.user_id = u.user_id;
 
 COMMIT;
-
--- =========================================================
--- NOTES
--- =========================================================
--- Required directories to create manually:
--- 1. /assets/images/tournaments/
--- 2. /assets/images/qrcodes/
--- 3. /assets/images/payments/
--- 4. /assets/images/profiles/
--- Set permissions: chmod 755 or 777 depending on server configuration

@@ -85,35 +85,40 @@ $page_title = 'Manage Participants - ' . $tournament['tournament_title'];
 include '../includes/header.php';
 ?>
 
-<div class="top-bar">
-    <div class="top-bar-left">
-        <h1>Manage Participants</h1>
-        <p><?= htmlspecialchars($tournament['tournament_title']); ?></p>
-    </div>
-    <div class="top-bar-right">
-        <a href="<?= SITE_URL; ?>/admin/tournament/viewTournament.php?id=<?= $tournament_id; ?>" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Tournament
-        </a>
-    </div>
+<!-- Back Button -->
+<div style="margin-bottom: 1.5rem;">
+    <a href="<?= SITE_URL; ?>/admin/tournament/viewTournament.php?id=<?= $tournament_id; ?>" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Tournament
+    </a>
 </div>
 
-<div class="content-container">
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
-    <?php endif; ?>
+<div class="section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-tasks"></i>
+                Participant Management
+            </h3>
+        </div>
 
-    <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
-    <?php endif; ?>
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+        <?php endif; ?>
 
-    <!-- Stats -->
-    <div class="dashboard-stats">
-        <div class="stat-card"><div class="stat-header"><div><div class="stat-label">Total</div><div class="stat-value"><?= $total ?></div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div></div>
-        <div class="stat-card success"><div class="stat-header"><div><div class="stat-label">Approved</div><div class="stat-value"><?= $approved ?></div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div></div>
-        <div class="stat-card warning"><div class="stat-header"><div><div class="stat-label">Pending</div><div class="stat-value"><?= $pending ?></div></div><div class="stat-icon"><i class="fas fa-clock"></i></div></div></div>
-        <div class="stat-card danger"><div class="stat-header"><div><div class="stat-label">Rejected</div><div class="stat-value"><?= $rejected ?></div></div><div class="stat-icon"><i class="fas fa-times-circle"></i></div></div></div>
-    </div>
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+        <?php endif; ?>
 
+        <!-- Stats -->
+        <div class="dashboard-stats">
+            <div class="stat-card"><div class="stat-header"><div><div class="stat-label">Total</div><div class="stat-value"><?= $total ?></div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div></div>
+            <div class="stat-card success"><div class="stat-header"><div><div class="stat-label">Approved</div><div class="stat-value"><?= $approved ?></div></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div></div>
+            <div class="stat-card warning"><div class="stat-header"><div><div class="stat-label">Pending</div><div class="stat-value"><?= $pending ?></div></div><div class="stat-icon"><i class="fas fa-clock"></i></div></div></div>
+            <div class="stat-card danger"><div class="stat-header"><div><div class="stat-label">Rejected</div><div class="stat-value"><?= $rejected ?></div></div><div class="stat-icon"><i class="fas fa-times-circle"></i></div></div></div>
+        </div>
+</div>
+
+ 
+<div class="section">
     <!-- Search & Sort -->
     <div class="table-controls">
         <form method="GET" style="flex:1;">
@@ -216,7 +221,6 @@ include '../includes/header.php';
             <p>No participants have registered for this tournament yet.</p>
         </div>
     <?php endif; ?>
-
 </div>
 
 <!-- Reject Modal -->
