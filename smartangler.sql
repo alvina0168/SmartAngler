@@ -243,10 +243,13 @@ CREATE TABLE SPONSOR (
   sponsor_id INT AUTO_INCREMENT PRIMARY KEY,
   tournament_id INT NOT NULL,
   sponsor_name VARCHAR(100) NOT NULL,
+  sponsor_logo VARCHAR(255) DEFAULT NULL,
+  contact_phone VARCHAR(20) DEFAULT NULL,
+  contact_email VARCHAR(100) DEFAULT NULL,
   sponsor_description TEXT,
   sponsored_amount DECIMAL(10,2) DEFAULT 0.00,
   FOREIGN KEY (tournament_id) REFERENCES TOURNAMENT(tournament_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+ ) ENGINE=InnoDB;
 
 -- =========================================================
 -- TABLE: TOURNAMENT_PRIZE

@@ -131,6 +131,10 @@ $categories_query = "
 ";
 $categories_result = mysqli_query($conn, $categories_query);
 
+// Fetch sponsors
+$sponsors_query = "SELECT * FROM SPONSOR WHERE tournament_id = '$tournament_id' ORDER BY sponsor_id";
+$sponsors_result = mysqli_query($conn, $sponsors_query);
+
 $page_title = $tournament['tournament_title'];
 
 include '../includes/header.php';
@@ -439,7 +443,90 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Categories & Prizes Section -->
+    <!-- Sponsors Section (Updated - matches Step 4 of create) -->
+    <div class="section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-handshake"></i>
+                Sponsors
+            </h3>
+            <a href="../sponsor/sponsorList.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary btn-sm">
+                <i class="fas fa-cog"></i> Manage Sponsors
+            </a>
+        </div>
+
+        <?php if (mysqli_num_rows($sponsors_result) > 0): ?>
+            <div style="display: grid; gap: 1rem;">
+                <?php 
+                $sponsor_index = 1;
+                while ($sponsor = mysqli_fetch_assoc($sponsors_result)): 
+                ?>
+                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #dee2e6;">
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 0.5rem 0; color: #1a1a1a; font-size: 1.125rem; font-weight: 600;">
+                                    Sponsor <?= $sponsor_index ?>: <?= htmlspecialchars($sponsor['sponsor_name']) ?>
+                                </h4>
+                                <?php if (!empty($sponsor['sponsor_description'])): ?>
+                                    <p style="margin: 0; color: #6c757d; font-size: 0.875rem;">
+                                        <?= htmlspecialchars($sponsor['sponsor_description']) ?>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+                            <span style="background: #28a745; color: white; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 700; font-size: 0.875rem; white-space: nowrap; margin-left: 1rem;">
+                                RM <?= number_format($sponsor['sponsored_amount'], 2) ?>
+                            </span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <?php if (!empty($sponsor['contact_phone'])): ?>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: #495057; font-size: 0.875rem;">
+                                    <i class="fas fa-phone" style="color: var(--color-blue-primary);"></i>
+                                    <span><?= htmlspecialchars($sponsor['contact_phone']) ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($sponsor['contact_email'])): ?>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: #495057; font-size: 0.875rem;">
+                                    <i class="fas fa-envelope" style="color: var(--color-blue-primary);"></i>
+                                    <span><?= htmlspecialchars($sponsor['contact_email']) ?></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php 
+                $sponsor_index++;
+                endwhile; 
+                ?>
+            </div>
+            
+            <!-- Total Sponsorship Summary -->
+            <?php
+            mysqli_data_seek($sponsors_result, 0);
+            $total_sponsorship = 0;
+            while ($sponsor = mysqli_fetch_assoc($sponsors_result)) {
+                $total_sponsorship += $sponsor['sponsored_amount'];
+            }
+            ?>
+            <div style="margin-top: 1rem; padding: 1rem; background: #e8f5e9; border-radius: 12px; border-left: 4px solid #4caf50; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 0.875rem; color: #2e7d32; font-weight: 600;">Total Sponsorship</div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #1b5e20;">RM <?= number_format($total_sponsorship, 2) ?></div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.875rem; color: #2e7d32;"><?= $tournament['sponsor_count'] ?> sponsors</div>
+                </div>
+            </div>
+        <?php else: ?>
+            <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 12px;">
+                <i class="fas fa-handshake" style="font-size: 3rem; color: #dee2e6; margin-bottom: 1rem;"></i>
+                <p style="color: #6c757d; margin: 0;">No sponsors added yet</p>
+                <a href="../sponsor/sponsorList.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-plus"></i> Add Sponsors
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Categories & Prizes Section (Updated - matches Step 5 of create) -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -457,15 +544,22 @@ include '../includes/header.php';
                     <div style="background: white; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                             <div>
-                                <h4 style="margin: 0 0 0.5rem 0; color: var(--color-blue-primary); font-size: 1.125rem;">
+                                <h4 style="margin: 0 0 0.5rem 0; color: var(--color-blue-primary); font-size: 1.125rem; font-weight: 600;">
                                     <?= htmlspecialchars($category['category_name']) ?>
                                 </h4>
-                                <p style="margin: 0; color: #6c757d; font-size: 0.875rem;">
-                                    <?= htmlspecialchars($category['description']) ?>
-                                </p>
+                                <?php if (!empty($category['description'])): ?>
+                                    <p style="margin: 0; color: #6c757d; font-size: 0.875rem;">
+                                        <?= htmlspecialchars($category['description']) ?>
+                                    </p>
+                                <?php endif; ?>
+                                <?php if ($category['category_type'] === 'exact_weight' && !empty($category['target_weight'])): ?>
+                                    <div style="margin-top: 0.5rem; color: #f57c00; font-size: 0.875rem;">
+                                        <i class="fas fa-weight"></i> Target Weight: <?= $category['target_weight'] ?> KG
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <span style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; color: #495057; font-size: 0.875rem;">
-                                <?= $category['prize_count'] ?> prizes
+                                <?= $category['number_of_ranking'] ?> winners
                             </span>
                         </div>
 
@@ -493,17 +587,26 @@ include '../includes/header.php';
 
                         <?php if (mysqli_num_rows($prizes_result) > 0): ?>
                             <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem;">
-                                <?php while ($prize = mysqli_fetch_assoc($prizes_result)): ?>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #e9ecef;">
-                                        <div style="display: flex; gap: 1rem; align-items: center; flex: 1;">
-                                            <span style="font-weight: 700; color: #495057; min-width: 60px;"><?= htmlspecialchars($prize['prize_ranking']) ?></span>
-                                            <span style="color: #1a1a1a;"><?= htmlspecialchars($prize['prize_description']) ?></span>
-                                        </div>
-                                        <span style="font-weight: 700; color: #28a745; font-size: 1rem;">
-                                            RM <?= number_format($prize['prize_value'], 2) ?>
-                                        </span>
-                                    </div>
-                                <?php endwhile; ?>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="border-bottom: 2px solid #dee2e6;">
+                                            <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem; width: 100px;">Place</th>
+                                            <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem;">Prize Description</th>
+                                            <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem; width: 150px;">Value (RM)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while ($prize = mysqli_fetch_assoc($prizes_result)): ?>
+                                            <tr style="border-bottom: 1px solid #e9ecef;">
+                                                <td style="padding: 0.75rem; font-weight: 700; color: #495057;"><?= htmlspecialchars($prize['prize_ranking']) ?></td>
+                                                <td style="padding: 0.75rem; color: #1a1a1a;"><?= htmlspecialchars($prize['prize_description']) ?></td>
+                                                <td style="padding: 0.75rem; text-align: right; font-weight: 700; color: #28a745; font-size: 1rem;">
+                                                    RM <?= number_format($prize['prize_value'], 2) ?>
+                                                </td>
+                                            </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -520,27 +623,128 @@ include '../includes/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- Sponsors Section -->
+    <!-- Reviews Section (NEW) -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
-                <i class="fas fa-handshake"></i>
-                Sponsors
+                <i class="fas fa-star"></i>
+                Participant Reviews
             </h3>
-            <a href="../sponsor/sponsorList.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary btn-sm">
-                <i class="fas fa-cog"></i> Manage Sponsors
-            </a>
         </div>
 
-        <div style="padding: 1rem; background: #f8f9fa; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <div style="font-size: 2rem; font-weight: 700; color: #1a1a1a;"><?= $tournament['sponsor_count'] ?></div>
-                <div style="font-size: 0.875rem; color: #6c757d;">Total Sponsors</div>
+        <?php
+        // Fetch reviews for this tournament
+        $reviews_query = "
+            SELECT r.*, u.full_name, u.profile_image
+            FROM REVIEW r
+            INNER JOIN USER u ON r.user_id = u.user_id
+            WHERE r.tournament_id = '$tournament_id'
+            ORDER BY r.created_at DESC
+        ";
+        $reviews_result = mysqli_query($conn, $reviews_query);
+        ?>
+
+        <?php if (mysqli_num_rows($reviews_result) > 0): ?>
+            <!-- Reviews Summary -->
+            <?php
+            $total_reviews = mysqli_num_rows($reviews_result);
+            $total_rating = 0;
+            $rating_counts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+            
+            // Calculate statistics
+            mysqli_data_seek($reviews_result, 0);
+            while ($review = mysqli_fetch_assoc($reviews_result)) {
+                $total_rating += $review['rating'];
+                $rating_counts[$review['rating']]++;
+            }
+            $average_rating = $total_rating / $total_reviews;
+            ?>
+
+            <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: center;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; font-weight: 700; color: #1a1a1a;"><?= number_format($average_rating, 1) ?></div>
+                        <div style="color: #ff9800; font-size: 1.25rem; margin: 0.5rem 0;">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <?php if ($i <= floor($average_rating)): ?>
+                                    <i class="fas fa-star"></i>
+                                <?php elseif ($i <= ceil($average_rating) && $average_rating - floor($average_rating) >= 0.5): ?>
+                                    <i class="fas fa-star-half-alt"></i>
+                                <?php else: ?>
+                                    <i class="far fa-star"></i>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                        </div>
+                        <div style="color: #6c757d; font-size: 0.875rem;"><?= $total_reviews ?> reviews</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <?php for ($rating = 5; $rating >= 1; $rating--): ?>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="min-width: 40px; font-size: 0.875rem; color: #6c757d;"><?= $rating ?> <i class="fas fa-star" style="color: #ff9800; font-size: 0.75rem;"></i></span>
+                                <div style="flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                    <div style="height: 100%; background: #ff9800; width: <?= $total_reviews > 0 ? ($rating_counts[$rating] / $total_reviews * 100) : 0 ?>%;"></div>
+                                </div>
+                                <span style="min-width: 40px; text-align: right; font-size: 0.875rem; color: #6c757d;"><?= $rating_counts[$rating] ?></span>
+                            </div>
+                        <?php endfor; ?>
+                    </div>
+                </div>
             </div>
-            <div style="text-align: right;">
-                <i class="fas fa-handshake" style="font-size: 2.5rem; color: var(--color-blue-primary); opacity: 0.3;"></i>
+
+            <!-- Individual Reviews -->
+            <div style="display: grid; gap: 1rem;">
+                <?php mysqli_data_seek($reviews_result, 0); ?>
+                <?php while ($review = mysqli_fetch_assoc($reviews_result)): ?>
+                    <div style="background: white; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem;">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="flex-shrink: 0;">
+                                <?php if (!empty($review['profile_image'])): ?>
+                                    <img src="../../assets/images/profiles/<?= htmlspecialchars($review['profile_image']) ?>" 
+                                         alt="<?= htmlspecialchars($review['full_name']) ?>"
+                                         style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #e9ecef;">
+                                <?php else: ?>
+                                    <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--color-blue-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
+                                        <?= strtoupper(substr($review['full_name'], 0, 1)) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <div>
+                                        <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 600; color: #1a1a1a;">
+                                            <?= htmlspecialchars($review['full_name']) ?>
+                                        </h4>
+                                        <div style="color: #6c757d; font-size: 0.8125rem;">
+                                            <i class="far fa-clock"></i> <?= date('d M Y, g:i A', strtotime($review['created_at'])) ?>
+                                        </div>
+                                    </div>
+                                    <div style="color: #ff9800; font-size: 1rem;">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <?php if ($i <= $review['rating']): ?>
+                                                <i class="fas fa-star"></i>
+                                            <?php else: ?>
+                                                <i class="far fa-star"></i>
+                                            <?php endif; ?>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                <?php if (!empty($review['review_text'])): ?>
+                                    <p style="margin: 0; color: #495057; line-height: 1.6; font-size: 0.9375rem;">
+                                        <?= nl2br(htmlspecialchars($review['review_text'])) ?>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endwhile; ?>
             </div>
-        </div>
+        <?php else: ?>
+            <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 12px;">
+                <i class="fas fa-star" style="font-size: 3rem; color: #dee2e6; margin-bottom: 1rem;"></i>
+                <p style="color: #6c757d; margin: 0;">No reviews yet</p>
+                <p style="color: #999; font-size: 0.875rem; margin-top: 0.5rem;">Reviews will appear here after the tournament is completed</p>
+            </div>
+        <?php endif; ?>
     </div>
 </form>
 

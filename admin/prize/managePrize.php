@@ -31,14 +31,27 @@ $prizes_query = "
     SELECT 
         tp.*,
         c.category_name,
-        c.number_of_ranking,
-        s.sponsor_name,
-        s.sponsor_logo
+        c.category_type,
+        c.description as category_description,
+        c.target_weight,
+        c.number_of_ranking
     FROM TOURNAMENT_PRIZE tp
     LEFT JOIN CATEGORY c ON tp.category_id = c.category_id
-    LEFT JOIN SPONSOR s ON tp.sponsor_id = s.sponsor_id
     WHERE tp.tournament_id = $tournament_id
-    ORDER BY c.category_name ASC, tp.prize_ranking ASC
+    ORDER BY c.category_name ASC, 
+             CASE tp.prize_ranking
+                 WHEN '1st' THEN 1
+                 WHEN '2nd' THEN 2
+                 WHEN '3rd' THEN 3
+                 WHEN '4th' THEN 4
+                 WHEN '5th' THEN 5
+                 WHEN '6th' THEN 6
+                 WHEN '7th' THEN 7
+                 WHEN '8th' THEN 8
+                 WHEN '9th' THEN 9
+                 WHEN '10th' THEN 10
+                 ELSE 99
+             END
 ";
 $prizes_result = mysqli_query($conn, $prizes_query);
 
@@ -51,6 +64,10 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
     if (!isset($prizes_by_category[$category_id])) {
         $prizes_by_category[$category_id] = [
             'name' => $category_name,
+            'description' => $prize['category_description'] ?? '',
+            'type' => $prize['category_type'] ?? '',
+            'target_weight' => $prize['target_weight'] ?? null,
+            'number_of_ranking' => $prize['number_of_ranking'] ?? 0,
             'prizes' => []
         ];
     }
@@ -83,7 +100,7 @@ include '../includes/header.php';
     <div class="section-header">
         <div>
             <h2 class="section-title">
-                <i class="fas fa-gift"></i> Prize Management
+                <i class="fas fa-trophy"></i> Categories & Prizes
             </h2>
             <p style="color: #6c757d; font-size: 0.875rem; margin-top: 0.25rem;">
                 <?= htmlspecialchars($tournament['tournament_title']) ?>
@@ -133,87 +150,81 @@ include '../includes/header.php';
     <?php foreach ($prizes_by_category as $category_id => $category_data): ?>
         <div class="section">
             <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-trophy"></i>
-                    <?= htmlspecialchars($category_data['name']) ?>
-                </h3>
+                <div style="flex: 1;">
+                    <h3 class="section-title" style="margin-bottom: 0.5rem;">
+                        <i class="fas fa-trophy"></i>
+                        <?= htmlspecialchars($category_data['name']) ?>
+                    </h3>
+                    <?php if (!empty($category_data['description'])): ?>
+                        <p style="color: #6c757d; font-size: 0.875rem; margin: 0;">
+                            <?= htmlspecialchars($category_data['description']) ?>
+                        </p>
+                    <?php endif; ?>
+                    <?php if ($category_data['type'] === 'exact_weight' && !empty($category_data['target_weight'])): ?>
+                        <div style="margin-top: 0.5rem; color: #f57c00; font-size: 0.875rem;">
+                            <i class="fas fa-weight"></i> Target Weight: <?= $category_data['target_weight'] ?> KG
+                        </div>
+                    <?php endif; ?>
+                </div>
                 <span class="badge badge-info">
-                    <?= count($category_data['prizes']) ?> prize(s)
+                    <?= count($category_data['prizes']) ?> <?= count($category_data['prizes']) == 1 ? 'prize' : 'prizes' ?>
                 </span>
             </div>
 
-            <div style="display: grid; gap: 1rem;">
-                <?php foreach ($category_data['prizes'] as $prize): ?>
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 1.25rem; border: 1px solid #e9ecef; transition: all 0.2s ease;" 
-                         onmouseover="this.style.background='#e3f2fd'; this.style.borderColor='var(--color-blue-light)'" 
-                         onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#e9ecef'">
-                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
-                            <!-- Left: Prize Info -->
-                            <div style="flex: 1; min-width: 200px;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-blue-primary), var(--color-blue-light)); color: white; border-radius: 10px; font-weight: 700; font-size: 1rem;">
-                                        <?php
-                                        $ranking = $prize['prize_ranking'];
-                                        if ($ranking == '1st' || $ranking == '1') echo '🥇';
-                                        elseif ($ranking == '2nd' || $ranking == '2') echo '🥈';
-                                        elseif ($ranking == '3rd' || $ranking == '3') echo '🥉';
-                                        else echo substr($ranking, 0, 1);
-                                        ?>
-                                    </span>
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 1.125rem; color: #1a1a1a;">
-                                            <?= htmlspecialchars($prize['prize_ranking']) ?> Place
-                                        </div>
-                                        <div style="font-size: 0.875rem; color: #6c757d;">
-                                            <?= htmlspecialchars($prize['prize_description']) ?>
-                                        </div>
+            <!-- Prize Table -->
+            <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #dee2e6;">
+                            <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem; width: 100px;">Place</th>
+                            <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem;">Prize Description</th>
+                            <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem; width: 150px;">Value (RM)</th>
+                            <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #6c757d; font-size: 0.875rem; width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($category_data['prizes'] as $prize): ?>
+                            <tr style="border-bottom: 1px solid #e9ecef;">
+                                <td style="padding: 0.75rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.25rem;">
+                                            <?php
+                                            $ranking = $prize['prize_ranking'];
+                                            if ($ranking == '1st') echo '🥇';
+                                            elseif ($ranking == '2nd') echo '🥈';
+                                            elseif ($ranking == '3rd') echo '🥉';
+                                            ?>
+                                        </span>
+                                        <span style="font-weight: 700; color: #495057;">
+                                            <?= htmlspecialchars($prize['prize_ranking']) ?>
+                                        </span>
                                     </div>
-                                </div>
-
-                                <!-- Prize Value & Sponsor -->
-                                <div style="display: flex; align-items: center; gap: 1.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
-                                    <div>
-                                        <div style="font-size: 0.75rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Value</div>
-                                        <div style="font-size: 1.25rem; font-weight: 700; color: #4caf50;">
-                                            RM <?= number_format($prize['prize_value'], 2) ?>
-                                        </div>
+                                </td>
+                                <td style="padding: 0.75rem; color: #1a1a1a;">
+                                    <?= htmlspecialchars($prize['prize_description']) ?>
+                                </td>
+                                <td style="padding: 0.75rem; text-align: right; font-weight: 700; color: #28a745; font-size: 1rem;">
+                                    RM <?= number_format($prize['prize_value'], 2) ?>
+                                </td>
+                                <td style="padding: 0.75rem; text-align: center;">
+                                    <div class="action-btns" style="display: inline-flex; gap: 0.5rem;">
+                                        <a href="editPrize.php?id=<?= $prize['prize_id'] ?>" 
+                                           class="btn btn-primary btn-sm" 
+                                           title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button"
+                                                onclick="if(confirm('Are you sure you want to delete this prize?\n\nPlace: <?= htmlspecialchars($prize['prize_ranking']) ?>\nDescription: <?= htmlspecialchars($prize['prize_description']) ?>')) { window.location.href='deletePrize.php?id=<?= $prize['prize_id'] ?>&tournament_id=<?= $tournament_id ?>'; }" 
+                                                class="btn btn-danger btn-sm" 
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
-
-                                    <?php if (!empty($prize['sponsor_name'])): ?>
-                                        <div>
-                                            <div style="font-size: 0.75rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Sponsor</div>
-                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <?php if (!empty($prize['sponsor_logo'])): ?>
-                                                    <img src="../../assets/images/sponsors/<?= htmlspecialchars($prize['sponsor_logo']) ?>" 
-                                                         alt="Sponsor" 
-                                                         style="width: 30px; height: 30px; object-fit: contain; border-radius: 6px; background: white; padding: 4px;">
-                                                <?php endif; ?>
-                                                <span style="font-size: 0.875rem; font-weight: 600; color: #495057;">
-                                                    <?= htmlspecialchars($prize['sponsor_name']) ?>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <!-- Right: Actions -->
-                            <div class="action-btns">
-                                <a href="editPrize.php?id=<?= $prize['prize_id'] ?>" 
-                                   class="btn btn-primary btn-sm" 
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button"
-                                        onclick="if(confirm('Delete this prize?')) { window.location.href='deletePrize.php?id=<?= $prize['prize_id'] ?>&tournament_id=<?= $tournament_id ?>'; }" 
-                                        class="btn btn-danger btn-sm" 
-                                        title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     <?php endforeach; ?>
