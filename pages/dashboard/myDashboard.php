@@ -11,444 +11,616 @@ if (isAdmin()) {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// Get user statistics
+$stats_query = "
+    SELECT 
+        (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
+         WHERE user_id = ? AND approval_status IN ('approved', 'pending')) as total_tournaments,
+        (SELECT COUNT(*) FROM FISH_CATCH 
+         WHERE user_id = ?) as total_catches,
+        (SELECT COUNT(*) FROM REVIEW 
+         WHERE user_id = ?) as total_reviews,
+        (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION tr
+         JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
+         WHERE tr.user_id = ? AND tr.approval_status = 'approved' 
+         AND t.status = 'upcoming') as upcoming_tournaments
+";
+$stmt = $conn->prepare($stats_query);
+$stmt->bind_param("iiii", $user_id, $user_id, $user_id, $user_id);
+$stmt->execute();
+$stats = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+// Get registered tournaments (including pending)
+$tournaments_query = "
+    SELECT 
+        t.*,
+        tr.registration_id,
+        tr.approval_status,
+        tr.registration_date,
+        u.full_name as organizer_name,
+        (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
+         WHERE tournament_id = t.tournament_id 
+         AND approval_status = 'approved') as registered_count,
+        (SELECT COUNT(*) 
+         FROM FISH_CATCH fc
+         JOIN TOURNAMENT_REGISTRATION tr2 ON fc.registration_id = tr2.registration_id
+         WHERE tr2.tournament_id = t.tournament_id
+           AND fc.user_id = ?) as my_catches_count
+    FROM TOURNAMENT_REGISTRATION tr
+    JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
+    LEFT JOIN USER u ON t.created_by = u.user_id
+    WHERE tr.user_id = ?
+    ORDER BY tr.registration_date DESC
+";
+$stmt = $conn->prepare($tournaments_query);
+$stmt->bind_param("ii", $user_id, $user_id);
+$stmt->execute();
+$tournaments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
 $page_title = 'My Dashboard';
 include '../../includes/header.php';
-
-// Get filter parameters
-$status_filter = isset($_GET['status']) ? $_GET['status'] : 'all';
-$search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
-$order_by = isset($_GET['order']) ? $_GET['order'] : 'date_desc';
-
-// Build query conditions - SIMPLIFIED VERSION
-$where_conditions = ["tr.user_id = ?"];
-$params = [$user_id];
-
-// Apply status filter - DIRECT COMPARISON
-if ($status_filter != 'all') {
-    $where_conditions[] = "t.status = ?";  // Simple direct comparison
-    $params[] = $status_filter;
-}
-
-if (!empty($search_query)) {
-    $where_conditions[] = "(t.tournament_title LIKE ? OR t.location LIKE ?)";
-    $search_param = "%$search_query%";
-    $params[] = $search_param;
-    $params[] = $search_param;
-}
-
-$where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
-
-// Determine sort order
-$order_clause = "ORDER BY ";
-switch ($order_by) {
-    case 'date_asc':
-        $order_clause .= "t.tournament_date ASC";
-        break;
-    case 'date_desc':
-        $order_clause .= "t.tournament_date DESC";
-        break;
-    case 'title_asc':
-        $order_clause .= "t.tournament_title ASC";
-        break;
-    case 'title_desc':
-        $order_clause .= "t.tournament_title DESC";
-        break;
-    default:
-        $order_clause .= "t.tournament_date DESC";
-}
-
-// Get user's registered tournaments - SIMPLIFIED QUERY
-$sql = "SELECT 
-    t.tournament_id,
-    t.tournament_title,
-    t.tournament_date,
-    t.location,
-    t.status,
-    t.tournament_fee,
-    t.image,
-    tr.registration_id,
-    tr.approval_status,
-    tr.registration_date,
-    tr.boat_number,
-    u.full_name as organizer_name,
-    0 as total_catches,
-    0 as total_weight,
-    0 as valid_catches,
-    1 as current_rank,
-    (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION WHERE tournament_id = t.tournament_id AND approval_status = 'approved') as total_participants
-FROM TOURNAMENT_REGISTRATION tr
-INNER JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
-LEFT JOIN USER u ON t.user_id = u.user_id
-$where_clause
-$order_clause";
-
-try {
-    $my_tournaments = $db->fetchAll($sql, $params);
-    if (!is_array($my_tournaments)) {
-        $my_tournaments = [];
-    }
-    
-    // After fetching, get catch counts for each tournament
-    if (count($my_tournaments) > 0) {
-        foreach ($my_tournaments as &$tournament) {
-            // Get catch counts
-            $catch_sql = "SELECT 
-                COUNT(*) as total_catches,
-                SUM(weight) as total_weight,
-                COUNT(CASE WHEN is_valid = TRUE THEN 1 END) as valid_catches
-            FROM FISH_CATCH 
-            WHERE registration_id = ?";
-            $catch_result = $db->fetchAll($catch_sql, [$tournament['registration_id']]);
-            
-            if (isset($catch_result[0])) {
-                $tournament['total_catches'] = $catch_result[0]['total_catches'] ?? 0;
-                $tournament['total_weight'] = $catch_result[0]['total_weight'] ?? 0;
-                $tournament['valid_catches'] = $catch_result[0]['valid_catches'] ?? 0;
-            }
-        }
-    }
-} catch (Exception $e) {
-    $my_tournaments = [];
-    $sql_error = $e->getMessage();
-    error_log("Tournament fetch error: " . $sql_error);
-}
-
-// Get quick stats
-try {
-    $stats_sql = "SELECT 
-        COUNT(CASE WHEN t.status = 'upcoming' THEN 1 END) as upcoming_count,
-        COUNT(CASE WHEN t.status = 'ongoing' THEN 1 END) as ongoing_count,
-        COUNT(CASE WHEN t.status = 'completed' THEN 1 END) as completed_count,
-        COUNT(CASE WHEN tr.approval_status = 'pending' THEN 1 END) as pending_count
-    FROM TOURNAMENT_REGISTRATION tr
-    INNER JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
-    WHERE tr.user_id = ?";
-    
-    $stats_result = $db->fetchAll($stats_sql, [$user_id]);
-    
-    if (is_array($stats_result) && isset($stats_result[0])) {
-        $stats = $stats_result[0];
-    } else {
-        $stats = [
-            'upcoming_count' => 0,
-            'ongoing_count' => 0,
-            'completed_count' => 0,
-            'pending_count' => 0
-        ];
-    }
-    
-    // Get total catches
-    $catches_sql = "SELECT COUNT(*) as total_catches_overall 
-                    FROM FISH_CATCH fc 
-                    JOIN TOURNAMENT_REGISTRATION tr2 ON fc.registration_id = tr2.registration_id 
-                    WHERE tr2.user_id = ?";
-    $catches_result = $db->fetchAll($catches_sql, [$user_id]);
-    $stats['total_catches_overall'] = isset($catches_result[0]['total_catches_overall']) ? $catches_result[0]['total_catches_overall'] : 0;
-    
-} catch (Exception $e) {
-    $stats = [
-        'upcoming_count' => 0,
-        'ongoing_count' => 0,
-        'completed_count' => 0,
-        'pending_count' => 0,
-        'total_catches_overall' => 0
-    ];
-}
 ?>
 
-<div class="dashboard-page">
-    <div class="container">
-        <!-- Dashboard Header -->
-        <div class="dashboard-header">
-            <div class="welcome-section">
-                <div class="user-avatar-large">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="welcome-text">
-                    <p class="welcome-back">Welcome back,</p>
-                    <h1><?php echo htmlspecialchars($_SESSION['full_name']); ?>!</h1>
-                </div>
-            </div>
-        </div>
+<style>
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --sand: #F8F6F0;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
+}
 
-        <!-- Quick Stats Cards -->
-        <div class="stats-cards-row">
-            <div class="stat-card-modern">
-                <div class="stat-icon upcoming">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $stats['upcoming_count']; ?></h3>
-                    <p>Upcoming Tournaments</p>
-                </div>
-            </div>
+/* Hero Section */
+.dashboard-hero {
+    background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
+    padding: 60px 0;
+    position: relative;
+}
 
-            <div class="stat-card-modern">
-                <div class="stat-icon ongoing">
-                    <i class="fas fa-play-circle"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $stats['ongoing_count']; ?></h3>
-                    <p>Ongoing Tournaments</p>
-                </div>
-            </div>
+.hero-content {
+    max-width: 100%;
+    padding: 0 60px;
+}
 
-            <div class="stat-card-modern">
-                <div class="stat-icon completed">
-                    <i class="fas fa-trophy"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $stats['completed_count']; ?></h3>
-                    <p>Completed</p>
-                </div>
-            </div>
+.hero-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--white);
+    margin: 0 0 12px;
+}
 
-            <div class="stat-card-modern">
-                <div class="stat-icon catches">
-                    <i class="fas fa-fish"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><?php echo $stats['total_catches_overall']; ?></h3>
-                    <p>Total Catches</p>
-                </div>
-            </div>
-        </div>
+.hero-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
 
-        <!-- Page Title -->
-        <div class="page-title-section">
-            <h2>My Tournaments</h2>
-            <p>Track your tournament registrations, catches, and rankings</p>
-        </div>
+/* Dashboard Container */
+.dashboard-page {
+    background: var(--white);
+    padding: 40px 0 60px;
+}
 
-        <!-- Filters and Search Bar -->
-        <div class="filters-search-bar">
-            <div class="filter-group">
-                <label>Order By</label>
-                <select class="filter-select" onchange="handleOrderChange(this.value)">
-                    <option value="date_desc" <?php echo $order_by == 'date_desc' ? 'selected' : ''; ?>>Date (Newest First)</option>
-                    <option value="date_asc" <?php echo $order_by == 'date_asc' ? 'selected' : ''; ?>>Date (Oldest First)</option>
-                    <option value="title_asc" <?php echo $order_by == 'title_asc' ? 'selected' : ''; ?>>Title (A-Z)</option>
-                    <option value="title_desc" <?php echo $order_by == 'title_desc' ? 'selected' : ''; ?>>Title (Z-A)</option>
-                </select>
-            </div>
+.dashboard-container {
+    max-width: 100%;
+    padding: 0 60px;
+}
 
-            <div class="filter-group">
-                <label>Filter By Status</label>
-                <select class="filter-select" onchange="handleStatusChange(this.value)">
-                    <option value="all" <?php echo $status_filter == 'all' ? 'selected' : ''; ?>>All Status</option>
-                    <option value="upcoming" <?php echo $status_filter == 'upcoming' ? 'selected' : ''; ?>>Upcoming</option>
-                    <option value="ongoing" <?php echo $status_filter == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
-                    <option value="completed" <?php echo $status_filter == 'completed' ? 'selected' : ''; ?>>Completed</option>
-                </select>
-            </div>
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
 
-            <div class="search-group">
-                <form action="" method="GET" class="search-form-dash">
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
-                    <input type="hidden" name="order" value="<?php echo htmlspecialchars($order_by); ?>">
-                    <input type="text" 
-                           name="search" 
-                           placeholder="Search a listing" 
-                           value="<?php echo htmlspecialchars($search_query); ?>"
-                           class="search-input-dash">
-                    <button type="submit" class="search-btn-dash">Search</button>
-                </form>
-            </div>
-        </div>
+.stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+}
 
-        <!-- Active Filter Notice -->
-        <?php if ($status_filter != 'all' || !empty($search_query)): ?>
-        <div style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>Active Filters:</strong>
-                    <?php if ($status_filter != 'all'): ?>
-                        <span style="display: inline-block; background: #2196F3; color: white; padding: 4px 12px; border-radius: 12px; margin-left: 10px; font-size: 13px;">
-                            Status: <?php echo ucfirst($status_filter); ?>
-                        </span>
-                    <?php endif; ?>
-                    <?php if (!empty($search_query)): ?>
-                        <span style="display: inline-block; background: #2196F3; color: white; padding: 4px 12px; border-radius: 12px; margin-left: 10px; font-size: 13px;">
-                            Search: "<?php echo htmlspecialchars($search_query); ?>"
-                        </span>
-                    <?php endif; ?>
-                </div>
-                <a href="?" style="background: #f44336; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">
-                    <i class="fas fa-times"></i> Clear All Filters
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
 
-        <!-- Tournaments Table/List -->
-        <?php if (count($my_tournaments) > 0): ?>
-        <div class="tournaments-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tournament</th>
-                        <th>Category</th>
-                        <th>Registration Status</th>
-                        <th>Rank</th>
-                        <th>Catches</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($my_tournaments as $tournament): ?>
-                    <tr>
-                        <td>
-                            <div class="tournament-cell">
-                                <div class="tournament-thumb">
-                                    <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
-                                         alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>"
-                                         onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
-                                    <span class="featured-badge">
-                                        <?php echo strtoupper($tournament['status']); ?>
-                                    </span>
-                                </div>
-                                <div class="tournament-info">
-                                    <h4><?php echo htmlspecialchars($tournament['tournament_title']); ?></h4>
-                                    <p class="tournament-location">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <?php echo htmlspecialchars(substr($tournament['location'], 0, 30)); ?><?php echo strlen($tournament['location']) > 30 ? '...' : ''; ?>
-                                    </p>
-                                    <p class="tournament-date">
-                                        Date: <?php echo date('M j, Y', strtotime($tournament['tournament_date'])); ?>
-                                    </p>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="category-cell">
-                                <span><?php echo htmlspecialchars($tournament['organizer_name']); ?></span>
-                                <span class="tournament-type">Tournament</span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="status-badge-table <?php echo $tournament['approval_status']; ?>">
-                                <?php 
-                                $status_text = [
-                                    'pending' => 'Pending',
-                                    'approved' => 'Approved',
-                                    'rejected' => 'Rejected'
-                                ];
-                                echo $status_text[$tournament['approval_status']] ?? 'Unknown';
-                                ?>
-                            </span>
-                        </td>
-                        <td>
-                            <div class="rank-cell">
-                                <?php if ($tournament['approval_status'] == 'approved'): ?>
-                                    <span class="rank-number">#<?php echo $tournament['current_rank']; ?></span>
-                                    <span class="rank-total">of <?php echo $tournament['total_participants']; ?></span>
-                                <?php else: ?>
-                                    <span class="rank-na">N/A</span>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="catches-cell">
-                                <span class="catches-count">
-                                    <i class="fas fa-fish"></i> <?php echo $tournament['valid_catches']; ?> valid
-                                </span>
-                                <?php if ($tournament['total_weight'] > 0): ?>
-                                <span class="catches-weight">
-                                    <?php echo number_format($tournament['total_weight'], 2); ?> kg
-                                </span>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="dropdown-actions">
-                                <button class="actions-btn" onclick="toggleDropdown(<?php echo $tournament['registration_id']; ?>)">
-                                    Actions <i class="fas fa-chevron-down"></i>
-                                </button>
-                                <div class="dropdown-menu-actions" id="dropdown-<?php echo $tournament['registration_id']; ?>">
-                                    <a href="../tournament/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" class="dropdown-item-action">
-                                        <i class="fas fa-eye"></i> View Tournament
-                                    </a>
-                                    <?php if ($tournament['status'] == 'ongoing' && $tournament['approval_status'] == 'approved'): ?>
-                                    <a href="../angler/log-catch.php?tournament_id=<?php echo $tournament['tournament_id']; ?>" class="dropdown-item-action">
-                                        <i class="fas fa-plus-circle"></i> Log Catch
-                                    </a>
-                                    <?php endif; ?>
-                                    <a href="../angler/view-catches.php?registration_id=<?php echo $tournament['registration_id']; ?>" class="dropdown-item-action">
-                                        <i class="fas fa-fish"></i> View My Catches
-                                    </a>
-                                    <a href="../angler/leaderboard.php?tournament_id=<?php echo $tournament['tournament_id']; ?>" class="dropdown-item-action">
-                                        <i class="fas fa-trophy"></i> View Leaderboard
-                                    </a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php else: ?>
-        <div class="empty-state-dashboard">
-            <i class="fas fa-clipboard-list"></i>
-            <h3>No Tournaments Found</h3>
-            <p>
-                <?php if ($status_filter != 'all'): ?>
-                    No <strong><?php echo strtolower($status_filter); ?></strong> tournaments found.
-                <?php elseif (!empty($search_query)): ?>
-                    No tournaments match your search "<strong><?php echo htmlspecialchars($search_query); ?></strong>".
-                <?php else: ?>
-                    You haven't registered for any tournaments yet.
-                <?php endif; ?>
-            </p>
-            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
-                <?php if ($status_filter != 'all' || !empty($search_query)): ?>
-                <a href="?" class="btn btn-secondary">
-                    <i class="fas fa-redo"></i> Clear Filters
-                </a>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.stat-icon.tournaments {
+    background: linear-gradient(135deg, rgba(8, 131, 149, 0.1) 0%, rgba(5, 191, 219, 0.1) 100%);
+    color: var(--ocean-light);
+}
+
+.stat-icon.catches {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.stat-icon.reviews {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.stat-icon.upcoming {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ocean-blue);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Tournaments Grid */
+.tournaments-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.tournament-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tournament-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.tournament-card.pending {
+    border: 2px solid #F59E0B;
+}
+
+.tournament-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.tournament-content {
+    padding: 20px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.status-badge.upcoming { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+.status-badge.ongoing { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+.status-badge.completed { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+
+.approval-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    margin-left: 8px;
+}
+
+.approval-badge.pending { 
+    background: rgba(245, 158, 11, 0.15); 
+    color: #F59E0B;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.approval-badge.approved { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+.approval-badge.rejected { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.tournament-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.tournament-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.meta-item i {
+    width: 16px;
+    color: var(--ocean-light);
+}
+
+.tournament-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ocean-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-action:hover {
+    background: var(--ocean-light);
+    color: var(--white);
+    border-color: var(--ocean-light);
+}
+
+.btn-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-action:disabled:hover {
+    background: var(--white);
+    color: var(--text-muted);
+    border-color: var(--border);
+}
+
+/* Pending Indicator */
+.pending-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 12px;
+    height: 12px;
+    background: #F59E0B;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 32px;
+    background: linear-gradient(135deg, var(--sand) 0%, #E5E7EB 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-icon i {
+    font-size: 56px;
+    color: var(--text-muted);
+}
+
+.empty-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 12px;
+}
+
+.empty-text {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin: 0 0 32px;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-teal) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(8, 131, 149, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .dashboard-container,
+    .hero-content {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .tournaments-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 36px;
+    }
+    
+    .dashboard-container,
+    .hero-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .tournaments-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<!-- Hero Section -->
+<div class="dashboard-hero">
+    <div class="hero-content">
+        <h1 class="hero-title">My Dashboard</h1>
+        <p class="hero-subtitle">Track your tournaments, catches, and achievements</p>
     </div>
 </div>
 
-<script>
-function handleOrderChange(value) {
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('order', value);
-    window.location.search = urlParams.toString();
-}
+<!-- Dashboard Page -->
+<div class="dashboard-page">
+    <div class="dashboard-container">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon tournaments">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-value"><?php echo $stats['total_tournaments']; ?></div>
+                <div class="stat-label">Total Tournaments</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon catches">
+                    <i class="fas fa-fish"></i>
+                </div>
+                <div class="stat-value"><?php echo $stats['total_catches']; ?></div>
+                <div class="stat-label">Total Catches</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon reviews">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-value"><?php echo $stats['total_reviews']; ?></div>
+                <div class="stat-label">Reviews Written</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon upcoming">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value"><?php echo $stats['upcoming_tournaments']; ?></div>
+                <div class="stat-label">Upcoming Tournaments</div>
+            </div>
+        </div>
 
-function handleStatusChange(value) {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (value === 'all') {
-        urlParams.delete('status');
-    } else {
-        urlParams.set('status', value);
-    }
-    window.location.search = urlParams.toString();
-}
+        <!-- My Tournaments Section -->
+        <div class="section-header">
+            <h2 class="section-title">
+                My Tournaments
+            </h2>
+        </div>
 
-function toggleDropdown(id) {
-    const dropdown = document.getElementById('dropdown-' + id);
-    const allDropdowns = document.querySelectorAll('.dropdown-menu-actions');
-    
-    allDropdowns.forEach(dd => {
-        if (dd.id !== 'dropdown-' + id) {
-            dd.classList.remove('show');
-        }
-    });
-    
-    dropdown.classList.toggle('show');
-}
+        <?php if (count($tournaments) > 0): ?>
+            <div class="tournaments-grid">
+                <?php foreach ($tournaments as $tournament): ?>
+                    <div class="tournament-card <?php echo $tournament['approval_status'] == 'pending' ? 'pending' : ''; ?>">
+                        <?php if ($tournament['approval_status'] == 'pending'): ?>
+                            <div class="pending-indicator"></div>
+                        <?php endif; ?>
+                        
+                        <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
+                             alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>"
+                             class="tournament-image"
+                             onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
+                        
+                        <div class="tournament-content">
+                            <div>
+                                <span class="status-badge <?php echo $tournament['status']; ?>">
+                                    <?php echo $tournament['status']; ?>
+                                </span>
+                                
+                                <span class="approval-badge <?php echo $tournament['approval_status']; ?>">
+                                    <?php 
+                                    if ($tournament['approval_status'] == 'pending') {
+                                        echo '<i class="fas fa-clock"></i> Pending Approval';
+                                    } elseif ($tournament['approval_status'] == 'approved') {
+                                        echo '<i class="fas fa-check-circle"></i> Approved';
+                                    } else {
+                                        echo '<i class="fas fa-times-circle"></i> Rejected';
+                                    }
+                                    ?>
+                                </span>
+                            </div>
+                            
+                            <h3 class="tournament-title">
+                                <?php echo htmlspecialchars($tournament['tournament_title']); ?>
+                            </h3>
+                            
+                            <div class="tournament-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span><?php echo date('M j, Y', strtotime($tournament['tournament_date'])); ?></span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span><?php echo htmlspecialchars(substr($tournament['location'], 0, 30)); ?><?php echo strlen($tournament['location']) > 30 ? '...' : ''; ?></span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-fish"></i>
+                                    <span><?php echo $tournament['my_catches_count']; ?> Catches Recorded</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Registered: <?php echo date('M j, Y', strtotime($tournament['registration_date'])); ?></span>
+                                </div>
+                            </div>
+                            
+                            <?php if ($tournament['approval_status'] == 'approved'): ?>
+                            <div class="tournament-actions">
+                                <a href="<?php echo SITE_URL; ?>/pages/tournament/get-live-results.php?tournament_id=<?php echo $tournament['tournament_id']; ?>" 
+                                   class="btn-action">
+                                    <i class="fas fa-trophy"></i>
+                                    Results
+                                </a>
 
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('.dropdown-actions')) {
-        document.querySelectorAll('.dropdown-menu-actions').forEach(dd => {
-            dd.classList.remove('show');
-        });
-    }
-});
-</script>
+                                <a href="<?php echo SITE_URL; ?>/pages/catch/my-catches.php?tournament_id=<?php echo $tournament['tournament_id']; ?>" 
+                                   class="btn-action">
+                                    <i class="fas fa-fish"></i>
+                                    Catches
+                                </a>
+
+                                <?php if ($tournament['status'] == 'completed'): ?>
+                                <a href="<?php echo SITE_URL; ?>/pages/review/addReview.php?tournament_id=<?php echo $tournament['tournament_id']; ?>" 
+                                   class="btn-action">
+                                    <i class="fas fa-star"></i>
+                                    Review
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                            <?php elseif ($tournament['approval_status'] == 'pending'): ?>
+                            <div class="tournament-actions">
+                                <button class="btn-action" disabled>
+                                    <i class="fas fa-hourglass-half"></i>
+                                    Awaiting Approval
+                                </button>
+                            </div>
+                            <?php else: ?>
+                            <div class="tournament-actions">
+                                <button class="btn-action" disabled>
+                                    <i class="fas fa-times-circle"></i>
+                                    Registration Rejected
+                                </button>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3 class="empty-title">No Tournaments Yet</h3>
+                <p class="empty-text">You haven't registered for any tournaments. Start exploring!</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 
 <?php include '../../includes/footer.php'; ?>

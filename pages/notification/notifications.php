@@ -124,18 +124,427 @@ function getNotificationIcon($title, $message) {
 }
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
+<style>
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --sand: #F8F6F0;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
+}
 
+/* Hero Section */
+.notifications-hero {
+    background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
+    padding: 60px 0 100px;
+    position: relative;
+}
 
-<div class="notifications-container">
-    <!-- Header -->
-    <div class="notifications-header">
-        <h1><i class="fas fa-bell"></i> Notifications</h1>
-        <p>Stay updated with your tournament activities</p>
+.hero-content {
+    max-width: 100%;
+    padding: 0 60px;
+}
+
+.hero-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--white);
+    margin: 0 0 12px;
+}
+
+.hero-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+/* Filter Section */
+.filter-section {
+    max-width: 100%;
+    margin: -50px 60px 0;
+    position: relative;
+    z-index: 10;
+}
+
+.filter-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: #F3F4F6;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-tab:hover {
+    background: #E5E7EB;
+}
+
+.filter-tab.active {
+    background: var(--ocean-light);
+    color: var(--white);
+}
+
+.filter-tab .badge {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.filter-tab.active .badge {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.notifications-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    padding: 10px 16px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--sand);
+    border-color: var(--ocean-light);
+    color: var(--ocean-light);
+}
+
+/* Notifications Container */
+.notifications-page {
+    background: var(--white);
+    padding: 40px 0 60px;
+}
+
+.notifications-container {
+    max-width: 100%;
+    padding: 0 60px;
+}
+
+/* Notifications List */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notification-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.notification-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.notification-card.unread {
+    background: linear-gradient(135deg, rgba(8, 131, 149, 0.05) 0%, rgba(5, 191, 219, 0.05) 100%);
+    border-color: var(--ocean-light);
+    border-width: 2px;
+}
+
+.unread-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--ocean-light);
+    color: var(--white);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.notification-content {
+    display: flex;
+    gap: 16px;
+}
+
+.notification-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon i {
+    font-size: 24px;
+}
+
+.notification-icon.success {
+    background: #ECFDF5;
+    color: #10B981;
+}
+
+.notification-icon.danger {
+    background: #FEE2E2;
+    color: #EF4444;
+}
+
+.notification-icon.warning {
+    background: #FEF3C7;
+    color: #F59E0B;
+}
+
+.notification-icon.gold {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.notification-icon.info {
+    background: #DBEAFE;
+    color: var(--ocean-light);
+}
+
+.notification-icon.primary {
+    background: linear-gradient(135deg, rgba(8, 131, 149, 0.1) 0%, rgba(5, 191, 219, 0.1) 100%);
+    color: var(--ocean-light);
+}
+
+.notification-body {
+    flex: 1;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 16px;
+}
+
+.notification-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.notification-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.notification-message {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 12px;
+}
+
+.notification-tournament {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--sand);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--ocean-blue);
+    font-weight: 600;
+    margin-bottom: 12px;
+    width: fit-content;
+}
+
+.notification-tournament i {
+    color: var(--ocean-light);
+}
+
+.notification-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.notif-action-btn {
+    padding: 8px 16px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.notif-action-btn:hover {
+    background: var(--sand);
+}
+
+.notif-action-btn.read-btn:hover {
+    border-color: var(--ocean-light);
+    color: var(--ocean-light);
+}
+
+.notif-action-btn.delete-btn:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+    background: #FEE2E2;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-state-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 32px;
+    background: linear-gradient(135deg, var(--sand) 0%, #E5E7EB 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state-icon i {
+    font-size: 56px;
+    color: var(--text-muted);
+}
+
+.empty-state h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 12px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .notifications-container,
+    .filter-section,
+    .hero-content {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 36px;
+    }
+    
+    .notifications-container,
+    .filter-section,
+    .hero-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .filter-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .notifications-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .notification-content {
+        flex-direction: column;
+    }
+    
+    .notification-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .notification-actions {
+        flex-direction: column;
+    }
+    
+    .notif-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .unread-badge {
+        top: 12px;
+        right: 12px;
+    }
+}
+</style>
+
+<!-- Hero Section -->
+<div class="notifications-hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Notifications</h1>
+        <p class="hero-subtitle">Stay updated with your tournament activities</p>
     </div>
+</div>
 
-    <!-- Controls: Filters and Actions -->
-    <div class="notifications-controls">
+<!-- Filter Section -->
+<div class="filter-section">
+    <div class="filter-card">
         <div class="filter-tabs">
             <a href="?filter=all" class="filter-tab <?php echo $filter === 'all' ? 'active' : ''; ?>">
                 <i class="fas fa-inbox"></i>
@@ -176,94 +585,98 @@ function getNotificationIcon($title, $message) {
             <?php endif; ?>
         </div>
     </div>
+</div>
 
-    <!-- Notifications List -->
-    <div class="notifications-list">
-        <?php if (empty($notifications)): ?>
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fas fa-bell-slash"></i>
+<!-- Notifications Page -->
+<div class="notifications-page">
+    <div class="notifications-container">
+        <div class="notifications-list">
+            <?php if (empty($notifications)): ?>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <h3>No Notifications</h3>
+                    <p>
+                        <?php if ($filter === 'unread'): ?>
+                            You're all caught up! No unread notifications.
+                        <?php elseif ($filter === 'read'): ?>
+                            No read notifications yet.
+                        <?php else: ?>
+                            You don't have any notifications yet.
+                        <?php endif; ?>
+                    </p>
                 </div>
-                <h3>No Notifications</h3>
-                <p>
-                    <?php if ($filter === 'unread'): ?>
-                        You're all caught up! No unread notifications.
-                    <?php elseif ($filter === 'read'): ?>
-                        No read notifications yet.
-                    <?php else: ?>
-                        You don't have any notifications yet.
-                    <?php endif; ?>
-                </p>
-            </div>
-        <?php else: ?>
-            <?php foreach ($notifications as $notif): ?>
-                <?php 
-                $icon_info = getNotificationIcon($notif['title'], $notif['message']);
-                $is_unread = $notif['read_status'] == 0;
-                ?>
-                <div class="notification-card <?php echo $is_unread ? 'unread' : ''; ?>">
-                    <?php if ($is_unread): ?>
-                        <span class="unread-badge">New</span>
-                    <?php endif; ?>
-                    
-                    <div class="notification-content">
-                        <div class="notification-icon <?php echo $icon_info['color']; ?>">
-                            <i class="fas <?php echo $icon_info['icon']; ?>"></i>
-                        </div>
+            <?php else: ?>
+                <?php foreach ($notifications as $notif): ?>
+                    <?php 
+                    $icon_info = getNotificationIcon($notif['title'], $notif['message']);
+                    $is_unread = $notif['read_status'] == 0;
+                    ?>
+                    <div class="notification-card <?php echo $is_unread ? 'unread' : ''; ?>">
+                        <?php if ($is_unread): ?>
+                            <span class="unread-badge">New</span>
+                        <?php endif; ?>
                         
-                        <div class="notification-body">
-                            <div class="notification-header">
-                                <h3 class="notification-title"><?php echo htmlspecialchars($notif['title']); ?></h3>
-                                <span class="notification-time">
-                                    <i class="fas fa-clock"></i>
-                                    <?php echo getRelativeTime($notif['sent_date']); ?>
-                                </span>
+                        <div class="notification-content">
+                            <div class="notification-icon <?php echo $icon_info['color']; ?>">
+                                <i class="fas <?php echo $icon_info['icon']; ?>"></i>
                             </div>
                             
-                            <p class="notification-message"><?php echo nl2br(htmlspecialchars($notif['message'])); ?></p>
-                            
-                            <?php if (!empty($notif['tournament_title'])): ?>
-                                <div class="notification-tournament">
-                                    <i class="fas fa-trophy"></i>
-                                    <span><?php echo htmlspecialchars($notif['tournament_title']); ?></span>
+                            <div class="notification-body">
+                                <div class="notification-header">
+                                    <h3 class="notification-title"><?php echo htmlspecialchars($notif['title']); ?></h3>
+                                    <span class="notification-time">
+                                        <i class="fas fa-clock"></i>
+                                        <?php echo getRelativeTime($notif['sent_date']); ?>
+                                    </span>
                                 </div>
-                            <?php endif; ?>
-                            
-                            <div class="notification-actions">
-                                <?php if ($is_unread): ?>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="action" value="mark_read">
-                                        <input type="hidden" name="notification_id" value="<?php echo $notif['notification_id']; ?>">
-                                        <button type="submit" class="notif-action-btn read-btn">
-                                            <i class="fas fa-check"></i>
-                                            <span>Mark as Read</span>
-                                        </button>
-                                    </form>
-                                <?php else: ?>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="action" value="mark_unread">
-                                        <input type="hidden" name="notification_id" value="<?php echo $notif['notification_id']; ?>">
-                                        <button type="submit" class="notif-action-btn read-btn">
-                                            <i class="fas fa-envelope"></i>
-                                            <span>Mark as Unread</span>
-                                        </button>
-                                    </form>
+                                
+                                <p class="notification-message"><?php echo nl2br(htmlspecialchars($notif['message'])); ?></p>
+                                
+                                <?php if (!empty($notif['tournament_title'])): ?>
+                                    <div class="notification-tournament">
+                                        <i class="fas fa-trophy"></i>
+                                        <span><?php echo htmlspecialchars($notif['tournament_title']); ?></span>
+                                    </div>
                                 <?php endif; ?>
                                 
-                                <form method="POST" style="display: inline;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="notification_id" value="<?php echo $notif['notification_id']; ?>">
-                                    <button type="submit" class="notif-action-btn delete-btn" onclick="return confirm('Delete this notification?')">
-                                        <i class="fas fa-trash-alt"></i>
-                                        <span>Delete</span>
-                                    </button>
-                                </form>
+                                <div class="notification-actions">
+                                    <?php if ($is_unread): ?>
+                                        <form method="POST" style="display: inline;">
+                                            <input type="hidden" name="action" value="mark_read">
+                                            <input type="hidden" name="notification_id" value="<?php echo $notif['notification_id']; ?>">
+                                            <button type="submit" class="notif-action-btn read-btn">
+                                                <i class="fas fa-check"></i>
+                                                <span>Mark as Read</span>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="POST" style="display: inline;">
+                                            <input type="hidden" name="action" value="mark_unread">
+                                            <input type="hidden" name="notification_id" value="<?php echo $notif['notification_id']; ?>">
+                                            <button type="submit" class="notif-action-btn read-btn">
+                                                <i class="fas fa-envelope"></i>
+                                                <span>Mark as Unread</span>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="notification_id" value="<?php echo $notif['notification_id']; ?>">
+                                        <button type="submit" class="notif-action-btn delete-btn" onclick="return confirm('Delete this notification?')">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 

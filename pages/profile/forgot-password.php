@@ -9,7 +9,6 @@ require_once '../../includes/PHPMailer/src/Exception.php';
 require_once '../../includes/PHPMailer/src/PHPMailer.php';
 require_once '../../includes/PHPMailer/src/SMTP.php';
 
-
 $error = '';
 $success = '';
 
@@ -46,15 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-
-            // YOUR GMAIL + APP PASSWORD HERE
             $mail->Username = 'alvinaao0168@gmail.com';
-            $mail->Password = 'xmwxeyplblbyjeaj'; // your Gmail App Password
-
+            $mail->Password = 'xmwxeyplblbyjeaj'; // Gmail App Password
             $mail->SMTPSecure = 'tls';
             $mail->Port = 587;
 
-            // FROM email MUST match your Gmail address
             $mail->setFrom('alvinaao0168@gmail.com', 'SmartAngler Support');
             $mail->addAddress($email);
 
@@ -80,101 +75,156 @@ include '../../includes/header.php';
 ?>
 
 <style>
-    .forgot-container {
-        max-width: 450px;
-        margin: 70px auto;
-        background: white;
-        padding: 35px 40px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        font-family: 'Segoe UI', sans-serif;
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --white: #FFFFFF;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+}
+
+/* Forgot Password Page */
+.forgot-page {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
+    padding: 60px 20px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.forgot-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.forgot-card h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ocean-blue);
+    margin-bottom: 20px;
+}
+
+.forgot-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-dark);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #E5E7EB;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: var(--ocean-light);
+    box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.2);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px 0;
+    border-radius: 12px;
+    border: none;
+    background: var(--ocean-light);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--ocean-blue);
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.alert-danger { background: #FEE2E2; color: #B91C1C; }
+.alert-success { background: #D1FAE5; color: #065F46; }
+
+.back-link {
+    margin-top: 20px;
+}
+
+.back-link a {
+    color: var(--ocean-light);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.back-link a:hover {
+    color: var(--ocean-teal);
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .forgot-card {
+        padding: 30px 20px;
     }
-    .forgot-title {
-        color: #6D94C5;
-        text-align: center;
-        margin-bottom: 15px;
-        font-size: 28px;
-        font-weight: bold;
+
+    .forgot-card h2 {
+        font-size: 24px;
     }
-    .forgot-sub {
-        text-align: center;
-        color: #555;
-        font-size: 14px;
-        margin-bottom: 25px;
-    }
-    .form-group label {
-        font-weight: 600;
-        color: #444;
-    }
-    .form-card input {
-        width: 100%;
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        margin-bottom: 18px;
-        font-size: 15px;
-    }
-    .btn-primary {
-        width: 100%;
-        padding: 12px;
-        background: #6D94C5;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    .btn-primary:hover {
-        background: #5878a1;
-    }
-    .alert {
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 15px;
-        text-align: center;
-        font-size: 14px;
-    }
-    .alert-danger { background: #ffdddd; color: #b90000; }
-    .alert-success { background: #ddffdd; color: #006b24; }
-    .back-link {
-        display: block;
-        text-align: center;
-        margin-top: 15px;
-    }
-    .back-link a {
-        color: #6D94C5;
-        text-decoration: none;
-        font-weight: 600;
-    }
-    .back-link a:hover {
-        text-decoration: underline;
-    }
+}
 </style>
 
-<div class="forgot-container">
-    <h2 class="forgot-title">Forgot Password</h2>
-    <p class="forgot-sub">Enter your email and we’ll send you a reset link.</p>
+<div class="forgot-page">
+    <div class="forgot-card">
+        <h2> Forgot Password</h2>
+        <p>Enter your email and we’ll send you a reset link.</p>
 
-    <?php if ($error): ?>
-        <div class="alert alert-danger"><?= $error ?></div>
-    <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="alert alert-danger"><?= $error ?></div>
+        <?php endif; ?>
 
-    <?php if ($success): ?>
-        <div class="alert alert-success"><?= $success ?></div>
-    <?php endif; ?>
+        <?php if ($success): ?>
+            <div class="alert alert-success"><?= $success ?></div>
+        <?php endif; ?>
 
-    <form method="POST" class="form-card">
-        <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" name="email" placeholder="Enter your email" required>
+        <form method="POST">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <button class="btn-primary">Send Reset Link</button>
+        </form>
+
+        <div class="back-link">
+            <a href="../authentication/login.php"> Back to Login</a>
         </div>
-
-        <button class="btn btn-primary">Send Reset Link</button>
-    </form>
-
-    <div class="back-link">
-        <a href="../authentication/login.php">← Back to Login</a>
     </div>
 </div>
 

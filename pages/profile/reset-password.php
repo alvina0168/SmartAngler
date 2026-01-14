@@ -55,105 +55,167 @@ include '../../includes/header.php';
 ?>
 
 <style>
-.reset-container {
-    max-width: 450px;
-    margin: 70px auto;
-    background: white;
-    padding: 35px 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --white: #FFFFFF;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+}
+
+/* Reset Password Page */
+.reset-page {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
+    padding: 60px 20px;
     font-family: 'Segoe UI', sans-serif;
 }
-.reset-title {
-    color: #6D94C5;
+
+.reset-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 450px;
     text-align: center;
-    margin-bottom: 15px;
-    font-size: 28px;
-    font-weight: bold;
 }
+
+.reset-card h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ocean-blue);
+    margin-bottom: 20px;
+}
+
+.reset-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
 .form-group label {
     font-weight: 600;
-    color: #444;
+    color: var(--text-dark);
+    display: block;
+    margin-bottom: 6px;
 }
-.form-card input {
+
+.form-group input {
     width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    margin-bottom: 18px;
-    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #E5E7EB;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
 }
+
+.form-group input:focus {
+    border-color: var(--ocean-light);
+    box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.2);
+}
+
 .btn-primary {
     width: 100%;
-    padding: 12px;
-    background: #6D94C5;
-    color: white;
+    padding: 12px 0;
+    border-radius: 12px;
     border: none;
-    border-radius: 8px;
+    background: var(--ocean-light);
+    color: var(--white);
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.2s ease;
 }
+
 .btn-primary:hover {
-    background: #5878a1;
+    background: var(--ocean-blue);
 }
+
 .btn-login {
     display: block;
     width: 100%;
-    padding: 12px;
-    margin-top: 15px;
-    background: #28a745;
-    color: white;
+    padding: 12px 0;
+    margin-top: 20px;
+    background: var(--ocean-teal);
+    color: var(--white);
     font-size: 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     text-align: center;
     text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
+
 .btn-login:hover {
-    background: #218838;
+    background: #04A0C6;
 }
+
 .alert {
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    text-align: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
     font-size: 14px;
+    text-align: center;
 }
-.alert-danger { background: #ffdddd; color: #b90000; }
-.alert-success { background: #ddffdd; color: #006b24; }
+
+.alert-danger { background: #FEE2E2; color: #B91C1C; }
+.alert-success { background: #D1FAE5; color: #065F46; }
+
+/* Responsive */
+@media (max-width: 480px) {
+    .reset-card {
+        padding: 30px 20px;
+    }
+
+    .reset-card h2 {
+        font-size: 24px;
+    }
+}
 </style>
 
-<div class="reset-container">
-    <h2 class="reset-title">Reset Password</h2>
+<div class="reset-page">
+    <div class="reset-card">
+        <h2><i class="fas fa-key"></i> Reset Password</h2>
+        <p>Enter your new password below.</p>
 
-    <!-- Success or Error messages at the top -->
-    <?php if ($error): ?>
-        <div class="alert alert-danger"><?php echo $error; ?></div>
-    <?php endif; ?>
-    <?php if ($success): ?>
-        <div class="alert alert-success"><?php echo $success; ?></div>
-    <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="alert alert-danger"><?= $error ?></div>
+        <?php endif; ?>
 
-    <!-- Reset Password Form -->
-    <?php if (empty($success) && empty($error) || !empty($user_id)): ?>
-        <form method="POST" class="form-card">
-            <div class="form-group">
-                <label>New Password</label>
-                <input type="password" name="password" placeholder="Enter new password" required>
-            </div>
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" name="confirm_password" placeholder="Confirm new password" required>
-            </div>
-            <button class="btn-primary">Reset Password</button>
-        </form>
-    <?php endif; ?>
+        <?php if ($success): ?>
+            <div class="alert alert-success"><?= $success ?></div>
+        <?php endif; ?>
 
-    <!-- Login Button below form -->
-    <?php if ($success): ?>
-        <a href="<?php echo SITE_URL; ?>/pages/authentication/login.php" class="btn-login">Go to Login</a>
-    <?php endif; ?>
+        <?php if (empty($success) && (empty($error) || !empty($user_id))): ?>
+            <form method="POST">
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" name="password" placeholder="Enter new password" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" placeholder="Confirm new password" required>
+                </div>
+                <button class="btn-primary">Reset Password</button>
+            </form>
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+            <a href="<?php echo SITE_URL; ?>/pages/authentication/login.php" class="btn-login">Go to Login</a>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php include '../../includes/footer.php'; ?>

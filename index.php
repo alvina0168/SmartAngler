@@ -5,13 +5,403 @@ $page_title = 'Home';
 include 'includes/header.php';
 ?>
 
-<!-- Top Section -->
-<section class="hero">
-    <div class="container">
-        <h1>Compete, Track and Win<br>with <span>SmartAngler!</span></h1>
-        <p>SmartAngler makes fishing competitions easy! Create and join tournaments, log your catches, and compete with anglers for great prizes!</p>
+<style>
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --sand: #F5EFE6;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
+    color: var(--white);
+    text-align: center;
+    padding: 300px 20px 300px;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    line-height: 1.2;
+}
+
+.hero h1 span {
+    color: var(--ocean-teal);
+}
+
+.hero p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Account Type Section */
+.account-type-section {
+    background: var(--sand);
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.account-type-title {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.account-type-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 50px;
+}
+
+/* Account Cards */
+.account-type-cards {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.account-card {
+    background: var(--white);
+    padding: 30px 25px;
+    border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    width: 300px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.account-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.account-card-icon {
+    font-size: 50px;
+    color: var(--ocean-light);
+    margin-bottom: 20px;
+}
+
+.account-card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.account-card-description {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+.account-card-button {
+    display: inline-block;
+    background: var(--ocean-light);
+    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.account-card-button:hover {
+    background: var(--ocean-blue);
+}
+
+/* Admin Modal */
+.admin-request-modal {
+    display: none;
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    justify-content:center;
+    align-items:center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    padding: 30px;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Form inside modal */
+.modal-content form .form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.modal-content form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.modal-content form input,
+.modal-content form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 0.95rem;
+}
+
+.modal-content form textarea {
+    min-height: 80px;
+}
+
+.file-upload-area {
+    background: #F3F4F6;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    background: #E5E7EB;
+}
+
+.file-preview img {
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 12px;
+}
+
+/* Features Section */
+.features {
+    padding: 160px 20px;
+    background: var(--white);
+    text-align: center;
+}
+
+.features h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.features h2 span {
+    color: var(--ocean-light);
+}
+
+.features-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 50px;
+}
+
+.features-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+
+.feature-card {
+    background: var(--sand);
+    padding: 25px 20px;
+    border-radius: 20px;
+    width: 280px;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.feature-icon {
+    font-size: 40px;
+    color: var(--ocean-light);
+    margin-bottom: 15px;
+}
+
+/* Tournament Cards */
+.card {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.card-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.card-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--ocean-light);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--ocean-blue);
+}
+
+.btn-secondary {
+    background: var(--text-dark);
+    color: var(--white);
+}
+
+.btn-secondary:hover {
+    background: #0A2D40;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .features-grid, .account-type-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        width: 90%;
+        margin: 0 auto;
+    }
+}
+</style>
+
+<!-- Hero Section - Split Layout -->
+<section class="hero-split">
+    <div class="container hero-split-container">
+        <!-- Left Content -->
+        <div class="hero-text">
+            <h1>Compete, Track and Win with <span>SmartAngler</span></h1>
+            <p>SmartAngler makes fishing competitions easy! Create and join tournaments, log your catches, and compete with anglers for great prizes.</p>
+            <a href="pages/authentication/login.php" class="btn btn-primary btn-hero">Get Started</a>
+        </div>
+
+        <!-- Right Image -->
+        <div class="hero-image">
+            <img src="images/angler.webp" alt="Fishing GIF">
+        </div>
+
     </div>
 </section>
+
+<style>
+.hero-split {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
+    color: var(--white);
+    padding: 120px 20px;
+}
+
+.hero-text {
+    flex: 1 1 500px;
+    max-width: 600px;
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.hero-text h1 span {
+    color: var(--ocean-teal);
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 30px;
+}
+
+.btn-hero {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+}
+
+.hero-split-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hero-image {
+    margin-left: auto; 
+}
+
+.hero-image img {
+    width: 600px;
+    height: auto;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .hero-split-container {
+        flex-direction: column-reverse;
+        text-align: center;
+    }
+
+    .hero-text {
+        max-width: 100%;
+        margin-top: 40px;
+    }
+}
+</style>
 
 <?php if (!isLoggedIn()): ?>
 <!-- Account Type Selection Section - Only visible when NOT logged in -->

@@ -140,6 +140,191 @@ $page_title = $tournament['tournament_title'];
 include '../includes/header.php';
 ?>
 
+<style>
+/* Edit Mode Styles */
+.edit-only {
+    display: none;
+}
+
+.edit-mode .edit-only {
+    display: block;
+}
+
+.edit-mode .view-only {
+    display: none;
+}
+
+.edit-mode select.edit-only,
+.edit-mode input.edit-only,
+.edit-mode textarea.edit-only {
+    display: block;
+}
+
+/* Tournament Image Container */
+.tournament-image-container {
+    width: 100%;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.tournament-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* QR Code Container */
+.qr-container {
+    width: 250px;
+    height: 250px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 1rem;
+}
+
+/* Management Grid */
+.management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.management-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.management-card:hover {
+    border-color: var(--color-blue-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.management-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.management-card-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--color-blue-primary), #7AA5C4);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.management-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.management-card-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .management-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Info Items */
+.info-item {
+    margin-bottom: 1rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+/* Form Controls */
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-blue-primary);
+    box-shadow: 0 0 0 3px rgba(109, 148, 197, 0.1);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Status Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.badge-upcoming { background: #e3f2fd; color: #1976d2; }
+.badge-ongoing { background: #fff3e0; color: #f57c00; }
+.badge-completed { background: #e8f5e9; color: #388e3c; }
+.badge-cancelled { background: #ffebee; color: #d32f2f; }
+</style>
+
 <!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="tournamentList.php" class="btn btn-secondary">
@@ -353,7 +538,10 @@ include '../includes/header.php';
                         <?php endif; ?>
                     </div>
                     <div class="edit-only">
-                        <input type="file" name="tournament_image" class="form-control">
+                        <input type="file" name="tournament_image" class="form-control" accept="image/*">
+                        <?php if ($tournament['image']): ?>
+                            <small style="color: #6c757d; display: block; margin-top: 0.5rem;">Current: <?= htmlspecialchars($tournament['image']) ?></small>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -437,13 +625,16 @@ include '../includes/header.php';
                     </div>
                 <?php endif; ?>
                 <div class="edit-only">
-                    <input type="file" name="bank_qr_image" class="form-control">
+                    <input type="file" name="bank_qr_image" class="form-control" accept="image/*">
+                    <?php if ($tournament['bank_qr']): ?>
+                        <small style="color: #6c757d; display: block; margin-top: 0.5rem;">Current: <?= htmlspecialchars($tournament['bank_qr']) ?></small>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sponsors Section (Updated - matches Step 4 of create) -->
+    <!-- Sponsors Section -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -526,7 +717,7 @@ include '../includes/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- Categories & Prizes Section (Updated - matches Step 5 of create) -->
+    <!-- Categories & Prizes Section -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -568,20 +759,7 @@ include '../includes/header.php';
                         $prizes_query = "SELECT * FROM TOURNAMENT_PRIZE 
                                         WHERE tournament_id = '$tournament_id' 
                                         AND category_id = '{$category['category_id']}'
-                                        ORDER BY 
-                                            CASE prize_ranking
-                                                WHEN '1st' THEN 1
-                                                WHEN '2nd' THEN 2
-                                                WHEN '3rd' THEN 3
-                                                WHEN '4th' THEN 4
-                                                WHEN '5th' THEN 5
-                                                WHEN '6th' THEN 6
-                                                WHEN '7th' THEN 7
-                                                WHEN '8th' THEN 8
-                                                WHEN '9th' THEN 9
-                                                WHEN '10th' THEN 10
-                                                ELSE 99
-                                            END";
+                                        ORDER BY CAST(prize_ranking AS UNSIGNED) ASC";
                         $prizes_result = mysqli_query($conn, $prizes_query);
                         ?>
 
@@ -623,7 +801,7 @@ include '../includes/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- Reviews Section (NEW) -->
+    <!-- Reviews Section -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -639,7 +817,7 @@ include '../includes/header.php';
             FROM REVIEW r
             INNER JOIN USER u ON r.user_id = u.user_id
             WHERE r.tournament_id = '$tournament_id'
-            ORDER BY r.created_at DESC
+            ORDER BY r.review_date DESC
         ";
         $reviews_result = mysqli_query($conn, $reviews_query);
         ?>
@@ -715,7 +893,7 @@ include '../includes/header.php';
                                             <?= htmlspecialchars($review['full_name']) ?>
                                         </h4>
                                         <div style="color: #6c757d; font-size: 0.8125rem;">
-                                            <i class="far fa-clock"></i> <?= date('d M Y, g:i A', strtotime($review['created_at'])) ?>
+                                            <i class="far fa-clock"></i> <?= date('d M Y, g:i A', strtotime($review['review_date'])) ?>
                                         </div>
                                     </div>
                                     <div style="color: #ff9800; font-size: 1rem;">
@@ -749,26 +927,48 @@ include '../includes/header.php';
 </form>
 
 <script>
-function toggleEditMode(){
+function toggleEditMode() {
     const form = document.getElementById("tournamentForm");
     const btn = document.getElementById("toggleEditBtn");
-    if(form.classList.contains("edit-mode")){
+    
+    if (form.classList.contains("edit-mode")) {
         cancelEdit();
     } else {
         form.classList.add("edit-mode");
         btn.innerHTML = '<i class="fas fa-eye"></i> View Mode';
         btn.className = 'btn btn-secondary';
+        
+        // Scroll to top of form
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
-function cancelEdit(){
+function cancelEdit() {
     const form = document.getElementById("tournamentForm");
     const btn = document.getElementById("toggleEditBtn");
+    
     form.classList.remove("edit-mode");
     form.reset();
     btn.innerHTML = '<i class="fas fa-edit"></i> Edit';
     btn.className = 'btn btn-primary';
 }
+
+// Prevent accidental navigation away
+let formChanged = false;
+document.getElementById('tournamentForm').addEventListener('input', function() {
+    formChanged = true;
+});
+
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged && document.getElementById('tournamentForm').classList.contains('edit-mode')) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+document.getElementById('tournamentForm').addEventListener('submit', function() {
+    formChanged = false;
+});
 </script>
 
 <?php include '../includes/footer.php'; ?>

@@ -94,11 +94,11 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 </a>
             </li>
 
-            <!-- Review -->
+            <!-- Revenue -->
             <li>
-                <a href="<?= SITE_URL ?>/admin/review/allReviews.php" class="<?php echo $current_folder == 'review' ? 'active' : ''; ?>">
-                    <i class="fas fa-star"></i>
-                    <span>Reviews</span>
+                <a href="<?= SITE_URL ?>/admin/Revenue/revenue.php" class="<?php echo $current_folder == 'review' ? 'active' : ''; ?>">
+                <i class="fas fa-money-bill-wave"></i>
+                    <span>Revenue</span>
                 </a>
             </li>
 

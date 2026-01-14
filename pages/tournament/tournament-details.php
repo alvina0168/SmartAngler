@@ -100,165 +100,667 @@ include '../../includes/header.php';
 ?>
 
 <style>
-.badge {
-    display: inline-block;
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --sand: #F8F6F0;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
 }
 
-.badge-upcoming { background: #3498DB; color: white; }
-.badge-ongoing { background: #F1C40F; color: #333; }
-.badge-completed { background: #2ECC71; color: white; }
-.badge-cancelled { background: #E74C3C; color: white; }
+/* Page Container */
+.details-page {
+    background: var(--sand);
+    min-height: 100vh;
+    padding: 40px 0 60px;
+}
 
-.save-details-btn {
+.details-container {
+    max-width: 100%;
+    padding: 0 60px;
+}
+
+/* Back Button */
+.back-button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 24px;
-    background: white;
-    color: #F39C12;
-    border: 2px solid #F39C12;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
+    color: var(--ocean-light);
     text-decoration: none;
-}
-
-.save-details-btn:hover {
-    background: #F39C12;
-    color: white;
-}
-
-.save-details-btn.saved {
-    background: #F39C12;
-    color: white;
-}
-
-.status-message {
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
     font-weight: 600;
-    margin-bottom: 15px;
+    font-size: 15px;
+    margin-bottom: 24px;
+    transition: all 0.2s ease;
 }
 
-.status-message.pending { background: #FFF3CD; color: #856404; border: 2px solid #856404; }
-.status-message.approved { background: #D4EDDA; color: #155724; border: 2px solid #155724; }
-.status-message.rejected { background: #F8D7DA; color: #721C24; border: 2px solid #721C24; }
-.status-message.full { background: #F8D7DA; color: #721C24; border: 2px solid #721C24; }
+.back-button:hover {
+    color: var(--ocean-blue);
+    gap: 12px;
+}
 
-.detail-icon-box {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #6D94C5, #CBDCEB);
-    border-radius: 8px;
+/* Tournament Header Card */
+.tournament-header-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border);
+}
+
+.header-grid {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 40px;
+}
+
+.tournament-image {
+    width: 100%;
+    height: 400px;
+    border-radius: 16px;
+    object-fit: cover;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-badge.upcoming { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+.status-badge.ongoing { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+.status-badge.completed { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+.status-badge.cancelled { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+
+.tournament-title {
+    color: var(--ocean-blue);
+    margin: 20px 0 10px 0;
+    font-size: 36px;
+    font-weight: 800;
+}
+
+.organizer-info {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+/* Quick Info Grid */
+.quick-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.info-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.info-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-teal) 100%);
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--white);
     font-size: 18px;
+    flex-shrink: 0;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.info-value {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 15px;
+}
+
+/* Status Messages */
+.status-message {
+    padding: 16px 20px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.status-message.pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 2px solid #FCD34D;
+}
+
+.status-message.approved {
+    background: #ECFDF5;
+    color: #065F46;
+    border: 2px solid #A7F3D0;
+}
+
+.status-message.rejected {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 2px solid #FCA5A5;
+}
+
+.status-message.full {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 2px solid #FCA5A5;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-teal) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(8, 131, 149, 0.3);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: var(--white);
+    color: var(--ocean-light);
+    border: 2px solid var(--ocean-light);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--ocean-light);
+    color: var(--white);
+}
+
+.save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: var(--white);
+    color: #F59E0B;
+    border: 2px solid #F59E0B;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+    background: #FEF3C7;
+}
+
+.save-btn.saved {
+    background: #F59E0B;
+    color: var(--white);
+}
+
+/* Content Cards */
+.content-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border);
+}
+
+.card-title {
+    color: var(--ocean-blue);
+    margin-bottom: 24px;
+    font-size: 24px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-content {
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+/* Prize Tables */
+.prize-category {
+    margin-bottom: 32px;
+}
+
+.prize-category:last-child {
+    margin-bottom: 0;
+}
+
+.category-header {
+    background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-teal) 100%);
+    color: var(--white);
+    padding: 16px 20px;
+    border-radius: 12px 12px 0 0;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.prize-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+}
+
+.prize-table thead th {
+    background: var(--sand);
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+}
+
+.prize-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+.prize-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.prize-table tbody tr:hover {
+    background: var(--sand);
+}
+
+.prize-rank {
+    font-weight: 700;
+    color: var(--ocean-blue);
+}
+
+.prize-value {
+    font-weight: 700;
+    color: #10B981;
+}
+
+/* Sponsors Grid */
+.sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.sponsor-card {
+    background: var(--sand);
+    border-radius: 12px;
+    padding: 24px;
+    border: 2px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.sponsor-card:hover {
+    border-color: var(--ocean-light);
+    box-shadow: 0 4px 12px rgba(8, 131, 149, 0.1);
+}
+
+.sponsor-name {
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.sponsor-amount {
+    color: #10B981;
+    font-weight: 700;
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+.sponsor-description {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Reviews */
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stars {
+    display: flex;
+    gap: 4px;
+    font-size: 20px;
+}
+
+.avg-rating {
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--text-dark);
+}
+
+.review-count {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.review-card {
+    background: var(--sand);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.review-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-teal) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.review-info {
+    flex: 1;
+}
+
+.reviewer-name {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.review-date {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.review-rating {
+    display: flex;
+    gap: 4px;
+    font-size: 16px;
+}
+
+.review-text {
+    color: var(--text-dark);
+    line-height: 1.7;
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+
+.admin-response {
+    background: #E3F2FD;
+    border-left: 4px solid var(--ocean-light);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.response-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--ocean-blue);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.response-text {
+    color: var(--text-dark);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.empty-reviews {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-reviews i {
+    font-size: 48px;
+    opacity: 0.5;
+    margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .details-container {
+        padding: 0 40px;
+    }
+}
+
+@media (max-width: 992px) {
+    .header-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tournament-image {
+        height: 300px;
+    }
+    
+    .quick-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sponsors-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .details-container {
+        padding: 0 20px;
+    }
+    
+    .tournament-header-card {
+        padding: 24px;
+    }
+    
+    .tournament-title {
+        font-size: 28px;
+    }
+    
+    .content-card {
+        padding: 20px;
+    }
+    
+    .reviews-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .save-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 
-<div style="min-height: 70vh; padding: 50px 0; background-color: #F5EFE6;">
-    <div class="container">
+<div class="details-page">
+    <div class="details-container">
         <!-- Back Button -->
-        <div style="margin-bottom: 20px;">
-            <a href="tournaments.php" style="color: #6D94C5; text-decoration: none; font-weight: 600;">
-                <i class="fas fa-arrow-left"></i> Back to Tournaments
-            </a>
-        </div>
+        <a href="tournaments.php" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Tournaments
+        </a>
 
         <!-- Tournament Header Card -->
-        <div style="background: white; border-radius: 16px; padding: 40px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <div style="display: grid; grid-template-columns: 400px 1fr; gap: 40px;">
+        <div class="tournament-header-card">
+            <div class="header-grid">
                 <!-- Tournament Image -->
                 <div>
                     <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
                          alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>" 
-                         style="width: 100%; height: 400px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"
+                         class="tournament-image"
                          onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
                 </div>
                 
                 <!-- Tournament Info -->
                 <div>
-                    <span class="badge badge-<?php echo $tournament['status']; ?>">
+                    <span class="status-badge <?php echo $tournament['status']; ?>">
                         <?php echo strtoupper($tournament['status']); ?>
                     </span>
                     
-                    <h1 style="color: #6D94C5; margin: 20px 0 10px 0; font-size: 36px; font-weight: 700;">
+                    <h1 class="tournament-title">
                         <?php echo htmlspecialchars($tournament['tournament_title']); ?>
                     </h1>
                     
-                    <p style="color: #999; font-size: 14px; margin-bottom: 30px;">
+                    <p class="organizer-info">
                         <i class="fas fa-user-tie"></i> Organized by <?php echo htmlspecialchars($tournament['organizer_name']); ?>
                     </p>
                     
                     <!-- Quick Info Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="detail-icon-box">
+                    <div class="quick-info-grid">
+                        <div class="info-item">
+                            <div class="info-icon">
                                 <i class="fas fa-calendar"></i>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Date</div>
-                                <div style="font-weight: 600; color: #333;"><?php echo formatDate($tournament['tournament_date']); ?></div>
+                            <div class="info-content">
+                                <div class="info-label">Date</div>
+                                <div class="info-value"><?php echo formatDate($tournament['tournament_date']); ?></div>
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="detail-icon-box">
+                        <div class="info-item">
+                            <div class="info-icon">
                                 <i class="fas fa-clock"></i>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Time</div>
-                                <div style="font-weight: 600; color: #333;"><?php echo formatTime($tournament['start_time']); ?> - <?php echo formatTime($tournament['end_time']); ?></div>
+                            <div class="info-content">
+                                <div class="info-label">Time</div>
+                                <div class="info-value"><?php echo formatTime($tournament['start_time']); ?> - <?php echo formatTime($tournament['end_time']); ?></div>
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="detail-icon-box">
+                        <div class="info-item">
+                            <div class="info-icon">
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Entry Fee</div>
-                                <div style="font-weight: 600; color: #333;">RM <?php echo number_format($tournament['tournament_fee'], 2); ?></div>
+                            <div class="info-content">
+                                <div class="info-label">Entry Fee</div>
+                                <div class="info-value">RM <?php echo number_format($tournament['tournament_fee'], 2); ?></div>
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="detail-icon-box">
+                        <div class="info-item">
+                            <div class="info-icon">
                                 <i class="fas fa-users"></i>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Participants</div>
-                                <div style="font-weight: 600; color: #333;"><?php echo $participants_data['registered']; ?>/<?php echo $tournament['max_participants']; ?></div>
+                            <div class="info-content">
+                                <div class="info-label">Participants</div>
+                                <div class="info-value"><?php echo $participants_data['registered']; ?>/<?php echo $tournament['max_participants']; ?></div>
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="detail-icon-box">
+                        <div class="info-item">
+                            <div class="info-icon">
                                 <i class="fas fa-map-marked-alt"></i>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Spots Available</div>
-                                <div style="font-weight: 600; color: #333;"><?php echo $spots_data['available_spots']; ?>/<?php echo $spots_data['total_spots']; ?></div>
+                            <div class="info-content">
+                                <div class="info-label">Spots Available</div>
+                                <div class="info-value"><?php echo $spots_data['available_spots']; ?>/<?php echo $spots_data['total_spots']; ?></div>
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <div class="detail-icon-box">
+                        <div class="info-item">
+                            <div class="info-icon">
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; color: #999; margin-bottom: 3px;">Location</div>
-                                <div style="font-weight: 600; color: #333; font-size: 13px; line-height: 1.4;">
+                            <div class="info-content">
+                                <div class="info-label">Location</div>
+                                <div class="info-value" style="font-size: 13px; line-height: 1.4;">
                                     <?php echo htmlspecialchars($tournament['location']); ?>
                                 </div>
                             </div>
@@ -283,20 +785,27 @@ include '../../includes/header.php';
                     <?php endif; ?>
                     
                     <!-- Action Buttons -->
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="action-buttons">
                         <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected') 
                                 && $tournament['status'] == 'upcoming' && !$isFull): ?>
-                            <a href="../../user/register-tournament.php?id=<?php echo $tournament_id; ?>" class="btn btn-primary" style="padding: 14px 28px; font-size: 15px;">
+                            <a href="../../pages/registration/register-tournament.php?id=<?php echo $tournament_id; ?>" class="btn-primary">
                                 <i class="fas fa-user-plus"></i> Register for Tournament
                             </a>
                         <?php elseif ($tournament['user_registration_status'] == 'approved'): ?>
-                            <a href="<?php echo SITE_URL; ?>/user/my-registrations.php" class="btn btn-primary" style="padding: 14px 28px; font-size: 15px;">
+                            <a href="<?php echo SITE_URL; ?>/user/my-registrations.php" class="btn-primary">
                                 <i class="fas fa-list-alt"></i> View My Registrations
                             </a>
                         <?php endif; ?>
 
+                        <!-- View Results Button (for completed tournaments) -->
+                        <?php if ($tournament['status'] == 'completed'): ?>
+                            <a href="<?php echo SITE_URL; ?>/pages/tournament/get-live-results.php?tournament_id=<?php echo $tournament_id; ?>" class="btn-primary">
+                                <i class="fas fa-trophy"></i> View Results
+                            </a>
+                        <?php endif; ?>
+
                         <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected')): ?>
-                            <button class="save-details-btn <?php echo $tournament['is_saved'] > 0 ? 'saved' : ''; ?>" 
+                            <button class="save-btn <?php echo $tournament['is_saved'] > 0 ? 'saved' : ''; ?>" 
                                     id="saveBtn"
                                     onclick="toggleSave(<?php echo $tournament_id; ?>)">
                                 <i class="<?php echo $tournament['is_saved'] > 0 ? 'fas' : 'far'; ?> fa-bookmark"></i>
@@ -310,66 +819,93 @@ include '../../includes/header.php';
         
         <!-- Description -->
         <?php if (!empty($tournament['description'])): ?>
-        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <h3 style="color: #6D94C5; margin-bottom: 20px; font-size: 22px; font-weight: 700;">
+        <div class="content-card">
+            <h3 class="card-title">
                 <i class="fas fa-align-left"></i> Description
             </h3>
-            <p style="color: #666; line-height: 1.8; font-size: 15px;">
+            <div class="card-content">
                 <?php echo nl2br(htmlspecialchars($tournament['description'])); ?>
-            </p>
+            </div>
         </div>
         <?php endif; ?>
 
         <!-- Tournament Rules -->
         <?php if (!empty($tournament['tournament_rules'])): ?>
-        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <h3 style="color: #6D94C5; margin-bottom: 20px; font-size: 22px; font-weight: 700;">
+        <div class="content-card">
+            <h3 class="card-title">
                 <i class="fas fa-gavel"></i> Tournament Rules
             </h3>
-            <div style="color: #666; line-height: 1.8; font-size: 15px;">
+            <div class="card-content">
                 <?php echo nl2br(htmlspecialchars($tournament['tournament_rules'])); ?>
             </div>
         </div>
         <?php endif; ?>
         
-        <!-- Prizes -->
+        <!-- Prizes by Category -->
         <?php
-        $prizes_query = "SELECT tp.*, c.category_name 
+        $prizes_query = "SELECT tp.*, c.category_name, c.category_type
                          FROM TOURNAMENT_PRIZE tp 
                          LEFT JOIN CATEGORY c ON tp.category_id = c.category_id 
                          WHERE tp.tournament_id = ? 
-                         ORDER BY tp.category_id, tp.prize_ranking ASC";
+                         ORDER BY c.category_name, tp.target_weight, tp.prize_ranking ASC";
         $stmt = $conn->prepare($prizes_query);
         $stmt->bind_param("i", $tournament_id);
         $stmt->execute();
         $prizes_result = $stmt->get_result();
         
-        if ($prizes_result->num_rows > 0):
+        // Group prizes by category + target weight
+        $prizes_by_category = [];
+        while ($prize = $prizes_result->fetch_assoc()) {
+            $key = $prize['category_id'] . '_' . ($prize['target_weight'] ?? 'null');
+            if (!isset($prizes_by_category[$key])) {
+                $prizes_by_category[$key] = [
+                    'category_name' => $prize['category_name'],
+                    'category_type' => $prize['category_type'],
+                    'target_weight' => $prize['target_weight'],
+                    'prizes' => []
+                ];
+            }
+            $prizes_by_category[$key]['prizes'][] = $prize;
+        }
+        
+        if (count($prizes_by_category) > 0):
         ?>
-        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <h3 style="color: #6D94C5; margin-bottom: 25px; font-size: 22px; font-weight: 700;">
+        <div class="content-card">
+            <h3 class="card-title">
                 <i class="fas fa-gift"></i> Tournament Prizes
             </h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>Rank</th>
-                        <th>Prize Description</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($prize = $prizes_result->fetch_assoc()): ?>
-                    <tr>
-                        <td><strong><?php echo htmlspecialchars($prize['category_name']); ?></strong></td>
-                        <td><strong><?php echo htmlspecialchars($prize['prize_ranking']); ?></strong></td>
-                        <td><?php echo htmlspecialchars($prize['prize_description']); ?></td>
-                        <td style="font-weight: 600; color: #2ECC71;">RM <?php echo number_format($prize['prize_value'], 2); ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+            
+            <?php foreach ($prizes_by_category as $category_data): ?>
+                <div class="prize-category">
+                    <div class="category-header">
+                        <i class="fas fa-trophy"></i>
+                        <span><?php echo htmlspecialchars($category_data['category_name']); ?></span>
+                        <?php if ($category_data['target_weight']): ?>
+                            <span style="opacity: 0.9; font-size: 14px; margin-left: 8px;">
+                                (Target: <?php echo $category_data['target_weight']; ?> KG)
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    <table class="prize-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Prize Description</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($category_data['prizes'] as $prize): ?>
+                            <tr>
+                                <td class="prize-rank"><?php echo htmlspecialchars($prize['prize_ranking']); ?></td>
+                                <td><?php echo htmlspecialchars($prize['prize_description']); ?></td>
+                                <td class="prize-value">RM <?php echo number_format($prize['prize_value'], 2); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endforeach; ?>
         </div>
         <?php 
         endif; 
@@ -386,23 +922,23 @@ include '../../includes/header.php';
         
         if ($sponsors_result->num_rows > 0):
         ?>
-        <div style="background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <h3 style="color: #6D94C5; margin-bottom: 25px; font-size: 22px; font-weight: 700;">
+        <div class="content-card">
+            <h3 class="card-title">
                 <i class="fas fa-handshake"></i> Tournament Sponsors
             </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+            <div class="sponsors-grid">
                 <?php while ($sponsor = $sponsors_result->fetch_assoc()): ?>
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; border: 2px solid #e9ecef;">
-                    <h4 style="color: #333; margin-bottom: 10px; font-size: 18px; font-weight: 700;">
+                <div class="sponsor-card">
+                    <h4 class="sponsor-name">
                         <?php echo htmlspecialchars($sponsor['sponsor_name']); ?>
                     </h4>
                     <?php if ($sponsor['sponsored_amount'] > 0): ?>
-                        <p style="color: #2ECC71; font-weight: 600; margin-bottom: 10px; font-size: 16px;">
+                        <p class="sponsor-amount">
                             RM <?php echo number_format($sponsor['sponsored_amount'], 2); ?>
                         </p>
                     <?php endif; ?>
                     <?php if (!empty($sponsor['sponsor_description'])): ?>
-                        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                        <p class="sponsor-description">
                             <?php echo htmlspecialchars($sponsor['sponsor_description']); ?>
                         </p>
                     <?php endif; ?>
@@ -415,7 +951,7 @@ include '../../includes/header.php';
         $stmt->close();
         ?>
 
-        <!-- Reviews Section -->
+        <!-- Reviews Section (keeping your original review code) -->
         <?php
         // Check if user can review
         $can_review = false;
@@ -482,23 +1018,23 @@ include '../../includes/header.php';
         $avg_rating = $review_stats['avg_rating'] ?? 0;
         ?>
 
-        <div style="background: white; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div class="content-card">
+            <div class="reviews-header">
                 <div>
-                    <h3 style="color: #6D94C5; margin-bottom: 10px; font-size: 22px; font-weight: 700;">
+                    <h3 class="card-title" style="margin-bottom: 12px;">
                         <i class="fas fa-star"></i> Reviews & Ratings
                     </h3>
                     <?php if ($total_reviews > 0): ?>
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="display: flex; gap: 4px; font-size: 20px;">
+                        <div class="rating-summary">
+                            <div class="stars">
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <i class="fas fa-star" style="color: <?= $i <= round($avg_rating) ? '#ff9800' : '#dee2e6' ?>;"></i>
+                                    <i class="fas fa-star" style="color: <?= $i <= round($avg_rating) ? '#F59E0B' : '#E5E7EB' ?>;"></i>
                                 <?php endfor; ?>
                             </div>
-                            <span style="font-weight: 700; font-size: 20px; color: #495057;">
+                            <span class="avg-rating">
                                 <?= number_format($avg_rating, 1) ?>/5
                             </span>
-                            <span style="color: #6c757d; font-size: 14px;">
+                            <span class="review-count">
                                 (<?= $total_reviews ?> <?= $total_reviews == 1 ? 'review' : 'reviews' ?>)
                             </span>
                         </div>
@@ -507,11 +1043,11 @@ include '../../includes/header.php';
                 
                 <?php if ($can_review): ?>
                     <?php if ($has_reviewed): ?>
-                        <a href="<?= SITE_URL ?>/pages/review/myReviews.php" class="btn btn-secondary">
+                        <a href="<?= SITE_URL ?>/pages/review/myReviews.php" class="btn-secondary">
                             <i class="fas fa-eye"></i> View My Review
                         </a>
                     <?php else: ?>
-                        <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary">
+                        <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" class="btn-primary">
                             <i class="fas fa-star"></i> Write a Review
                         </a>
                     <?php endif; ?>
@@ -519,75 +1055,80 @@ include '../../includes/header.php';
             </div>
 
             <?php if ($total_reviews > 0): ?>
-                <div style="display: flex; flex-direction: column; gap: 20px;">
-                    <?php while ($review = $reviews_result->fetch_assoc()): ?>
-                        <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; border: 1px solid #e9ecef;">
-                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                                <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #6D94C5, #CBDCEB); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px;">
+                <?php while ($review = $reviews_result->fetch_assoc()): ?>
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="review-avatar">
+                                <?php if ($review['is_anonymous']): ?>
+                                    <i class="fas fa-user-secret"></i>
+                                <?php else: ?>
+                                    <?= strtoupper(substr($review['full_name'], 0, 1)) ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="review-info">
+                                <div class="reviewer-name">
                                     <?php if ($review['is_anonymous']): ?>
-                                        <i class="fas fa-user-secret"></i>
+                                        Anonymous User
                                     <?php else: ?>
-                                        <?= strtoupper(substr($review['full_name'], 0, 1)) ?>
+                                        <?= htmlspecialchars($review['full_name']) ?>
                                     <?php endif; ?>
                                 </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 3px;">
-                                        <?php if ($review['is_anonymous']): ?>
-                                            Anonymous User
-                                            <span style="font-size: 11px; background: #9e9e9e; color: white; padding: 3px 8px; border-radius: 10px; margin-left: 8px;">
-                                                <i class="fas fa-user-secret"></i> ANONYMOUS
-                                            </span>
-                                        <?php else: ?>
-                                            <?= htmlspecialchars($review['full_name']) ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div style="font-size: 13px; color: #6c757d;">
-                                        <?= date('d M Y', strtotime($review['review_date'])) ?>
-                                    </div>
-                                </div>
-                                <div style="display: flex; gap: 3px; font-size: 16px;">
-                                    <?php for ($i = 1; $i <= 5; $i++): ?>
-                                        <i class="fas fa-star" style="color: <?= $i <= $review['rating'] ? '#ff9800' : '#dee2e6' ?>;"></i>
-                                    <?php endfor; ?>
+                                <div class="review-date">
+                                    <?= date('d M Y', strtotime($review['review_date'])) ?>
                                 </div>
                             </div>
-
-                            <div style="color: #495057; line-height: 1.7; font-size: 15px;">
-                                <?= nl2br(htmlspecialchars($review['review_text'])) ?>
+                            <div class="review-rating">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <i class="fas fa-star" style="color: <?= $i <= $review['rating'] ? '#F59E0B' : '#E5E7EB' ?>;"></i>
+                                <?php endfor; ?>
                             </div>
-
-                            <?php if (!empty($review['admin_response'])): ?>
-                                <div style="background: #e3f2fd; border-left: 4px solid #6D94C5; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                                        <i class="fas fa-reply" style="color: #6D94C5;"></i>
-                                        <strong style="color: #6D94C5; font-size: 14px;">Admin Response</strong>
-                                        <span style="font-size: 13px; color: #6c757d;">
-                                            • <?= date('d M Y', strtotime($review['response_date'])) ?>
-                                        </span>
-                                    </div>
-                                    <div style="color: #495057; font-size: 14px; line-height: 1.6;">
-                                        <?= nl2br(htmlspecialchars($review['admin_response'])) ?>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
                         </div>
-                    <?php endwhile; ?>
-                </div>
+
+                        <!-- Review Text -->
+                        <div class="review-text">
+                            <?= nl2br(htmlspecialchars($review['review_text'])) ?>
+                        </div>
+
+                        <!-- Review Image -->
+                        <?php if (!empty($review['review_image'])): ?>
+                            <div class="review-image" style="margin-top: 12px;">
+                            <img src="<?= SITE_URL ?>/<?= htmlspecialchars($review['review_image']) ?>" 
+                                alt="Review Image" 
+                                style="max-width: 200px; max-height: 150px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); object-fit: cover;"
+                                onerror="this.src='<?= SITE_URL ?>/assets/images/default-review.jpg'">
+
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($review['admin_response'])): ?>
+                            <div class="admin-response">
+                                <div class="response-header">
+                                    <i class="fas fa-reply"></i>
+                                    <span>Admin Response</span>
+                                    <span style="font-weight: 400; opacity: 0.8;">
+                                        • <?= date('d M Y', strtotime($review['response_date'])) ?>
+                                    </span>
+                                </div>
+                                <div class="response-text">
+                                    <?= nl2br(htmlspecialchars($review['admin_response'])) ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endwhile; ?>
 
                 <?php if ($total_reviews > 10): ?>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <p style="color: #6c757d; font-size: 14px;">
-                            Showing 10 of <?= $total_reviews ?> reviews
-                        </p>
+                    <div style="text-align: center; margin-top: 20px; color: var(--text-muted); font-size: 14px;">
+                        Showing 10 of <?= $total_reviews ?> reviews
                     </div>
                 <?php endif; ?>
             <?php else: ?>
-                <div style="text-align: center; padding: 40px 20px; color: #adb5bd;">
-                    <i class="fas fa-star" style="font-size: 48px; opacity: 0.5; margin-bottom: 15px;"></i>
-                    <p style="font-size: 14px; margin: 0;">
+                <div class="empty-reviews">
+                    <i class="fas fa-star"></i>
+                    <p>
                         No reviews yet. 
                         <?php if ($can_review && !$has_reviewed): ?>
-                            <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" style="color: #6D94C5; font-weight: 600;">Be the first to review!</a>
+                            <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" style="color: var(--ocean-light); font-weight: 600;">Be the first to review!</a>
                         <?php endif; ?>
                     </p>
                 </div>

@@ -57,13 +57,9 @@ $total_activities = mysqli_num_rows($recent_activity);
             <i class="fas fa-trophy"></i>
         </div>
         <div class="stat-card-content">
-            <div class="stat-number"><?php echo $stats['tournaments']; ?></div>
             <div class="stat-title">Total Tournaments</div>
+            <div class="stat-number"><?php echo $stats['tournaments']; ?></div>
             <div class="stat-trend">
-                <span class="trend-neutral">
-                    <i class="fas fa-chart-bar"></i> 
-                    <?php echo $stats['upcoming']; ?> upcoming, <?php echo $stats['completed']; ?> completed
-                </span>
             </div>
         </div>
     </div>
@@ -73,14 +69,9 @@ $total_activities = mysqli_num_rows($recent_activity);
             <i class="fas fa-play-circle"></i>
         </div>
         <div class="stat-card-content">
-            <div class="stat-number"><?php echo $stats['active_tournaments']; ?></div>
             <div class="stat-title">Active Tournaments</div>
+            <div class="stat-number"><?php echo $stats['active_tournaments']; ?></div>
             <div class="stat-trend">
-                <?php if ($stats['active_tournaments'] > 0): ?>
-                    <span class="trend-success"><i class="fas fa-circle"></i> Live now</span>
-                <?php else: ?>
-                    <span class="trend-neutral"><i class="fas fa-pause-circle"></i> None active</span>
-                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -90,14 +81,9 @@ $total_activities = mysqli_num_rows($recent_activity);
             <i class="fas fa-clock"></i>
         </div>
         <div class="stat-card-content">
-            <div class="stat-number"><?php echo $stats['pending']; ?></div>
             <div class="stat-title">Pending Approvals</div>
+            <div class="stat-number"><?php echo $stats['pending']; ?></div>
             <div class="stat-trend">
-                <?php if ($stats['pending'] > 0): ?>
-                    <span class="trend-warning"><i class="fas fa-exclamation-circle"></i> Needs attention</span>
-                <?php else: ?>
-                    <span class="trend-success"><i class="fas fa-check-circle"></i> All clear</span>
-                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -107,11 +93,8 @@ $total_activities = mysqli_num_rows($recent_activity);
             <i class="fas fa-user-plus"></i>
         </div>
         <div class="stat-card-content">
-            <div class="stat-number"><?php echo $stats['recent_registrations']; ?></div>
             <div class="stat-title">New Registrations</div>
-            <div class="stat-trend">
-                <span class="trend-up"><i class="fas fa-calendar-week"></i> Last 7 days</span>
-            </div>
+            <div class="stat-number"><?php echo $stats['recent_registrations']; ?></div>
         </div>
     </div>
 </div>
@@ -126,7 +109,6 @@ $total_activities = mysqli_num_rows($recent_activity);
                     <i class="fas fa-bell"></i>
                     Recent Activity
                 </h2>
-                <p class="section-subtitle">Latest registration activity</p>
             </div>
             <?php if ($stats['pending'] > 0): ?>
                 <a href="participant/manageParticipants.php" class="btn btn-warning btn-sm">
@@ -202,7 +184,6 @@ $total_activities = mysqli_num_rows($recent_activity);
                     <i class="fas fa-chart-pie"></i>
                     Tournament Status
                 </h2>
-                <p class="section-subtitle">Current tournament breakdown</p>
             </div>
         </div>
 

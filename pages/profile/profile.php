@@ -72,76 +72,66 @@ $page_title = "My Profile";
 include '../../includes/header.php';
 ?>
 <style>
+:root {
+    --ocean-blue: #0A4D68;
+    --ocean-light: #088395;
+    --ocean-teal: #05BFDB;
+    --sand: #F8F6F0;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
+}
+
+/* Profile Hero Section */
+.profile-hero {
+    background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
+    padding: 20px 0 20px;
+    text-align: center;
+    color: var(--white);
+}
+
+.profile-hero h1 {
+    font-size: 42px;
+    font-weight: 800;
+    margin: 0 0 12px;
+}
+
+.profile-hero p {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+/* Profile Card Section */
 .profile-section {
+    background: var(--sand);
+    padding: 60px 0;
     min-height: 70vh;
-    padding: 50px 0;
-    background-color: #F5EFE6;
 }
 
 .profile-card {
-    max-width: 800px;
+    max-width: 700px;
     margin: 0 auto;
-    background: white;
-    border-radius: 12px;
+    background: var(--white);
+    border-radius: 16px;
     padding: 40px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.profile-card:hover {
+    transform: translateY(-3px);
 }
 
 .profile-card h2 {
-    color: #6D94C5;
+    color: var(--ocean-blue);
     margin-bottom: 30px;
     text-align: center;
+    font-size: 28px;
 }
 
-.profile-card .form-group {
-    margin-bottom: 20px;
-}
-
-.profile-card label {
-    font-weight: 600;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.profile-card input[type="text"],
-.profile-card input[type="email"],
-.profile-card input[type="password"] {
-    width: 100%;
-    padding: 12px 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-}
-
-.profile-card input[type="file"] {
-    border: none;
-}
-
-.profile-card .profile-image-preview {
-    display: block;
-    margin: 0 auto 20px auto;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #6D94C5;
-}
-
-.profile-card button {
-    background: #6D94C5;
-    color: white;
-    padding: 12px 25px;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.profile-card button:hover {
-    background: #5a7ea8;
-}
-
+/* Alerts */
 .alert {
     padding: 15px;
     border-radius: 8px;
@@ -162,17 +152,100 @@ include '../../includes/header.php';
     border: 2px solid #721C24;
 }
 
+/* Form Groups */
+.profile-card .form-group {
+    margin-bottom: 20px;
+}
+
+.profile-card label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+}
+
+/* Inputs */
+.profile-card input[type="text"],
+.profile-card input[type="email"],
+.profile-card input[type="password"],
+.profile-card input[type="file"] {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    background: #FAFAFA;
+    transition: all 0.2s ease;
+}
+
+.profile-card input[type="text"]:focus,
+.profile-card input[type="email"]:focus,
+.profile-card input[type="password"]:focus {
+    border-color: var(--ocean-light);
+    box-shadow: 0 0 0 2px rgba(8,131,149,0.2);
+    outline: none;
+}
+
+/* Profile Image */
+.profile-card .profile-image-preview {
+    display: block;
+    margin: 0 auto 20px auto;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--ocean-light);
+    transition: all 0.3s ease;
+}
+
+.profile-card .profile-image-preview:hover {
+    transform: scale(1.05);
+}
+
+/* Submit Button */
+.profile-card button {
+    background: var(--ocean-light);
+    color: var(--white);
+    padding: 12px 25px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.profile-card button:hover {
+    background: var(--ocean-blue);
+    transform: translateY(-2px);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
     .profile-card {
         padding: 25px;
     }
+    .profile-hero h1 {
+        font-size: 32px;
+    }
+    .profile-hero p {
+        font-size: 16px;
+    }
 }
 </style>
 
+<!-- Hero -->
+<div class="profile-hero">
+    <h1>My Profile</h1>
+    <p>Update your information and profile image</p>
+</div>
+
+<!-- Profile Form Section -->
 <section class="profile-section">
     <div class="profile-card">
-        <h2><i class="fas fa-user-circle"></i> My Profile</h2>
-
         <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
         <?php if ($error): ?><div class="alert alert-error"><?= $error ?></div><?php endif; ?>
 
@@ -211,5 +284,5 @@ function previewImage(event){
     document.getElementById('profilePreview').src = URL.createObjectURL(event.target.files[0]);
 }
 </script>
-
+ 
 <?php include '../../includes/footer.php'; ?>
