@@ -8,43 +8,49 @@ if (!isAdmin()) {
     redirect(SITE_URL . '/index.php');
 }
 
+// Get logged-in admin user ID
+$logged_in_user_id = intval($_SESSION['user_id']);
+
 $page_title = 'Revenue Overview';
-$page_description = 'Tournament revenue statistics';
+$page_description = 'My tournament revenue statistics';
 
 include '../includes/header.php';
 
 /* =========================
-   REVENUE CALCULATIONS
+   REVENUE CALCULATIONS - ONLY FOR THIS ADMIN'S TOURNAMENTS
 ========================= */
 
-// Total Revenue
+// Total Revenue - Only from admin's tournaments
 $total_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COALESCE(SUM(t.tournament_fee), 0) AS total
     FROM TOURNAMENT_REGISTRATION tr
     JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
     WHERE tr.approval_status = 'approved'
+    AND t.created_by = '$logged_in_user_id'
 "))['total'];
 
-// Weekly Revenue
+// Weekly Revenue - Only from admin's tournaments
 $weekly_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COALESCE(SUM(t.tournament_fee), 0) AS total
     FROM TOURNAMENT_REGISTRATION tr
     JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
     WHERE tr.approval_status = 'approved'
+    AND t.created_by = '$logged_in_user_id'
     AND tr.registration_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
 "))['total'];
 
-// Monthly Revenue
+// Monthly Revenue - Only from admin's tournaments
 $monthly_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COALESCE(SUM(t.tournament_fee), 0) AS total
     FROM TOURNAMENT_REGISTRATION tr
     JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
     WHERE tr.approval_status = 'approved'
+    AND t.created_by = '$logged_in_user_id'
     AND MONTH(tr.registration_date) = MONTH(CURDATE())
     AND YEAR(tr.registration_date) = YEAR(CURDATE())
 "))['total'];
 
-// Revenue per tournament
+// Revenue per tournament - Only admin's tournaments
 $revenue_per_tournament = mysqli_query($conn, "
     SELECT 
         t.tournament_title,
@@ -55,6 +61,7 @@ $revenue_per_tournament = mysqli_query($conn, "
     LEFT JOIN TOURNAMENT_REGISTRATION tr 
         ON t.tournament_id = tr.tournament_id
         AND tr.approval_status = 'approved'
+    WHERE t.created_by = '$logged_in_user_id'
     GROUP BY t.tournament_id
     ORDER BY total_revenue DESC
 ");
@@ -153,14 +160,23 @@ $revenue_per_tournament = mysqli_query($conn, "
     .revenue-info h3 {
         font-size: 20px;
     }
+    
+    .revenue-table {
+        font-size: 14px;
+    }
+    
+    .revenue-table th,
+    .revenue-table td {
+        padding: 10px 12px;
+    }
 }
 </style>
 
 <!-- Page Header -->
 <div class="welcome-card">
     <div class="welcome-content">
-        <h1>Revenue Overview 💰</h1>
-        <p>Monitor earnings from tournament registrations</p>
+        <h1>My Revenue Overview</h1>
+        <p>Monitor earnings from your tournament registrations</p>
     </div>
     <div class="welcome-date">
         <i class="fas fa-calendar-day"></i>
@@ -198,28 +214,37 @@ $revenue_per_tournament = mysqli_query($conn, "
 <!-- Revenue Table -->
 <div class="dashboard-section">
     <h2 class="section-title-modern">
-        <i class="fas fa-chart-line"></i> Revenue Per Tournament
+        Revenue Per Tournament
     </h2>
 
-    <table class="revenue-table">
-        <thead>
-            <tr>
-                <th>Tournament</th>
-                <th>Fee (RM)</th>
-                <th>Approved Anglers</th>
-                <th>Total Revenue</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = mysqli_fetch_assoc($revenue_per_tournament)): ?>
-            <tr>
-                <td><?= htmlspecialchars($row['tournament_title']); ?></td>
-                <td>RM <?= number_format($row['tournament_fee'], 2); ?></td>
-                <td><?= $row['total_participants']; ?></td>
-                <td><span class="badge-money">RM <?= number_format($row['total_revenue'], 2); ?></span></td>
-            </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+    <?php if (mysqli_num_rows($revenue_per_tournament) > 0): ?>
+        <table class="revenue-table">
+            <thead>
+                <tr>
+                    <th>Tournament</th>
+                    <th>Fee (RM)</th>
+                    <th>Approved Anglers</th>
+                    <th>Total Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = mysqli_fetch_assoc($revenue_per_tournament)): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['tournament_title']); ?></td>
+                    <td>RM <?= number_format($row['tournament_fee'], 2); ?></td>
+                    <td><?= $row['total_participants']; ?></td>
+                    <td><span class="badge-money">RM <?= number_format($row['total_revenue'], 2); ?></span></td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <div class="empty-state">
+            <i class="fas fa-chart-line"></i>
+            <h3>No Revenue Data</h3>
+            <p>You haven't created any tournaments yet or there are no approved registrations.</p>
+        </div>
+    <?php endif; ?>
 </div>
 
+<?php include '../includes/footer.php'; ?>

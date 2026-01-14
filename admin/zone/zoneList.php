@@ -5,7 +5,10 @@ require_once '../../includes/functions.php';
 $page_title = 'Fishing Zones';
 $page_description = 'Manage fishing zones and spots';
 
-// Get all zones with spot count
+// Get logged-in admin user ID
+$logged_in_user_id = intval($_SESSION['user_id']);
+
+// Get all zones **created by this admin**
 $zones_query = "
     SELECT z.*, 
            COUNT(DISTINCT fs.spot_id) as total_spots,
@@ -16,13 +19,16 @@ $zones_query = "
     FROM ZONE z
     LEFT JOIN FISHING_SPOT fs ON z.zone_id = fs.zone_id
     LEFT JOIN TOURNAMENT t ON z.tournament_id = t.tournament_id
+    WHERE t.created_by = '$logged_in_user_id' OR z.tournament_id IS NULL
     GROUP BY z.zone_id
     ORDER BY z.created_at DESC
 ";
+
 $zones_result = mysqli_query($conn, $zones_query);
 
 include '../includes/header.php';
 ?>
+
 
 <style>
 .table tbody tr {
@@ -55,7 +61,7 @@ include '../includes/header.php';
         <div class="section-header">
             <h2 class="section-title">
                 <i class="fas fa-map-marked-alt"></i>
-                All Fishing Zones (<?php echo mysqli_num_rows($zones_result); ?>)
+                My Fishing Zones (<?php echo mysqli_num_rows($zones_result); ?>)
             </h2>
         </div>
 

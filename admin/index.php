@@ -3,18 +3,26 @@ $page_title = 'Dashboard';
 $page_description = 'Overview of your fishing tournament management';
 include 'includes/header.php';
 
+$admin_id = $current_user['user_id']; // Logged-in admin
+
 // Get statistics
 $stats_queries = [
-    'tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT",
-    'active_tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing'",
-    'pending' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION WHERE approval_status = 'pending'",
-    'recent_registrations' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION WHERE DATE(registration_date) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)",
-    'upcoming' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'upcoming'",
-    'ongoing' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing'",
-    'completed' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'completed'",
-    'total_participants' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION WHERE approval_status = 'approved'"
+    'tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE created_by = $admin_id",
+    'active_tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing' AND created_by = $admin_id",
+    'pending' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION tr 
+                  JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id 
+                  WHERE tr.approval_status = 'pending' AND t.created_by = $admin_id",
+    'recent_registrations' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION tr 
+                               JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id 
+                               WHERE DATE(tr.registration_date) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                               AND t.created_by = $admin_id",
+    'upcoming' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'upcoming' AND created_by = $admin_id",
+    'ongoing' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing' AND created_by = $admin_id",
+    'completed' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'completed' AND created_by = $admin_id",
+    'total_participants' => "SELECT COUNT(*) as total FROM TOURNAMENT_REGISTRATION tr
+                             JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
+                             WHERE tr.approval_status = 'approved' AND t.created_by = $admin_id"
 ];
-
 $stats = [];
 foreach ($stats_queries as $key => $query) {
     $result = mysqli_query($conn, $query);
@@ -32,6 +40,7 @@ $recent_activity_query = "
     FROM TOURNAMENT_REGISTRATION tr
     JOIN USER u ON tr.user_id = u.user_id
     JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id
+    WHERE t.created_by = $admin_id
     ORDER BY tr.registration_date DESC
 ";
 $recent_activity = mysqli_query($conn, $recent_activity_query);

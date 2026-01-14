@@ -12,6 +12,15 @@ if (!function_exists('sanitize')) {
     }
 }
 
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
+// Get logged-in admin user ID
+$logged_in_user_id = intval($_SESSION['user_id']);
+
 /* -----------------------------------------------------------
    Auto-update tournament status based on date/time
 ----------------------------------------------------------- */
@@ -23,7 +32,7 @@ $update_query = "
         WHEN NOW() > CONCAT(tournament_date, ' ', end_time) THEN 'completed'
         ELSE status
     END
-    WHERE status != 'cancelled';
+    WHERE status != 'cancelled' AND created_by = '$logged_in_user_id';
 ";
 mysqli_query($conn, $update_query);
 
@@ -34,10 +43,15 @@ $offset = ($page - 1) * $limit;
 
 // --- Status filter ---
 $status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'all';
-$where_clause = '';
+
+// Build WHERE clause - ALWAYS filter by created_by
+$where_conditions = ["created_by = '$logged_in_user_id'"];
+
 if ($status_filter != 'all') {
-    $where_clause = "WHERE status = '$status_filter'";
+    $where_conditions[] = "status = '$status_filter'";
 }
+
+$where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 
 // --- Get total tournaments for pagination ---
 $total_query = "SELECT COUNT(*) as total FROM TOURNAMENT $where_clause";
@@ -91,7 +105,7 @@ include '../includes/header.php';
         <div class="section-header">
             <h2 class="section-title">
                 <i class="fas fa-trophy"></i>
-                Tournaments (<?php echo $total_tournaments; ?>)
+                My Tournaments (<?php echo $total_tournaments; ?>)
             </h2>
         </div>
 
@@ -125,7 +139,7 @@ include '../includes/header.php';
                         <div class="tournament-title"><?php echo htmlspecialchars($tournament['tournament_title']); ?></div>
                         <div class="tournament-location">
                             <i class="fas fa-map-marker-alt"></i>
-                            <?php echo htmlspecialchars(substr($tournament['location'],0,40)) . '...'; ?>
+                            <?php echo htmlspecialchars(substr($tournament['location'],0,40)) . (strlen($tournament['location']) > 40 ? '...' : ''); ?>
                         </div>
                     </td>
                     <td>
@@ -172,7 +186,7 @@ include '../includes/header.php';
     <div class="empty-state">
         <i class="fas fa-trophy"></i>
         <h3>No Tournaments Found</h3>
-        <p>You haven't created any tournaments yet or no tournaments match your filter.</p>
+        <p>You haven't created any tournaments yet<?php echo $status_filter != 'all' ? ' or no tournaments match your filter' : ''; ?>.</p>
     </div>
 <?php endif; ?>
 

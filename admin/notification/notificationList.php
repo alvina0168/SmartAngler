@@ -7,19 +7,51 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     redirect(SITE_URL . '/login.php');
 }
 
-// Fetch notifications with user and tournament info
+// Get logged-in admin user ID
+$logged_in_user_id = intval($_SESSION['user_id']);
+
+// Fetch notifications - Only for tournaments created by this admin
 $query = "
     SELECT n.*, u.full_name AS user_name, t.tournament_title 
     FROM NOTIFICATION n
     LEFT JOIN USER u ON n.user_id = u.user_id
     LEFT JOIN TOURNAMENT t ON n.tournament_id = t.tournament_id
+    WHERE (t.created_by = '$logged_in_user_id' OR t.tournament_id IS NULL)
     ORDER BY n.sent_date DESC
 ";
 $result = mysqli_query($conn, $query);
 
-$page_title = "Notifications & Announcements";
+$page_title = "My Notifications & Announcements";
 include '../includes/header.php';
 ?>
+
+<style>
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    background: white;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.empty-state h3 {
+    color: #435334;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #999;
+    font-size: 15px;
+}
+</style>
 
 <!-- Create Notification Button -->
 <div class="text-right mb-3">
@@ -32,10 +64,9 @@ include '../includes/header.php';
     <div class="section">
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fas fa-bell"></i> All Notifications (<?php echo mysqli_num_rows($result); ?>)
+                <i class="fas fa-bell"></i> My Notifications (<?php echo mysqli_num_rows($result); ?>)
             </h2>
         </div>
-
         <table class="table">
             <thead>
                 <tr>
@@ -57,7 +88,7 @@ include '../includes/header.php';
                             <i class="fas fa-trophy"></i> <?php echo htmlspecialchars($notif['tournament_title'] ?? '-'); ?>
                         </td>
                         <td><?php echo htmlspecialchars($notif['title']); ?></td>
-                        <td><?php echo htmlspecialchars($notif['message']); ?></td>
+                        <td><?php echo htmlspecialchars(substr($notif['message'], 0, 50)) . (strlen($notif['message']) > 50 ? '...' : ''); ?></td>
                         <td><?php echo date('d M Y, h:i A', strtotime($notif['sent_date'])); ?></td>
                         <td>
                             <div class="action-btns">
@@ -78,7 +109,7 @@ include '../includes/header.php';
     <div class="empty-state">
         <i class="fas fa-bell"></i>
         <h3>No Notifications Yet</h3>
-        <p>Create a notification or announcement to notify users.</p>
+        <p>Create a notification or announcement to notify users about your tournaments.</p>
     </div>
 <?php endif; ?>
 
