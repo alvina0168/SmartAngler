@@ -9,9 +9,20 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'smartangler');
 
-// Site Configuration
+// Site Configuration - Dynamic URL Detection
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+// Check if running on ngrok or localhost
+if (strpos($host, 'ngrok') !== false) {
+    // Running on ngrok - use HTTPS
+    define('SITE_URL', 'https://' . $host . '/SmartAngler');
+} else {
+    // Running locally - use HTTP
+    define('SITE_URL', 'http://' . $host . '/SmartAngler');
+}
+
 define('SITE_NAME', 'SmartAngler');
-define('SITE_URL', 'http://localhost/SmartAngler');
 
 // Session Configuration
 define('SESSION_TIMEOUT', 3600); // 1 hour in seconds

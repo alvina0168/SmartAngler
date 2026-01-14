@@ -492,35 +492,3 @@ include '../../includes/header.php';
 </div>
 
 <?php include '../../includes/footer.php'; ?>
-```
-
-## **✅ Fixed Issues:**
-
-### **1. Total Catches Column:**
-- ❌ Removed from all categories
-- ✅ Only shows for "Most Catches" category
-- Other categories show: Fish Species, Weight, Catch Time
-
-### **2. Table Layout (Like Image):**
-- Simple rank numbers (no badges)
-- Clean blue header (#7AA5C4)
-- All prize slots shown
-- "No winner yet" for empty slots
-
-### **3. All Rankings Listed:**
-- Shows ALL prize rankings from TOURNAMENT_PRIZE
-- Displays winner info OR "No winner yet"
-- Matches exactly like your image
-
-### **4. Simple Rank Numbers:**
-- Just plain numbers (1, 2, 3, 4, 5...)
-- No fancy badges or colors
-- Clean and simple
-
-### **Table Structure:**
-```
-Most Catches Category:
-Rank | Name | Total Catches | Prize | Value
-
-Other Categories:
-Rank | Name | Species | Weight | Time | Prize | Value
