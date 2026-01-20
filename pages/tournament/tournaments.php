@@ -2,11 +2,13 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Require login
-requireLogin();
+// Don't require login - tournaments should be public
+// Only check if user is logged in for personalized features
+$isLoggedIn = isLoggedIn();
+$currentUserId = $isLoggedIn ? $_SESSION['user_id'] : null;
 
 // Admins shouldn't access this page
-if (isAdmin()) {
+if ($isLoggedIn && isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
 
@@ -72,24 +74,40 @@ switch ($sort_by) {
         $order_by .= "t.tournament_date ASC";
 }
 
-$sql = "SELECT t.*, u.full_name as organizer_name,
-        (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
-         WHERE tournament_id = t.tournament_id 
-         AND approval_status IN ('pending', 'approved')) as registered_count,
-        (SELECT COUNT(*) FROM SAVED 
-         WHERE tournament_id = t.tournament_id 
-         AND user_id = ? 
-         AND is_saved = TRUE) as is_saved,
-        (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
-         WHERE tournament_id = t.tournament_id 
-         AND user_id = ? 
-         AND approval_status IN ('pending', 'approved')) as user_registered
-        FROM TOURNAMENT t
-        LEFT JOIN USER u ON t.user_id = u.user_id
-        $where_clause
-        $order_by, t.created_at DESC";
+// Build the SQL query - handle both logged-in and guest users
+if ($isLoggedIn) {
+    $sql = "SELECT t.*, u.full_name as organizer_name,
+            (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
+             WHERE tournament_id = t.tournament_id 
+             AND approval_status IN ('pending', 'approved')) as registered_count,
+            (SELECT COUNT(*) FROM SAVED 
+             WHERE tournament_id = t.tournament_id 
+             AND user_id = ? 
+             AND is_saved = TRUE) as is_saved,
+            (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
+             WHERE tournament_id = t.tournament_id 
+             AND user_id = ? 
+             AND approval_status IN ('pending', 'approved')) as user_registered
+            FROM TOURNAMENT t
+            LEFT JOIN USER u ON t.user_id = u.user_id
+            $where_clause
+            $order_by, t.created_at DESC";
+    
+    array_unshift($params, $currentUserId, $currentUserId);
+} else {
+    // Guest users - no personalization
+    $sql = "SELECT t.*, u.full_name as organizer_name,
+            (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
+             WHERE tournament_id = t.tournament_id 
+             AND approval_status IN ('pending', 'approved')) as registered_count,
+            0 as is_saved,
+            0 as user_registered
+            FROM TOURNAMENT t
+            LEFT JOIN USER u ON t.user_id = u.user_id
+            $where_clause
+            $order_by, t.created_at DESC";
+}
 
-array_unshift($params, $_SESSION['user_id'], $_SESSION['user_id']);
 $tournaments = $db->fetchAll($sql, $params);
 ?>
 
@@ -220,7 +238,7 @@ $tournaments = $db->fetchAll($sql, $params);
 /* Tournament Grid - 3 Columns Full Width */
 .tournaments-container {
     max-width: 100%;
-    padding: 4px 60px 60px;
+    padding: 40px 60px 60px;
 }
 
 .tournaments-grid {
@@ -503,8 +521,8 @@ $tournaments = $db->fetchAll($sql, $params);
                        value="<?php echo htmlspecialchars($search_query); ?>">
             </div>
             <select class="sort-select" name="sort" onchange="this.form.submit()">
-                <option value="date_asc" <?php echo $sort_by == 'date_asc' ? 'selected' : ''; ?>>Soonest First</option>
                 <option value="date_desc" <?php echo $sort_by == 'date_desc' ? 'selected' : ''; ?>>Latest First</option>
+                <option value="date_asc" <?php echo $sort_by == 'date_asc' ? 'selected' : ''; ?>>Soonest First</option>
                 <option value="price_low" <?php echo $sort_by == 'price_low' ? 'selected' : ''; ?>>Lowest Price</option>
                 <option value="price_high" <?php echo $sort_by == 'price_high' ? 'selected' : ''; ?>>Highest Price</option>
             </select>
@@ -528,10 +546,17 @@ $tournaments = $db->fetchAll($sql, $params);
                         </span>
                         
                         <?php if ($tournament['user_registered'] == 0): ?>
-                            <button class="save-btn <?php echo $tournament['is_saved'] > 0 ? 'saved' : ''; ?>" 
-                                    onclick="event.stopPropagation(); toggleSave(<?php echo $tournament['tournament_id']; ?>, this)">
-                                <i class="<?php echo $tournament['is_saved'] > 0 ? 'fas' : 'far'; ?> fa-heart"></i>
-                            </button>
+                            <?php if ($isLoggedIn): ?>
+                                <button class="save-btn <?php echo $tournament['is_saved'] > 0 ? 'saved' : ''; ?>" 
+                                        onclick="event.stopPropagation(); toggleSave(<?php echo $tournament['tournament_id']; ?>, this)">
+                                    <i class="<?php echo $tournament['is_saved'] > 0 ? 'fas' : 'far'; ?> fa-heart"></i>
+                                </button>
+                            <?php else: ?>
+                                <button class="save-btn" 
+                                        onclick="event.stopPropagation(); promptLogin()">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                     
@@ -595,6 +620,12 @@ $tournaments = $db->fetchAll($sql, $params);
 </div>
 
 <script>
+function promptLogin() {
+    if (confirm('Please login to save tournaments. Would you like to login now?')) {
+        window.location.href = '<?php echo SITE_URL; ?>/pages/authentication/login.php';
+    }
+}
+
 function toggleSave(tournamentId, button) {
     const isSaved = button.classList.contains('saved');
     const icon = button.querySelector('i');

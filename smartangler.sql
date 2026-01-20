@@ -14,12 +14,16 @@ CREATE TABLE USER (
   full_name VARCHAR(100),
   phone_number VARCHAR(20),
   address TEXT,
-  role ENUM('admin','angler') DEFAULT 'angler',
+  role ENUM('organizer','admin','angler') DEFAULT 'angler',
+  created_by INT NULL COMMENT 'ID of organizer who created this admin',
   status ENUM('active','inactive') DEFAULT 'active',
   profile_image VARCHAR(255),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   reset_token VARCHAR(255) NULL,
-  reset_expiry DATETIME NULL
+  reset_expiry DATETIME NULL,
+  FOREIGN KEY (created_by) REFERENCES USER(user_id) ON DELETE SET NULL,
+  INDEX idx_role (role),
+  INDEX idx_created_by (created_by)
 ) ENGINE=InnoDB;
 
 -- =========================================================

@@ -50,7 +50,7 @@ $total_activities = mysqli_num_rows($recent_activity);
 <!-- Welcome Section -->
 <div class="welcome-card">
     <div class="welcome-content">
-        <h1>Welcome back, <?php echo htmlspecialchars($current_user['full_name']); ?>! 👋</h1>
+        <h1>Welcome back, <?php echo htmlspecialchars($current_user['full_name']); ?>!</h1>
         <p>Here's what's happening with your fishing tournaments today.</p>
     </div>
     <div class="welcome-date">

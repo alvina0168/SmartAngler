@@ -77,6 +77,38 @@ include '../includes/header.php';
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+<style>
+.leaflet-control-layers {
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.leaflet-bar {
+    border-radius: 8px;
+}
+
+/* Custom marker styles for better visibility */
+.custom-marker {
+    background: transparent;
+}
+
+.marker-available {
+    background: #28a745;
+}
+
+.marker-occupied {
+    background: #007bff;
+}
+
+.marker-maintenance {
+    background: #17a2b8;
+}
+
+.marker-new {
+    background: #ff6b6b;
+}
+</style>
+
 <!-- Back & Edit Buttons -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
     <div>
@@ -146,7 +178,7 @@ include '../includes/header.php';
             <i class="fas fa-map"></i> Spots Map View
         </h2>
     </div>
-    <div id="spotsMap" style="width:100%; height:500px; border-radius: var(--radius-md); border:3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
+    <div id="spotsMap" style="width:100%; height:650px; border-radius: var(--radius-md); border:3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
 </div>
 
 <!-- Add New Spots Section -->
@@ -241,9 +273,57 @@ include '../includes/header.php';
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// --- MAP ---
-const spotsMap = L.map('spotsMap').setView([4.2105, 101.9758], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:19 }).addTo(spotsMap);
+// --- MAP INITIALIZATION WITH GOOGLE MAPS TILES ---
+const spotsMap = L.map('spotsMap').setView([5.4164, 116.0553], 10);
+
+// Google Maps-style Street Layer
+const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Google Satellite Layer
+const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Google Hybrid Layer (Satellite + Roads/Labels)
+const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Google Terrain Layer
+const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Add Google Hybrid as default
+googleHybrid.addTo(spotsMap);
+
+// Layer Control
+const baseLayers = {
+    "🌍 Hybrid (Recommended)": googleHybrid,
+    "🛰️ Satellite": googleSatellite,
+    "🗺️ Street Map": googleStreets,
+    "🏔️ Terrain": googleTerrain
+};
+
+L.control.layers(baseLayers, null, {
+    position: 'topright'
+}).addTo(spotsMap);
+
+// Add scale control
+L.control.scale({
+    metric: true,
+    imperial: false
+}).addTo(spotsMap);
 
 // Existing markers
 let spotMarkers = [];
@@ -255,8 +335,23 @@ if(!empty($spot['latitude']) && !empty($spot['longitude'])): ?>
 ];
 
 existingSpots.forEach(s=>{
-    const marker = L.marker([s.lat,s.lng]).addTo(spotsMap);
-    marker.bindPopup(`<b>Spot #${s.number}</b><br>Status: ${s.status}`);
+    // Custom marker based on status
+    let markerColor = '#28a745'; // available (green)
+    if (s.status === 'occupied') markerColor = '#007bff'; // blue
+    if (s.status === 'maintenance') markerColor = '#17a2b8'; // cyan
+    
+    const marker = L.marker([s.lat, s.lng], {
+        icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: ${markerColor}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    <span style="transform: rotate(45deg); color: white; font-weight: bold; font-size: 12px;">${s.number}</span>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        })
+    }).addTo(spotsMap);
+    
+    marker.bindPopup(`<b>Spot #${s.number}</b><br>Status: <strong>${s.status}</strong><br>Lat: ${s.lat}<br>Lng: ${s.lng}`);
     spotMarkers.push({spot_id:s.spot_id, leafletMarker:marker});
 });
 
@@ -283,8 +378,21 @@ spotsMap.on('click', function(e){
     const lng = e.latlng.lng.toFixed(8);
 
     maxSpotNumber++;
-    const marker = L.marker([lat,lng], {draggable:true}).addTo(spotsMap);
-    marker.bindPopup(`New Spot #${maxSpotNumber}`).openPopup();
+    
+    // Custom red marker for new spots
+    const marker = L.marker([lat, lng], {
+        draggable: true,
+        icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #ff6b6b; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    <span style="transform: rotate(45deg); color: white; font-weight: bold; font-size: 12px;">${maxSpotNumber}</span>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        })
+    }).addTo(spotsMap);
+    
+    marker.bindPopup(`<b>New Spot #${maxSpotNumber}</b><br><small style="color: #ff6b6b;">Drag to adjust position</small>`).openPopup();
 
     const spot={lat,lng,marker,spot_number:maxSpotNumber};
     newSpots.push(spot);
@@ -295,6 +403,7 @@ spotsMap.on('click', function(e){
         newSpots[idx].lat=ev.target.getLatLng().lat.toFixed(8);
         newSpots[idx].lng=ev.target.getLatLng().lng.toFixed(8);
         updateNewSpotsTable();
+        marker.setPopupContent(`<b>New Spot #${newSpots[idx].spot_number}</b><br>Lat: ${newSpots[idx].lat}<br>Lng: ${newSpots[idx].lng}`);
     });
 });
 
@@ -302,7 +411,7 @@ function updateNewSpotsTable(){
     newSpotsTable.innerHTML='';
     newSpots.forEach(s=>{
         const row=document.createElement('tr');
-        row.innerHTML=`<td>#${s.spot_number}</td><td>${s.lat}</td><td>${s.lng}</td>
+        row.innerHTML=`<td><strong>#${s.spot_number}</strong></td><td>${s.lat}</td><td>${s.lng}</td>
         <td><button type="button" class="btn btn-danger btn-sm" onclick="removeNewSpot(${s.spot_number})"><i class="fas fa-trash"></i></button></td>`;
         newSpotsTable.appendChild(row);
     });
@@ -312,6 +421,7 @@ function updateNewSpotsTable(){
     newSpotsInput.value=JSON.stringify(newSpots.map(s=>({lat:s.lat,lng:s.lng,spot_number:s.spot_number})));
     addSpotsBtn.disabled=newSpots.length===0;
 }
+
 function removeNewSpot(number){
     const idx=newSpots.findIndex(s=>s.spot_number===number);
     if(idx!==-1){

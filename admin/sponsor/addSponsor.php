@@ -4,22 +4,74 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Add Sponsor';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    redirect(SITE_URL . '/login.php');
-}
-
-if (!isset($_GET['tournament_id'])) {
-    $_SESSION['error'] = 'Tournament ID is missing!';
+// Validate tournament ID first
+if (!isset($_GET['tournament_id']) || !is_numeric($_GET['tournament_id'])) {
+    $_SESSION['error'] = 'Invalid tournament ID!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-$tournament_id = intval($_GET['tournament_id']);
+$tournament_id = (int) $_GET['tournament_id'];
+$logged_in_user_id = intval($_SESSION['user_id']);
+$logged_in_role = $_SESSION['role'];
+
+// ═══════════════════════════════════════════════════════════════
+//              ACCESS CONTROL
+// ═══════════════════════════════════════════════════════════════
+
+// Check access permissions
+if ($logged_in_role === 'organizer') {
+    $access_check = "
+        SELECT tournament_id FROM TOURNAMENT 
+        WHERE tournament_id = '$tournament_id'
+        AND (
+            created_by = '$logged_in_user_id'
+            OR created_by IN (
+                SELECT user_id FROM USER WHERE created_by = '$logged_in_user_id' AND role = 'admin'
+            )
+        )
+    ";
+} elseif ($logged_in_role === 'admin') {
+    $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
+    $creator_result = mysqli_query($conn, $get_creator_query);
+    $creator_row = mysqli_fetch_assoc($creator_result);
+    $organizer_id = $creator_row['created_by'] ?? null;
+    
+    if ($organizer_id) {
+        $access_check = "
+            SELECT tournament_id FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND (created_by = '$logged_in_user_id' OR created_by = '$organizer_id')
+        ";
+    } else {
+        $access_check = "
+            SELECT tournament_id FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND created_by = '$logged_in_user_id'
+        ";
+    }
+} else {
+    $_SESSION['error'] = 'Access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
+
+$access_result = mysqli_query($conn, $access_check);
+
+if (!$access_result || mysqli_num_rows($access_result) == 0) {
+    $_SESSION['error'] = 'Tournament not found or access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
+
+$tournament_id = (int) $_GET['tournament_id'];
 
 // Fetch tournament info
-$tournament_query = "SELECT tournament_title FROM TOURNAMENT WHERE tournament_id = $tournament_id";
+$tournament_query = "
+    SELECT tournament_title 
+    FROM TOURNAMENT 
+    WHERE tournament_id = $tournament_id
+";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
-if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
+if (!$tournament_result || mysqli_num_rows($tournament_result) === 0) {
     $_SESSION['error'] = 'Tournament not found!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
@@ -28,38 +80,59 @@ $tournament = mysqli_fetch_assoc($tournament_result);
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $sponsor_name = mysqli_real_escape_string($conn, trim($_POST['sponsor_name']));
+
+    $sponsor_name        = mysqli_real_escape_string($conn, trim($_POST['sponsor_name']));
     $sponsor_description = mysqli_real_escape_string($conn, trim($_POST['sponsor_description']));
-    $contact_phone = mysqli_real_escape_string($conn, trim($_POST['contact_phone']));
-    $contact_email = mysqli_real_escape_string($conn, trim($_POST['contact_email']));
-    $sponsored_amount = floatval($_POST['sponsored_amount']);
-    
+    $contact_phone       = mysqli_real_escape_string($conn, trim($_POST['contact_phone']));
+    $contact_email       = mysqli_real_escape_string($conn, trim($_POST['contact_email']));
+    $sponsored_amount    = isset($_POST['sponsored_amount']) ? floatval($_POST['sponsored_amount']) : 0.00;
+
+    // Validation
     if (empty($sponsor_name)) {
         $_SESSION['error'] = 'Sponsor name is required!';
+    } elseif (!empty($contact_email) && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['error'] = 'Invalid email format!';
     } else {
-        $sponsor_logo = '';
-        
+
         // Handle logo upload
+        $sponsor_logo = NULL;
+
         if (!empty($_FILES['sponsor_logo']['name'])) {
-            $sponsor_logo = uploadFile($_FILES['sponsor_logo'], 'sponsors');
-            if (!$sponsor_logo) {
-                $_SESSION['error'] = 'Failed to upload logo.';
+            $uploaded_logo = uploadFile($_FILES['sponsor_logo'], 'sponsors');
+            if ($uploaded_logo) {
+                $sponsor_logo = mysqli_real_escape_string($conn, $uploaded_logo);
+            } else {
+                $_SESSION['error'] = 'Failed to upload sponsor logo!';
             }
         }
-        
+
         if (!isset($_SESSION['error'])) {
+
             $insert_query = "
-                INSERT INTO SPONSOR (tournament_id, sponsor_name, sponsor_logo, sponsor_description, 
-                                     contact_phone, contact_email, sponsored_amount)
-                VALUES ($tournament_id, '$sponsor_name', '$sponsor_logo', '$sponsor_description', 
-                        '$contact_phone', '$contact_email', $sponsored_amount)
+                INSERT INTO SPONSOR (
+                    tournament_id,
+                    sponsor_name,
+                    sponsor_logo,
+                    contact_phone,
+                    contact_email,
+                    sponsor_description,
+                    sponsored_amount
+                ) VALUES (
+                    $tournament_id,
+                    '$sponsor_name',
+                    " . ($sponsor_logo ? "'$sponsor_logo'" : "NULL") . ",
+                    '$contact_phone',
+                    '$contact_email',
+                    '$sponsor_description',
+                    $sponsored_amount
+                )
             ";
-            
+
             if (mysqli_query($conn, $insert_query)) {
                 $_SESSION['success'] = 'Sponsor added successfully!';
                 redirect(SITE_URL . '/admin/sponsor/sponsorList.php?tournament_id=' . $tournament_id);
             } else {
-                $_SESSION['error'] = 'Failed to add sponsor: ' . mysqli_error($conn);
+                $_SESSION['error'] = 'Database error: ' . mysqli_error($conn);
             }
         }
     }

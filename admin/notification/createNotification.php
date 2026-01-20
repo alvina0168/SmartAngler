@@ -10,10 +10,8 @@ require '../../includes/PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    redirect(SITE_URL . '/login.php');
-}
+// Allow both organizer and admin
+requireAdminAccess();
 
 $page_title = 'Create Tournament Notification';
 $page_description = 'Send notification to all participants of a tournament';

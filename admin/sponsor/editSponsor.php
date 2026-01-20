@@ -4,15 +4,74 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Edit Sponsor';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    redirect(SITE_URL . '/login.php');
-}
-
+// Get sponsor ID first
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = 'Sponsor ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
+$sponsor_id = intval($_GET['id']);
+$logged_in_user_id = intval($_SESSION['user_id']);
+$logged_in_role = $_SESSION['role'];
+
+// Get tournament_id from sponsor
+$sponsor_check_query = "SELECT tournament_id FROM SPONSOR WHERE sponsor_id = '$sponsor_id'";
+$sponsor_check_result = mysqli_query($conn, $sponsor_check_query);
+
+if (!$sponsor_check_result || mysqli_num_rows($sponsor_check_result) == 0) {
+    $_SESSION['error'] = 'Sponsor not found!';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
+
+$sponsor_data = mysqli_fetch_assoc($sponsor_check_result);
+$tournament_id = $sponsor_data['tournament_id'];
+
+// ═══════════════════════════════════════════════════════════════
+//              ACCESS CONTROL
+// ═══════════════════════════════════════════════════════════════
+
+// Check access permissions
+if ($logged_in_role === 'organizer') {
+    $access_check = "
+        SELECT tournament_id FROM TOURNAMENT 
+        WHERE tournament_id = '$tournament_id'
+        AND (
+            created_by = '$logged_in_user_id'
+            OR created_by IN (
+                SELECT user_id FROM USER WHERE created_by = '$logged_in_user_id' AND role = 'admin'
+            )
+        )
+    ";
+} elseif ($logged_in_role === 'admin') {
+    $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
+    $creator_result = mysqli_query($conn, $get_creator_query);
+    $creator_row = mysqli_fetch_assoc($creator_result);
+    $organizer_id = $creator_row['created_by'] ?? null;
+    
+    if ($organizer_id) {
+        $access_check = "
+            SELECT tournament_id FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND (created_by = '$logged_in_user_id' OR created_by = '$organizer_id')
+        ";
+    } else {
+        $access_check = "
+            SELECT tournament_id FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND created_by = '$logged_in_user_id'
+        ";
+    }
+} else {
+    $_SESSION['error'] = 'Access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
+
+$access_result = mysqli_query($conn, $access_check);
+
+if (!$access_result || mysqli_num_rows($access_result) == 0) {
+    $_SESSION['error'] = 'Tournament not found or access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
 $sponsor_id = intval($_GET['id']);
 
 // Handle form submission

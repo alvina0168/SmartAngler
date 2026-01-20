@@ -1,20 +1,15 @@
 <?php
-require_once '../../includes/config.php';
-require_once '../../includes/functions.php';
+$page_title = 'Revenue Overview';
+require_once '../includes/header.php';
 
-// Require admin login
-requireLogin();
-if (!isAdmin()) {
-    redirect(SITE_URL . '/index.php');
-}
+// Only organizers can access revenue
+requireOrganizer();
 
-// Get logged-in admin user ID
+// Get logged-in organizer user ID
 $logged_in_user_id = intval($_SESSION['user_id']);
 
 $page_title = 'Revenue Overview';
 $page_description = 'My tournament revenue statistics';
-
-include '../includes/header.php';
 
 /* =========================
    REVENUE CALCULATIONS - ONLY FOR THIS ADMIN'S TOURNAMENTS
@@ -223,7 +218,7 @@ $revenue_per_tournament = mysqli_query($conn, "
                 <tr>
                     <th>Tournament</th>
                     <th>Fee (RM)</th>
-                    <th>Approved Anglers</th>
+                    <th>Registered Anglers</th>
                     <th>Total Revenue</th>
                 </tr>
             </thead>

@@ -1,16 +1,16 @@
 <?php
 /**
  * ═══════════════════════════════════════════════════════════════
- *         PROCESS ADMIN REGISTRATION (PLAIN PASSWORD VERSION)
+ *         PROCESS ORGANIZER REGISTRATION (PLAIN PASSWORD VERSION)
  * ═══════════════════════════════════════════════════════════════
  * Matches USER table structure:
  * - email, password, full_name, phone_number
- * - role ('admin' or 'angler')
+ * - role ('organizer')
  * - status ('active' or 'inactive')
  */
 
- require_once '../../includes/config.php';
- require_once '../../includes/functions.php';
+require_once '../../includes/config.php';
+require_once '../../includes/functions.php';
 
 // Set JSON header
 header('Content-Type: application/json');
@@ -105,7 +105,7 @@ if (!$insert_stmt) {
     exit;
 }
 
-$role = 'admin';
+$role = 'organizer';
 $status = 'active';
 $created_at = date('Y-m-d H:i:s');
 
@@ -125,7 +125,7 @@ if (mysqli_stmt_execute($insert_stmt)) {
     $user_id = mysqli_insert_id($conn);
     echo json_encode([
         'success' => true,
-        'message' => 'Admin account created successfully! Redirecting to login...',
+        'message' => 'Organizer account created successfully! Redirecting to login...',
         'user_id' => $user_id
     ]);
 } else {

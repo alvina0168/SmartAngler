@@ -8,9 +8,29 @@ function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
-// Check if user is admin
+// Check if user is organizer (super admin)
+function isOrganizer() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'organizer';
+}
+
+// Check if user is admin (data entry)
 function isAdmin() {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+}
+
+// Check if user is angler (regular user)
+function isAngler() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'angler';
+}
+
+// Check if user has full access (organizer only)
+function hasFullAccess() {
+    return isOrganizer();
+}
+
+// Check if user has admin access (both organizer and admin)
+function hasAdminAccess() {
+    return isOrganizer() || isAdmin();
 }
 
 // Get user information by user ID
@@ -121,6 +141,33 @@ function emailExists($email, $exclude_user_id = null) {
     return false;
 }
 
+// Check if username exists
+function usernameExists($username, $exclude_user_id = null) {
+    global $conn;
+    
+    $username = mysqli_real_escape_string($conn, $username);
+    $query = "SELECT COUNT(*) as count FROM USER WHERE username = '$username'";
+    
+    if ($exclude_user_id) {
+        $exclude_user_id = mysqli_real_escape_string($conn, $exclude_user_id);
+        $query .= " AND user_id != '$exclude_user_id'";
+    }
+    
+    $result = mysqli_query($conn, $query);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return $row['count'] > 0;
+    }
+    
+    return false;
+}
+
+// Validate username (alphanumeric, underscore, 3-20 characters)
+function validateUsername($username) {
+    return preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username);
+}
+
 // Check if user is registered for tournament (mysqli version)
 function isUserRegisteredForTournament($user_id, $tournament_id) {
     global $conn;
@@ -185,7 +232,7 @@ function checkSessionTimeout() {
                 session_unset();
                 session_destroy();
                 setFlashMessage('Your session has expired. Please login again.', 'warning');
-                redirect(SITE_URL . '/login.php');
+                redirect(SITE_URL . '/pages/authentication/login.php');
             }
         }
         $_SESSION['last_activity'] = time();
@@ -404,14 +451,23 @@ function sendNotification($db, $userId, $title, $message) {
 function requireLogin() {
     if (!isLoggedIn()) {
         setFlashMessage('Please login to access this page.', 'warning');
-        redirect(SITE_URL . '/login.php');
+        redirect(SITE_URL . '/pages/authentication/login.php');
     }
 }
 
-// Require admin
-function requireAdmin() {
+// Require organizer (super admin only)
+function requireOrganizer() {
     requireLogin();
-    if (!isAdmin()) {
+    if (!isOrganizer()) {
+        setFlashMessage('Access denied. Organizer privileges required.', 'error');
+        redirect(SITE_URL . '/admin/index.php');
+    }
+}
+
+// Require admin access (organizer or admin)
+function requireAdminAccess() {
+    requireLogin();
+    if (!hasAdminAccess()) {
         setFlashMessage('Access denied. Admin privileges required.', 'error');
         redirect(SITE_URL . '/index.php');
     }
@@ -424,5 +480,15 @@ function getUnreadNotificationsCount($db, $userId) {
     
     $result = $db->fetchOne($sql, [$userId]);
     return $result ? $result['count'] : 0;
+}
+
+// Get role display name
+function getRoleDisplayName($role) {
+    $roles = [
+        'organizer' => 'Organizer',
+        'admin' => 'Admin',
+        'angler' => 'Angler'
+    ];
+    return $roles[$role] ?? 'Unknown';
 }
 ?>

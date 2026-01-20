@@ -7,9 +7,9 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
-// Check if user is admin
-if (!isLoggedIn() || !isAdmin()) {
-    redirect(SITE_URL . '/pages/login.php');
+// Check if user has admin access
+if (!isLoggedIn() || !hasAdminAccess()) {
+    redirect(SITE_URL . '/pages/authentication/login.php?type=admin');
 }
 
 // Get current user info
@@ -21,7 +21,7 @@ if (!$current_user || !is_array($current_user)) {
         'full_name' => 'Admin User',
         'email' => $_SESSION['email'] ?? 'admin@smartangler.com',
         'profile_image' => '',
-        'role' => 'admin'
+        'role' => $_SESSION['role']
     ];
 }
 
@@ -57,7 +57,9 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 <img src="<?php echo SITE_URL; ?>/assets/images/logo.png" alt="SmartAngler Logo" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-logo.png'">
             </div>
             <div class="sidebar-title">SmartAngler</div>
-            <div class="sidebar-subtitle">Admin Panel</div>
+            <div class="sidebar-subtitle">
+                <?php echo isOrganizer() ? 'Organizer Panel' : 'Admin Panel'; ?>
+            </div>
         </div>
 
         <!-- Navigation Menu -->
@@ -94,13 +96,23 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 </a>
             </li>
 
-            <!-- Revenue -->
+            <?php if (isOrganizer()): ?>
+            <!-- Revenue (Organizer Only) -->
             <li>
-                <a href="<?= SITE_URL ?>/admin/Revenue/revenue.php" class="<?php echo $current_folder == 'review' ? 'active' : ''; ?>">
-                <i class="fas fa-money-bill-wave"></i>
+                <a href="<?php echo SITE_URL; ?>/admin/revenue/revenue.php" class="<?php echo $current_folder == 'revenue' ? 'active' : ''; ?>">
+                    <i class="fas fa-money-bill-wave"></i>
                     <span>Revenue</span>
                 </a>
             </li>
+
+            <!-- Manage Admins (Organizer Only) -->
+            <li>
+                <a href="<?php echo SITE_URL; ?>/admin/admin-management/manage-admins.php" class="<?php echo $current_folder == 'admin-management' ? 'active' : ''; ?>">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Manage Admins</span>
+                </a>
+            </li>
+            <?php endif; ?>
 
             <!-- My Profile -->
             <li>
@@ -138,7 +150,7 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                     </div>
                     <div class="user-info">
                         <div class="user-name"><?php echo htmlspecialchars($current_user['full_name'] ?? 'Admin User'); ?></div>
-                        <div class="user-role">Administrator</div>
+                        <div class="user-role"><?php echo getRoleDisplayName($current_user['role']); ?></div>
                     </div>
                 </div>
             </div>

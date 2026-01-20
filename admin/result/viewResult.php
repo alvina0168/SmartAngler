@@ -4,16 +4,68 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Tournament Results';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    redirect(SITE_URL . '/login.php');
-}
-
 if (!isset($_GET['tournament_id'])) {
     $_SESSION['error'] = 'Tournament ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
 $tournament_id = intval($_GET['tournament_id']);
+$logged_in_user_id = intval($_SESSION['user_id']);
+$logged_in_role = $_SESSION['role'];
+
+// ═══════════════════════════════════════════════════════════════
+//              ACCESS CONTROL
+// ═══════════════════════════════════════════════════════════════
+
+// Check access permissions
+if ($logged_in_role === 'organizer') {
+    // Organizer can access their tournaments or tournaments created by their admins
+    $access_check = "
+        SELECT tournament_id FROM TOURNAMENT 
+        WHERE tournament_id = '$tournament_id'
+        AND (
+            created_by = '$logged_in_user_id'
+            OR created_by IN (
+                SELECT user_id FROM USER WHERE created_by = '$logged_in_user_id' AND role = 'admin'
+            )
+        )
+    ";
+} elseif ($logged_in_role === 'admin') {
+    // Admin can access their tournaments or their organizer's tournaments
+    $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
+    $creator_result = mysqli_query($conn, $get_creator_query);
+    $creator_row = mysqli_fetch_assoc($creator_result);
+    $organizer_id = $creator_row['created_by'] ?? null;
+    
+    if ($organizer_id) {
+        $access_check = "
+            SELECT tournament_id FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND (created_by = '$logged_in_user_id' OR created_by = '$organizer_id')
+        ";
+    } else {
+        $access_check = "
+            SELECT tournament_id FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND created_by = '$logged_in_user_id'
+        ";
+    }
+} else {
+    // Other roles - no access
+    $_SESSION['error'] = 'Access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
+
+$access_result = mysqli_query($conn, $access_check);
+
+if (!$access_result || mysqli_num_rows($access_result) == 0) {
+    $_SESSION['error'] = 'Tournament not found or access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//              END OF ACCESS CONTROL
+// ═══════════════════════════════════════════════════════════════
 
 // Auto-calculate results in real-time
 // Clear existing results
@@ -395,9 +447,6 @@ include '../includes/header.php';
         <i class="fas fa-trophy"></i>
         <h3>No Prize Categories</h3>
         <p>Configure prizes first to view results</p>
-        <a href="../prize/managePrize.php?tournament_id=<?= $tournament_id ?>" class="btn btn-primary">
-            <i class="fas fa-cog"></i> Configure Prizes
-        </a>
     </div>
 <?php endif; ?>
 

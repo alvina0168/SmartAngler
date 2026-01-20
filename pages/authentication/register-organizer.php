@@ -1,12 +1,12 @@
 <?php
 /**
  * ═══════════════════════════════════════════════════════════════
- *         ADMIN REGISTRATION PAGE
+ *         ORGANIZER REGISTRATION PAGE
  * ═══════════════════════════════════════════════════════════════
  */
 
- require_once '../../includes/config.php';
- require_once '../../includes/functions.php';
+require_once '../../includes/config.php';
+require_once '../../includes/functions.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
@@ -18,7 +18,7 @@ if (isLoggedIn()) {
     exit;
 }
 
-$page_title = 'Admin Registration';
+$page_title = 'Organizer Registration';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -225,15 +225,15 @@ $page_title = 'Admin Registration';
 <body>
     <div class="register-container">
         <div class="register-header">
-            <i class="fas fa-user-shield"></i>
-            <h1>Admin Registration</h1>
-            <p>Create your tournament admin account</p>
+            <i class="fas fa-users-cog"></i>
+            <h1>Organizer Registration</h1>
+            <p>Create your tournament organizer account</p>
         </div>
 
         <div class="register-body">
             <div id="alertMessage"></div>
 
-            <form id="adminRegisterForm" method="POST">
+            <form id="organizerRegisterForm" method="POST">
                 <div class="form-group">
                     <label for="full_name">Full Name <span class="required">*</span></label>
                     <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
@@ -267,7 +267,7 @@ $page_title = 'Admin Registration';
                 </div>
 
                 <button type="submit" class="btn-register" id="submitBtn">
-                    <i class="fas fa-user-plus"></i> Create Admin Account
+                    <i class="fas fa-user-plus"></i> Create Organizer Account
                 </button>
             </form>
 
@@ -295,7 +295,7 @@ $page_title = 'Admin Registration';
         }
 
         // Handle form submission
-        document.getElementById('adminRegisterForm').addEventListener('submit', function(e) {
+        document.getElementById('organizerRegisterForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const submitBtn = document.getElementById('submitBtn');
@@ -334,7 +334,7 @@ $page_title = 'Admin Registration';
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
             
             // Send request
-            fetch('process-admin-register.php', {
+            fetch('process-organizer-register.php', {
                 method: 'POST',
                 body: formData
             })
@@ -362,7 +362,7 @@ $page_title = 'Admin Registration';
                     
                     // Re-enable submit button
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Admin Account';
+                    submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Organizer Account';
                 }
             })
             .catch(error => {
@@ -375,7 +375,7 @@ $page_title = 'Admin Registration';
                 
                 // Re-enable submit button
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Admin Account';
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Organizer Account';
             });
         });
     </script>

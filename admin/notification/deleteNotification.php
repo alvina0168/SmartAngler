@@ -2,9 +2,8 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    redirect(SITE_URL . '/login.php');
-}
+// Allow both organizer and admin
+requireAdminAccess();
 
 if (!isset($_GET['id'])) {
     redirect("notificationList.php");

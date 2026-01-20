@@ -2,11 +2,13 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Require login
-requireLogin();
+// Don't require login - tournament details should be public
+// Only check if user is logged in for personalized features
+$isLoggedIn = isLoggedIn();
+$currentUserId = $isLoggedIn ? $_SESSION['user_id'] : null;
 
 // Admins shouldn't access this page
-if (isAdmin()) {
+if ($isLoggedIn && isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
 
@@ -33,27 +35,42 @@ $stmt->execute();
 $stmt->close();
 
 // Get tournament details with save and registration status
-$query = "SELECT t.*, u.full_name as organizer_name,
-          (SELECT COUNT(*) FROM SAVED 
-           WHERE tournament_id = t.tournament_id 
-           AND user_id = ? 
-           AND is_saved = 1) as is_saved,
-          (SELECT registration_id FROM TOURNAMENT_REGISTRATION 
-           WHERE tournament_id = t.tournament_id 
-           AND user_id = ? 
-           AND approval_status IN ('pending', 'approved', 'rejected')
-           LIMIT 1) as user_registration_id,
-          (SELECT approval_status FROM TOURNAMENT_REGISTRATION 
-           WHERE tournament_id = t.tournament_id 
-           AND user_id = ? 
-           AND approval_status IN ('pending', 'approved', 'rejected')
-           LIMIT 1) as user_registration_status
-          FROM TOURNAMENT t 
-          LEFT JOIN USER u ON t.user_id = u.user_id 
-          WHERE t.tournament_id = ?";
+if ($isLoggedIn) {
+    $query = "SELECT t.*, u.full_name as organizer_name,
+              (SELECT COUNT(*) FROM SAVED 
+               WHERE tournament_id = t.tournament_id 
+               AND user_id = ? 
+               AND is_saved = 1) as is_saved,
+              (SELECT registration_id FROM TOURNAMENT_REGISTRATION 
+               WHERE tournament_id = t.tournament_id 
+               AND user_id = ? 
+               AND approval_status IN ('pending', 'approved', 'rejected')
+               LIMIT 1) as user_registration_id,
+              (SELECT approval_status FROM TOURNAMENT_REGISTRATION 
+               WHERE tournament_id = t.tournament_id 
+               AND user_id = ? 
+               AND approval_status IN ('pending', 'approved', 'rejected')
+               LIMIT 1) as user_registration_status
+              FROM TOURNAMENT t 
+              LEFT JOIN USER u ON t.user_id = u.user_id 
+              WHERE t.tournament_id = ?";
 
-$stmt = $conn->prepare($query);
-$stmt->bind_param("iiii", $_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id'], $tournament_id);
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("iiii", $currentUserId, $currentUserId, $currentUserId, $tournament_id);
+} else {
+    // Guest users - no personalization
+    $query = "SELECT t.*, u.full_name as organizer_name,
+              0 as is_saved,
+              NULL as user_registration_id,
+              NULL as user_registration_status
+              FROM TOURNAMENT t 
+              LEFT JOIN USER u ON t.user_id = u.user_id 
+              WHERE t.tournament_id = ?";
+
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $tournament_id);
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
 $tournament = $result->fetch_assoc();
@@ -275,6 +292,12 @@ include '../../includes/header.php';
     background: #FEE2E2;
     color: #991B1B;
     border: 2px solid #FCA5A5;
+}
+
+.status-message.login-required {
+    background: #DBEAFE;
+    color: #1E40AF;
+    border: 2px solid #93C5FD;
 }
 
 /* Action Buttons */
@@ -768,49 +791,72 @@ include '../../includes/header.php';
                     </div>
                     
                     <!-- Registration Status Messages -->
-                    <?php if ($tournament['user_registration_status']): ?>
-                        <?php if ($tournament['user_registration_status'] == 'pending'): ?>
-                            <div class="status-message pending">
-                                <i class="fas fa-clock"></i> Registration Pending Approval
-                            </div>
-                        <?php elseif ($tournament['user_registration_status'] == 'approved'): ?>
-                            <div class="status-message approved">
-                                <i class="fas fa-check-circle"></i> You're Registered for This Tournament!
+                    <?php if ($isLoggedIn): ?>
+                        <?php if ($tournament['user_registration_status']): ?>
+                            <?php if ($tournament['user_registration_status'] == 'pending'): ?>
+                                <div class="status-message pending">
+                                    <i class="fas fa-clock"></i> Registration Pending Approval
+                                </div>
+                            <?php elseif ($tournament['user_registration_status'] == 'approved'): ?>
+                                <div class="status-message approved">
+                                    <i class="fas fa-check-circle"></i> You're Registered for This Tournament!
+                                </div>
+                            <?php endif; ?>
+                        <?php elseif ($isFull): ?>
+                            <div class="status-message full">
+                                <i class="fas fa-user-slash"></i> Tournament Full - No Spots Available
                             </div>
                         <?php endif; ?>
-                    <?php elseif ($isFull): ?>
-                        <div class="status-message full">
-                            <i class="fas fa-user-slash"></i> Tournament Full - No Spots Available
-                        </div>
+                    <?php else: ?>
+                        <!-- Guest user message -->
+                        <?php if ($tournament['status'] == 'upcoming' && !$isFull): ?>
+                            <div class="status-message login-required">
+                                <i class="fas fa-info-circle"></i> Please login to register for this tournament
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                     
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected') 
-                                && $tournament['status'] == 'upcoming' && !$isFull): ?>
-                            <a href="../../pages/registration/register-tournament.php?id=<?php echo $tournament_id; ?>" class="btn-primary">
-                                <i class="fas fa-user-plus"></i> Register for Tournament
-                            </a>
-                        <?php elseif ($tournament['user_registration_status'] == 'approved'): ?>
-                            <a href="<?php echo SITE_URL; ?>/user/my-registrations.php" class="btn-primary">
-                                <i class="fas fa-list-alt"></i> View My Registrations
-                            </a>
+                        <?php if ($isLoggedIn): ?>
+                            <!-- Logged-in users: Show register/save buttons -->
+                            <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected') 
+                                    && $tournament['status'] == 'upcoming' && !$isFull): ?>
+                                <a href="../../pages/registration/register-tournament.php?id=<?php echo $tournament_id; ?>" class="btn-primary">
+                                    <i class="fas fa-user-plus"></i> Register for Tournament
+                                </a>
+                            <?php elseif ($tournament['user_registration_status'] == 'approved'): ?>
+                                <a href="<?php echo SITE_URL; ?>/user/my-registrations.php" class="btn-primary">
+                                    <i class="fas fa-list-alt"></i> View My Registrations
+                                </a>
+                            <?php endif; ?>
+
+                            <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected')): ?>
+                                <button class="save-btn <?php echo $tournament['is_saved'] > 0 ? 'saved' : ''; ?>" 
+                                        id="saveBtn"
+                                        onclick="toggleSave(<?php echo $tournament_id; ?>)">
+                                    <i class="<?php echo $tournament['is_saved'] > 0 ? 'fas' : 'far'; ?> fa-bookmark"></i>
+                                    <span><?php echo $tournament['is_saved'] > 0 ? 'Saved' : 'Save'; ?></span>
+                                </button>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <!-- Guest users: Show login prompt buttons -->
+                            <?php if ($tournament['status'] == 'upcoming' && !$isFull): ?>
+                                <button onclick="promptLogin('register')" class="btn-primary">
+                                    <i class="fas fa-user-plus"></i> Register for Tournament
+                                </button>
+                                <button onclick="promptLogin('save')" class="save-btn">
+                                    <i class="far fa-bookmark"></i>
+                                    <span>Save</span>
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
 
-                        <!-- View Results Button (for completed tournaments) -->
+                        <!-- View Results Button (available for everyone if completed) -->
                         <?php if ($tournament['status'] == 'completed'): ?>
                             <a href="<?php echo SITE_URL; ?>/pages/tournament/get-live-results.php?tournament_id=<?php echo $tournament_id; ?>" class="btn-primary">
                                 <i class="fas fa-trophy"></i> View Results
                             </a>
-                        <?php endif; ?>
-
-                        <?php if ((!$tournament['user_registration_status'] || $tournament['user_registration_status'] == 'rejected')): ?>
-                            <button class="save-btn <?php echo $tournament['is_saved'] > 0 ? 'saved' : ''; ?>" 
-                                    id="saveBtn"
-                                    onclick="toggleSave(<?php echo $tournament_id; ?>)">
-                                <i class="<?php echo $tournament['is_saved'] > 0 ? 'fas' : 'far'; ?> fa-bookmark"></i>
-                                <span><?php echo $tournament['is_saved'] > 0 ? 'Saved' : 'Save'; ?></span>
-                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -951,15 +997,13 @@ include '../../includes/header.php';
         $stmt->close();
         ?>
 
-        <!-- Reviews Section (keeping your original review code) -->
+        <!-- Reviews Section -->
         <?php
-        // Check if user can review
+        // Check if user can review (only for logged-in users)
         $can_review = false;
         $has_reviewed = false;
 
-        if (isset($_SESSION['user_id']) && !isAdmin()) {
-            $user_id = $_SESSION['user_id'];
-            
+        if ($isLoggedIn) {
             $participation_query = "
                 SELECT tr.registration_id
                 FROM TOURNAMENT_REGISTRATION tr
@@ -968,7 +1012,7 @@ include '../../includes/header.php';
                 AND tr.approval_status = 'approved'
             ";
             $stmt = $conn->prepare($participation_query);
-            $stmt->bind_param("ii", $user_id, $tournament_id);
+            $stmt->bind_param("ii", $currentUserId, $tournament_id);
             $stmt->execute();
             $participation_result = $stmt->get_result();
             $participated = $participation_result->num_rows > 0;
@@ -979,7 +1023,7 @@ include '../../includes/header.php';
             if ($can_review) {
                 $existing_review_query = "SELECT review_id FROM REVIEW WHERE user_id = ? AND tournament_id = ?";
                 $stmt = $conn->prepare($existing_review_query);
-                $stmt->bind_param("ii", $user_id, $tournament_id);
+                $stmt->bind_param("ii", $currentUserId, $tournament_id);
                 $stmt->execute();
                 $existing_review_result = $stmt->get_result();
                 $has_reviewed = $existing_review_result->num_rows > 0;
@@ -1041,7 +1085,7 @@ include '../../includes/header.php';
                     <?php endif; ?>
                 </div>
                 
-                <?php if ($can_review): ?>
+                <?php if ($isLoggedIn && $can_review): ?>
                     <?php if ($has_reviewed): ?>
                         <a href="<?= SITE_URL ?>/pages/review/myReviews.php" class="btn-secondary">
                             <i class="fas fa-eye"></i> View My Review
@@ -1051,6 +1095,10 @@ include '../../includes/header.php';
                             <i class="fas fa-star"></i> Write a Review
                         </a>
                     <?php endif; ?>
+                <?php elseif (!$isLoggedIn && $tournament['status'] == 'completed'): ?>
+                    <button onclick="promptLogin('review')" class="btn-primary">
+                        <i class="fas fa-star"></i> Write a Review
+                    </button>
                 <?php endif; ?>
             </div>
 
@@ -1126,9 +1174,11 @@ include '../../includes/header.php';
                 <div class="empty-reviews">
                     <i class="fas fa-star"></i>
                     <p>
-                        No reviews yet. 
-                        <?php if ($can_review && !$has_reviewed): ?>
+                        No reviews yet.
+                        <?php if ($isLoggedIn && $can_review && !$has_reviewed): ?>
                             <a href="<?= SITE_URL ?>/pages/review/addReview.php?tournament_id=<?= $tournament_id ?>" style="color: var(--ocean-light); font-weight: 600;">Be the first to review!</a>
+                        <?php elseif (!$isLoggedIn && $tournament['status'] == 'completed'): ?>
+                            <a href="#" onclick="promptLogin('review'); return false;" style="color: var(--ocean-light); font-weight: 600;">Login to be the first to review!</a>
                         <?php endif; ?>
                     </p>
                 </div>
@@ -1140,6 +1190,29 @@ include '../../includes/header.php';
 </div>
 
 <script>
+// Prompt login for guest users
+function promptLogin(action) {
+    let message = '';
+    switch(action) {
+        case 'register':
+            message = 'Please login to register for tournaments. Would you like to login now?';
+            break;
+        case 'save':
+            message = 'Please login to save tournaments. Would you like to login now?';
+            break;
+        case 'review':
+            message = 'Please login to write a review. Would you like to login now?';
+            break;
+        default:
+            message = 'Please login to continue. Would you like to login now?';
+    }
+    
+    if (confirm(message)) {
+        window.location.href = '<?php echo SITE_URL; ?>/pages/authentication/login.php?redirect=' + encodeURIComponent(window.location.href);
+    }
+}
+
+// Toggle save (only for logged-in users)
 function toggleSave(tournamentId) {
     const button = document.getElementById('saveBtn');
     const isSaved = button.classList.contains('saved');

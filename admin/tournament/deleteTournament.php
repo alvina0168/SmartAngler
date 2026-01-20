@@ -3,14 +3,14 @@ session_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// ✅ Ensure only admin can access
-if (!isLoggedIn() || !isAdmin()) {
-    $_SESSION['error'] = 'Unauthorized access';
+// Check if user is logged in
+if (!isLoggedIn()) {
+    $_SESSION['error'] = 'Please login to continue';
     redirect(SITE_URL . '/pages/login.php');
     exit;
 }
 
-// ✅ Ensure tournament ID provided
+// Ensure tournament ID provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['error'] = 'Tournament ID is required';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -18,28 +18,65 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 $tournament_id = intval($_GET['id']);
+$logged_in_user_id = intval($_SESSION['user_id']);
+$logged_in_role = $_SESSION['role'];
 
-// ✅ Get tournament info (for image deletion)
-$query = "SELECT image FROM TOURNAMENT WHERE tournament_id = ?";
-$stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, 'i', $tournament_id);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
+// Check access permissions before deleting
+if ($logged_in_role === 'organizer') {
+    // Organizer can delete their tournaments or tournaments created by their admins
+    $access_check = "
+        SELECT image FROM TOURNAMENT 
+        WHERE tournament_id = '$tournament_id'
+        AND (
+            created_by = '$logged_in_user_id'
+            OR created_by IN (
+                SELECT user_id FROM USER WHERE created_by = '$logged_in_user_id' AND role = 'admin'
+            )
+        )
+    ";
+} elseif ($logged_in_role === 'admin') {
+    // Admin can delete their tournaments or their organizer's tournaments
+    $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
+    $creator_result = mysqli_query($conn, $get_creator_query);
+    $creator_row = mysqli_fetch_assoc($creator_result);
+    $organizer_id = $creator_row['created_by'] ?? null;
+    
+    if ($organizer_id) {
+        $access_check = "
+            SELECT image FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND (created_by = '$logged_in_user_id' OR created_by = '$organizer_id')
+        ";
+    } else {
+        $access_check = "
+            SELECT image FROM TOURNAMENT 
+            WHERE tournament_id = '$tournament_id'
+            AND created_by = '$logged_in_user_id'
+        ";
+    }
+} else {
+    // Other roles - no access
+    $_SESSION['error'] = 'Access denied';
+    redirect(SITE_URL . '/admin/tournament/tournamentList.php');
+    exit;
+}
+
+$result = mysqli_query($conn, $access_check);
 
 if (!$result || mysqli_num_rows($result) == 0) {
-    $_SESSION['error'] = 'Tournament not found';
+    $_SESSION['error'] = 'Tournament not found or access denied';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
     exit;
 }
 
 $tournament = mysqli_fetch_assoc($result);
 
-// ✅ Start transaction
+// Start transaction
 mysqli_begin_transaction($conn);
 
 try {
     // =======================================================
-    // 🔹 Delete dependent records (but keep zones/spots)
+    // Delete dependent records (but keep zones/spots)
     // =======================================================
     $related_tables = [
         'CALENDAR',
@@ -60,12 +97,12 @@ try {
     }
 
     // =======================================================
-    // 🔹 Unlink zones (keep them reusable)
+    // Unlink zones (keep them reusable)
     // =======================================================
     mysqli_query($conn, "UPDATE ZONE SET tournament_id = NULL WHERE tournament_id = $tournament_id");
 
     // =======================================================
-    // 🔹 Finally, delete the tournament itself
+    // Finally, delete the tournament itself
     // =======================================================
     $delete_tournament = "DELETE FROM TOURNAMENT WHERE tournament_id = $tournament_id";
     if (!mysqli_query($conn, $delete_tournament)) {
@@ -73,23 +110,23 @@ try {
     }
 
     // =======================================================
-    // 🔹 Delete tournament image file (if exists)
+    // Delete tournament image file (if exists)
     // =======================================================
     if (!empty($tournament['image'])) {
         deleteFile($tournament['image'], 'tournaments');
     }
 
-    // ✅ Commit transaction
+    // Commit transaction
     mysqli_commit($conn);
     $_SESSION['success'] = 'Tournament deleted successfully (zones retained).';
 
 } catch (Exception $e) {
-    // ❌ Rollback on error
+    // Rollback on error
     mysqli_rollback($conn);
     $_SESSION['error'] = 'Failed to delete tournament: ' . $e->getMessage();
 }
 
-// ✅ Redirect
+// Redirect
 redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 exit;
 ?>

@@ -2,10 +2,14 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check if user is admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+// Check if user is logged in and has proper role
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['organizer', 'admin'])) {
+    $_SESSION['error'] = 'Access denied';
     redirect(SITE_URL . '/login.php');
 }
+
+$logged_in_user_id = intval($_SESSION['user_id']);
+$logged_in_role = $_SESSION['role'];
 
 $page_title = 'Create Tournament';
 $page_description = 'Add a new fishing tournament';
@@ -380,7 +384,7 @@ include '../includes/header.php';
 
             <div class="form-group">
                 <label>Location <span class="required">*</span></label>
-                <input type="text" name="location" id="location" class="form-control" placeholder="e.g., Kota Kinabalu Jetty" required>
+                <input type="text" name="location" id="location" class="form-control" placeholder="Location..." required>
             </div>
 
             <div class="form-group">
@@ -416,18 +420,18 @@ include '../includes/header.php';
             
             <div class="form-group">
                 <label>Bank Name <span class="required">*</span></label>
-                <input type="text" name="bank_account_name" id="bank_account_name" class="form-control" placeholder="e.g., Maybank, CIMB" required>
+                <input type="text" name="bank_account_name" id="bank_account_name" class="form-control"required>
             </div>
 
             <div class="info-grid">
                 <div class="form-group">
                     <label>Account Number <span class="required">*</span></label>
-                    <input type="text" name="bank_account_number" id="bank_account_number" class="form-control" placeholder="1234567890" required>
+                    <input type="text" name="bank_account_number" id="bank_account_number" class="form-control" required>
                 </div>
 
                 <div class="form-group">
                     <label>Account Holder <span class="required">*</span></label>
-                    <input type="text" name="bank_account_holder" id="bank_account_holder" class="form-control" placeholder="Account holder name" required>
+                    <input type="text" name="bank_account_holder" id="bank_account_holder" class="form-control" required>
                 </div>
             </div>
 

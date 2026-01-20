@@ -2,8 +2,8 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check admin access
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+// Check access - both organizer and admin can create zones
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['organizer', 'admin'])) {
     redirect(SITE_URL . '/login.php');
 }
 
@@ -63,10 +63,19 @@ include '../includes/header.php';
 <style>
 #spotMap {
     width: 100%;
-    height: 500px;
+    height: 650px;
     border-radius: 12px;
     border: 3px solid var(--color-blue-primary);
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.leaflet-control-layers {
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.leaflet-bar {
+    border-radius: 8px;
 }
 
 .search-box {
@@ -265,12 +274,50 @@ include '../includes/header.php';
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Initialize map centered on Sabah, Malaysia
+// Initialize map centered on Sabah, Malaysia with higher max zoom
 const map = L.map('spotMap').setView([5.4164, 116.0553], 10);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19
+// Google Maps-style Street Layer
+const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Google Satellite Layer
+const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Google Hybrid Layer (Satellite + Roads/Labels)
+const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Google Terrain Layer
+const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps'
+});
+
+// Add Google Hybrid as default (best for fishing spots)
+googleHybrid.addTo(map);
+
+// Layer Control
+const baseLayers = {
+    "🌍 Hybrid (Recommended)": googleHybrid,
+    "🛰️ Satellite": googleSatellite,
+    "🗺️ Street Map": googleStreets,
+    "🏔️ Terrain": googleTerrain
+};
+
+L.control.layers(baseLayers, null, {
+    position: 'topright'
 }).addTo(map);
 
 let spots = [];
@@ -301,26 +348,30 @@ searchInput.addEventListener('input', function() {
     searchResults.style.display = 'block';
     
     searchTimeout = setTimeout(() => {
-        // Add User-Agent and referer headers for better API compliance
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ' Malaysia')}&limit=10&addressdetails=1`, {
+        // Use Nominatim API with proper CORS handling
+        const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=my&limit=10&addressdetails=1`;
+        
+        fetch(apiUrl, {
+            method: 'GET',
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'User-Agent': 'SmartAngler/1.0'
             }
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Search results:', data); // Debug log
+            console.log('Search results:', data);
             
             if (data.length === 0) {
                 searchResults.innerHTML = `
                     <div class="search-loading">
                         <i class="fas fa-info-circle"></i> No results found for "${query}"
-                        <br><small>Try searching for: Tawau, Kota Kinabalu, Sandakan, etc.</small>
+                        <br><small>Try: Tawau, Kota Kinabalu, Sandakan, Lahad Datu, etc.</small>
                     </div>
                 `;
                 return;
@@ -348,8 +399,8 @@ searchInput.addEventListener('input', function() {
                     const lat = parseFloat(result.lat);
                     const lng = parseFloat(result.lon);
                     
-                    // Zoom to location
-                    map.setView([lat, lng], 16);
+                    // Zoom to location with higher zoom level
+                    map.setView([lat, lng], 18);
                     
                     // Remove previous search marker
                     if (searchMarker) {
@@ -388,13 +439,14 @@ searchInput.addEventListener('input', function() {
             console.error('Search error:', error);
             searchResults.innerHTML = `
                 <div class="search-loading" style="color: #dc3545;">
-                    <i class="fas fa-exclamation-triangle"></i> Search error. Please try again.
-                    <br><small>Error: ${error.message}</small>
-                    <br><small style="color: #6c757d; margin-top: 0.5rem; display: block;">You can still click directly on the map to add spots.</small>
+                    <i class="fas fa-exclamation-triangle"></i> Search temporarily unavailable
+                    <br><small style="color: #6c757d; margin-top: 0.5rem; display: block;">
+                        💡 Click directly on the map to add fishing spots
+                    </small>
                 </div>
             `;
         });
-    }, 800); // Increased delay to 800ms
+    }, 500);
 });
 
 // Close search results when clicking outside
@@ -483,10 +535,18 @@ map.on('click', function(e) {
     const spotId = spotCounter;
     const spotNumber = spots.length + 1;
     
-    // Create marker
+    // Create marker with custom icon
     const marker = L.marker([lat, lng], {
         draggable: true,
-        title: `Spot ${spotNumber}`
+        title: `Spot ${spotNumber}`,
+        icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #007bff; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    <span style="transform: rotate(45deg); color: white; font-weight: bold; font-size: 14px;">${spotNumber}</span>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        })
     }).addTo(map);
     
     marker.bindPopup(`<b>Spot ${spotNumber}</b><br>Lat: ${lat}<br>Lng: ${lng}`).openPopup();
@@ -609,7 +669,10 @@ document.getElementById('createZoneForm').addEventListener('submit', function(e)
 });
 
 // Add scale control
-L.control.scale().addTo(map);
+L.control.scale({
+    metric: true,
+    imperial: false
+}).addTo(map);
 </script>
 
 <?php include '../includes/footer.php'; ?>

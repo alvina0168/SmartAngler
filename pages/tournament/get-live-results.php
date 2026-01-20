@@ -2,8 +2,14 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Require login for users
-requireLogin();
+// Don't require login - results should be public for completed tournaments
+$isLoggedIn = isLoggedIn();
+$currentUserId = $isLoggedIn ? $_SESSION['user_id'] : null;
+
+// Admins shouldn't access this page
+if ($isLoggedIn && isAdmin()) {
+    redirect(SITE_URL . '/admin/index.php');
+}
 
 if (!isset($_GET['tournament_id'])) {
     redirect(SITE_URL . '/pages/tournament/tournaments.php');
@@ -153,6 +159,8 @@ include '../../includes/header.php';
     border-radius: 16px;
     padding: 20px 24px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    display: flex;
+    gap: 16px;
 }
 
 .back-button {
@@ -343,7 +351,7 @@ include '../../includes/header.php';
 <!-- Hero Section -->
 <div class="results-hero">
     <div class="hero-content">
-        <h1 class="hero-title">🏆 Tournament Results</h1>
+        <h1 class="hero-title">Tournament Results</h1>
         <div class="hero-subtitle">
             <div class="hero-meta">
                 <i class="fas fa-trophy"></i>
@@ -365,9 +373,14 @@ include '../../includes/header.php';
 <!-- Filter Section -->
 <div class="filter-section">
     <div class="filter-card">
-        <a href="<?php echo SITE_URL; ?>/pages/dashboard/myDashboard.php?id=<?php echo $tournament_id; ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        <a href="<?php echo SITE_URL; ?>/pages/tournament/tournament-details.php?id=<?php echo $tournament_id; ?>" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Tournament Details
         </a>
+        <?php if ($isLoggedIn): ?>
+            <a href="<?php echo SITE_URL; ?>/pages/dashboard/myDashboard.php" class="back-button" style="margin-left: auto;">
+                <i class="fas fa-tachometer-alt"></i> My Dashboard
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
