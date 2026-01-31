@@ -3,13 +3,14 @@
 SmartAngler is a full-stack web application which an automated fishing tournament management system designed to modernize and simplify the organization, monitoring and scoring of fishing competitions. The system helps tournament organizers manage events efficiently while providing anglers with a transparent, fair and engaging competition experience.
 
 <img width="1861" height="971" alt="image" src="https://github.com/user-attachments/assets/74b7460a-ea11-42be-b49d-0c7f4c12d940" />
+<img width="1882" height="976" alt="image" src="https://github.com/user-attachments/assets/1d9073c2-5d45-4704-9fa3-f4ccf93fad2d" />
 
 
 # Project Overview
 
 Traditional fishing tournaments often rely on manual processes such as paper-based registration, manual score tracking and verbal announcements. This may lead to errors and inefficiencies. SmartAngler addresses these challenges by introducing a digital platform that automates key tournament activities. The system is suitable for small to large-scale fishing events and can be adapted for both recreational and competitive tournaments.
 
-# ✨ Key Features
+# Key Features
 📝 Angler Registration: Register participants digitally with essential details.
 🐟 Catch Recording: Log fish catches with weight, species and time of catches.
 🏆 Automated Scoring System: Generate result based on tournament categories.
