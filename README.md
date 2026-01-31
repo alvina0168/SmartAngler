@@ -12,21 +12,32 @@ Traditional fishing tournaments often rely on manual processes such as paper-bas
 
 # Key Features
 📝 Angler Registration: Register participants digitally with essential details.
+
 🐟 Catch Recording: Log fish catches with weight, species and time of catches.
+
 🏆 Automated Scoring System: Generate result based on tournament categories.
+
 ⏱️ Real-Time Updates: Live leaderboard and time updates for anglers.
+
 📢 Notifications: Inform anglers about announcements, rule changes and time updates.
 
 # Technology Stack
 Backend
+
 PHP: Server-side scripting
+
 MySQL: Database management
+
 SMTP: Email services
 
 Frontend
+
 HTML5: Structure and markup
+
 CSS3: Styling and layout
+
 JavaScript: Interactive functionality
+
 Google Maps API: Location services
 
 # Contributing
@@ -37,7 +48,9 @@ This project is developed for academic purposes at University Malaysia Sabah (UM
 
 # Author
 ALVINA ALPHONSUS
+
 Final Year Computer Science Student (Software Engineering)
+
 University Malaysia Sabah (UMS)
 
 # Contact
