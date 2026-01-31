@@ -1,10 +1,4 @@
 <?php
-/**
- * ═══════════════════════════════════════════════════════════════
- *         ORGANIZER REGISTRATION PAGE
- * ═══════════════════════════════════════════════════════════════
- */
-
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
@@ -222,12 +216,11 @@ $page_title = 'Organizer Registration';
         }
     </style>
 </head>
+
 <body>
     <div class="register-container">
         <div class="register-header">
-            <i class="fas fa-users-cog"></i>
             <h1>Organizer Registration</h1>
-            <p>Create your tournament organizer account</p>
         </div>
 
         <div class="register-body">
@@ -246,7 +239,7 @@ $page_title = 'Organizer Registration';
 
                 <div class="form-group">
                     <label for="phone_number">Phone Number <span class="required">*</span></label>
-                    <input type="tel" id="phone_number" name="phone_number" required placeholder="012-345-6789">
+                    <input type="tel" id="phone_number" name="phone_number" required placeholder="012-xxxxxxx">
                 </div>
 
                 <div class="form-group">
@@ -267,7 +260,7 @@ $page_title = 'Organizer Registration';
                 </div>
 
                 <button type="submit" class="btn-register" id="submitBtn">
-                    <i class="fas fa-user-plus"></i> Create Organizer Account
+                    Create Organizer Account
                 </button>
             </form>
 

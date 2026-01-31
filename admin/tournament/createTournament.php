@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check if user is logged in and has proper role
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['organizer', 'admin'])) {
     $_SESSION['error'] = 'Access denied';
     redirect(SITE_URL . '/login.php');
@@ -16,12 +15,9 @@ $page_description = 'Add a new fishing tournament';
 
 $error = '';
 
-// Handle Final Submit
-// Handle Final Submit
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
     $user_id = $_SESSION['user_id'];
 
-    // SANITIZE INPUTS
     $tournament_title = sanitize($_POST['tournament_title']);
     $tournament_date = sanitize($_POST['tournament_date']);
     $location = sanitize($_POST['location']);
@@ -37,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
     $bank_account_number = sanitize($_POST['bank_account_number'] ?? '');
     $bank_account_holder = sanitize($_POST['bank_account_holder'] ?? '');
 
-    // Get max participants from selected zone's spot count
     $zone_query = mysqli_query($conn, "SELECT COUNT(*) as spot_count FROM FISHING_SPOT WHERE zone_id='$zone_id'");
     $zone_data = mysqli_fetch_assoc($zone_query);
     $max_participants = $zone_data['spot_count'] ?? 0;
@@ -63,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
     }
 
     if (empty($error)) {
-        // Insert tournament
         $query = "
             INSERT INTO TOURNAMENT 
             (user_id, tournament_title, tournament_date, location, description, tournament_rules,
@@ -78,18 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
         if (mysqli_query($conn, $query)) {
             $tournament_id = mysqli_insert_id($conn);
 
-            // Update zone with tournament_id
             if (!empty($zone_id)) {
                 mysqli_query($conn, "UPDATE ZONE SET tournament_id='$tournament_id' WHERE zone_id='$zone_id'");
             }
 
-            // Insert calendar event
             mysqli_query($conn, "
                 INSERT INTO CALENDAR (tournament_id, event_date, event_title)
                 VALUES ('$tournament_id', '$tournament_date', '$tournament_title')
             ");
 
-            // Insert sponsors with logo upload
             if (!empty($_POST['sponsor_names'])) {
                 foreach ($_POST['sponsor_names'] as $index => $sponsor_name) {
                     if (!empty($sponsor_name)) {
@@ -121,20 +112,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
                 }
             }
 
-            // Insert prizes for added categories
             if (!empty($_POST['prize_categories'])) {
                 foreach ($_POST['prize_categories'] as $prize_index => $category_id) {
                     $category_id = intval($category_id);
                     $num_winners = intval($_POST['prize_num_winners'][$prize_index]);
                     
-                    // Update number of rankings for this category
                     mysqli_query($conn, "
                         UPDATE CATEGORY 
                         SET number_of_ranking = '$num_winners' 
                         WHERE category_id = '$category_id'
                     ");
                     
-                    // Update target weight if exact_weight category
                     if (isset($_POST['prize_target_weights'][$prize_index])) {
                         $target_weight = floatval($_POST['prize_target_weights'][$prize_index]);
                         mysqli_query($conn, "
@@ -144,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
                         ");
                     }
                     
-                    // Insert prizes for each winner position
                     if (isset($_POST['prize_descriptions'][$prize_index])) {
                         foreach ($_POST['prize_descriptions'][$prize_index] as $winner_index => $description) {
                             if (!empty($description)) {
@@ -172,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['final_submit'])) {
     }
 }
 
-// Fetch predefined categories
+// Fetch categories
 $categories_query = "SELECT * FROM CATEGORY WHERE category_type != 'custom' ORDER BY category_id";
 $categories_result = mysqli_query($conn, $categories_query);
 
@@ -315,7 +302,6 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="tournamentList.php" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournaments
@@ -325,11 +311,10 @@ include '../includes/header.php';
 <div class="section">
     <div class="section-header">
         <h3 class="section-title">
-            <i class="fas fa-plus-circle"></i> Create New Tournament
+        Create New Tournament
         </h3>
     </div>
 
-    <!-- Step Indicator -->
     <div class="step-indicator">
         <span class="step-dot active" data-step="0"></span>
         <span class="step-dot" data-step="1"></span>
@@ -355,7 +340,7 @@ include '../includes/header.php';
             
             <div class="form-group">
                 <label>Tournament Title <span class="required">*</span></label>
-                <input type="text" name="tournament_title" id="tournament_title" class="form-control" required>
+                <input type="text" name="tournament_title" id="tournament_title" class="form-control" placeholder="Title..." required>
             </div>
 
             <div class="info-grid">
@@ -489,15 +474,6 @@ include '../includes/header.php';
                     <div style="font-size: 0.8125rem; color: #6c757d; margin-bottom: 0.25rem;">Description</div>
                     <div id="zoneDescDisplay" style="color: #495057; font-size: 0.875rem;"></div>
                 </div>
-                <div style="padding: 0.75rem; background: #fff3e0; border-radius: 8px; border-left: 3px solid #ff9800;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #f57c00; font-size: 0.875rem;">
-                        <i class="fas fa-users"></i>
-                        <strong>Max Participants:</strong> <span id="maxParticipantsDisplay" style="font-weight: 700;"></span>
-                    </div>
-                    <div style="font-size: 0.8125rem; color: #e65100; margin-top: 0.25rem;">
-                        Based on available fishing spots in this zone
-                    </div>
-                </div>
             </div>
 
             <div class="form-actions">
@@ -565,15 +541,6 @@ include '../includes/header.php';
             <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--color-blue-primary);">
                 Step 6: Review & Submit
             </h4>
-            
-            <div style="padding: 1rem; background: #fff3e0; border-radius: 12px; border-left: 4px solid #ff9800; margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <i class="fas fa-info-circle" style="color: #f57c00; font-size: 1.25rem;"></i>
-                    <div style="color: #e65100; font-size: 0.875rem;">
-                        Please review all information carefully before creating the tournament
-                    </div>
-                </div>
-            </div>
 
             <!-- Review Content -->
             <div id="reviewContent"></div>
@@ -606,14 +573,12 @@ include '../includes/header.php';
 </div>
 
 <script>
-// Categories data from PHP
+
 const categories = <?= json_encode(mysqli_fetch_all($categories_result, MYSQLI_ASSOC)) ?>;
 
-// Form submission handler
 function submitFinal() {
     console.log('Submitting tournament...');
     
-    // Create hidden input for final submission
     const form = document.getElementById('tournamentForm');
     const finalInput = document.createElement('input');
     finalInput.type = 'hidden';
@@ -621,11 +586,9 @@ function submitFinal() {
     finalInput.value = '1';
     form.appendChild(finalInput);
     
-    // Submit the form
     form.submit();
 }
 
-// Multi-step navigation
 const nextBtns = document.querySelectorAll('.btn-next');
 const prevBtns = document.querySelectorAll('.btn-prev');
 const formSteps = document.querySelectorAll('.form-step');
@@ -709,7 +672,7 @@ function previewQR(input) {
     }
 }
 
-// Check zone availability based on date and time
+// Check zone availability 
 function checkZoneAvailability() {
     const tournamentDate = document.getElementById('tournament_date').value;
     const startTime = document.getElementById('start_time').value;
@@ -719,7 +682,6 @@ function checkZoneAvailability() {
         return;
     }
     
-    // Fetch available zones via AJAX
     fetch('../../includes/check_zone_availability.php', {
         method: 'POST',
         headers: {
@@ -785,7 +747,7 @@ function addSponsor() {
             </div>
             <div class="form-group">
                 <label>Sponsor Name <span class="required">*</span></label>
-                <input type="text" name="sponsor_names[]" class="form-control sponsor-name" placeholder="e.g., ABC Bank" required>
+                <input type="text" name="sponsor_names[]" class="form-control sponsor-name" placeholder="Sponsor name..." required>
             </div>
             <div class="form-group">
                 <label>Sponsor Logo</label>
@@ -797,11 +759,11 @@ function addSponsor() {
             <div class="info-grid">
                 <div class="form-group">
                     <label>Phone Number</label>
-                    <input type="text" name="sponsor_phones[]" class="form-control sponsor-phone" placeholder="e.g., 012-3456789">
+                    <input type="text" name="sponsor_phones[]" class="form-control sponsor-phone" placeholder="012-xxxxxxx">
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" name="sponsor_emails[]" class="form-control sponsor-email" placeholder="e.g., sponsor@company.com">
+                    <input type="email" name="sponsor_emails[]" class="form-control sponsor-email" placeholder="sponsor@company.com">
                 </div>
             </div>
             <div class="form-group">
@@ -852,7 +814,7 @@ function addPrize() {
             
             <div id="target-weight-${prizeIndex}" style="display: none; margin-bottom: 1rem;">
                 <label>Target Weight (KG) <span class="required">*</span></label>
-                <input type="number" step="0.01" name="prize_target_weights[]" class="form-control prize-target-weight" placeholder="e.g., 2.50" style="max-width: 200px;">
+                <input type="number" step="0.01" name="prize_target_weights[]" class="form-control prize-target-weight" placeholder="Target weight" style="max-width: 200px;">
                 <small style="color: #6c757d; font-size: 0.8125rem; margin-top: 0.25rem; display: block;">
                     Specify the exact weight fish must match to win
                 </small>
@@ -877,7 +839,6 @@ function addPrize() {
     `;
     document.getElementById('prizesList').insertAdjacentHTML('beforeend', html);
     
-    // Generate initial 3 winner fields
     generateWinnerFields(prizeIndex, 3);
     
     prizeIndex++;
@@ -911,7 +872,7 @@ function generateWinnerFields(prizeIndex, numWinners) {
             <tr>
                 <td><strong>${rankings[i]} Place</strong></td>
                 <td>
-                    <input type="text" name="prize_descriptions[${prizeIndex}][]" class="form-control prize-desc" placeholder="e.g., Cash Prize + Trophy" required>
+                    <input type="text" name="prize_descriptions[${prizeIndex}][]" class="form-control prize-desc" required>
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -925,7 +886,6 @@ function generateWinnerFields(prizeIndex, numWinners) {
     }
 }
 
-// Move to review step
 function moveToReview() {
     console.log('moveToReview() called');
     
@@ -936,7 +896,6 @@ function moveToReview() {
         return;
     }
     
-    // Validate each prize
     let allValid = true;
     prizes.forEach(prize => {
         const categorySelect = prize.querySelector('select[name="prize_categories[]"]');
@@ -962,13 +921,11 @@ function moveToReview() {
         return;
     }
     
-    // Generate review content
     try {
         console.log('Generating review...');
         generateReview();
         console.log('Review generated successfully');
         
-        // Move to next step
         const step = formSteps[currentStep];
         step.classList.remove('form-step-active');
         currentStep++;
@@ -981,12 +938,11 @@ function moveToReview() {
     }
 }
 
-// Generate Review Content
+
 function generateReview() {
     console.log('generateReview() called');
     let reviewHTML = '';
     
-    // Helper function to escape HTML
     function escapeHtml(text) {
         if (!text) return '-';
         const div = document.createElement('div');
@@ -1008,7 +964,7 @@ function generateReview() {
     reviewHTML += `
         <div class="review-section">
             <div class="review-section-title">
-                <i class="fas fa-info-circle"></i> Tournament Information
+                Tournament Information
             </div>
             <div class="review-item">
                 <div class="review-label">Title:</div>
@@ -1054,7 +1010,7 @@ function generateReview() {
     reviewHTML += `
         <div class="review-section">
             <div class="review-section-title">
-                <i class="fas fa-credit-card"></i> Payment Information
+                Payment Information
             </div>
             <div class="review-item">
                 <div class="review-label">Bank Name:</div>
@@ -1084,7 +1040,7 @@ function generateReview() {
     reviewHTML += `
         <div class="review-section">
             <div class="review-section-title">
-                <i class="fas fa-map-marked-alt"></i> Fishing Zone
+                Fishing Zone
             </div>
             <div class="review-item">
                 <div class="review-label">Zone Name:</div>
@@ -1103,7 +1059,7 @@ function generateReview() {
         reviewHTML += `
             <div class="review-section">
                 <div class="review-section-title">
-                    <i class="fas fa-handshake"></i> Sponsors (${sponsors.length})
+                    Sponsors (${sponsors.length})
                 </div>
                 <ul class="review-list">
         `;
@@ -1129,7 +1085,7 @@ function generateReview() {
         reviewHTML += `
             <div class="review-section">
                 <div class="review-section-title">
-                    <i class="fas fa-handshake"></i> Sponsors
+                    Sponsors
                 </div>
                 <p style="color: #6c757d; font-style: italic;">No sponsors added</p>
             </div>
@@ -1142,7 +1098,7 @@ function generateReview() {
         reviewHTML += `
             <div class="review-section">
                 <div class="review-section-title">
-                    <i class="fas fa-trophy"></i> Categories & Prizes (${prizes.length})
+                    Categories & Prizes (${prizes.length})
                 </div>
         `;
         

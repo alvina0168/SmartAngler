@@ -182,7 +182,7 @@ include '../../includes/header.php';
 
 <div class="register-page">
     <div class="register-card">
-        <h2><i class="fas fa-user-plus"></i> Register for SmartAngler</h2>
+        <h2>Register for SmartAngler</h2>
 
         <?php if ($error): ?>
             <div class="alert alert-error"><?php echo $error; ?></div>

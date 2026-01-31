@@ -739,21 +739,23 @@ include '../../includes/header.php';
 
                         <div class="info-item">
                             <div class="info-icon">
-                                <i class="fas fa-clock"></i>
+                                <i class="fas fa-map-marker-alt"></i>
                             </div>
                             <div class="info-content">
-                                <div class="info-label">Time</div>
-                                <div class="info-value"><?php echo formatTime($tournament['start_time']); ?> - <?php echo formatTime($tournament['end_time']); ?></div>
+                                <div class="info-label">Location</div>
+                                <div class="info-value" style="font-size: 13px; line-height: 1.4;">
+                                    <?php echo htmlspecialchars($tournament['location']); ?>
+                                </div>
                             </div>
                         </div>
 
                         <div class="info-item">
                             <div class="info-icon">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-clock"></i>
                             </div>
                             <div class="info-content">
-                                <div class="info-label">Entry Fee</div>
-                                <div class="info-value">RM <?php echo number_format($tournament['tournament_fee'], 2); ?></div>
+                                <div class="info-label">Time</div>
+                                <div class="info-value"><?php echo formatTime($tournament['start_time']); ?> - <?php echo formatTime($tournament['end_time']); ?></div>
                             </div>
                         </div>
 
@@ -769,23 +771,21 @@ include '../../includes/header.php';
 
                         <div class="info-item">
                             <div class="info-icon">
-                                <i class="fas fa-map-marked-alt"></i>
+                                <i class="fas fa-dollar-sign"></i>
                             </div>
                             <div class="info-content">
-                                <div class="info-label">Spots Available</div>
-                                <div class="info-value"><?php echo $spots_data['available_spots']; ?>/<?php echo $spots_data['total_spots']; ?></div>
+                                <div class="info-label">Entry Fee</div>
+                                <div class="info-value">RM <?php echo number_format($tournament['tournament_fee'], 2); ?></div>
                             </div>
                         </div>
 
                         <div class="info-item">
                             <div class="info-icon">
-                                <i class="fas fa-map-marker-alt"></i>
+                                <i class="fas fa-map-marked-alt"></i>
                             </div>
                             <div class="info-content">
-                                <div class="info-label">Location</div>
-                                <div class="info-value" style="font-size: 13px; line-height: 1.4;">
-                                    <?php echo htmlspecialchars($tournament['location']); ?>
-                                </div>
+                                <div class="info-label">Spots Available</div>
+                                <div class="info-value"><?php echo $spots_data['available_spots']; ?>/<?php echo $spots_data['total_spots']; ?></div>
                             </div>
                         </div>
                     </div>

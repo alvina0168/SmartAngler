@@ -353,10 +353,6 @@ include '../includes/header.php';
         <select onchange="window.location.href='?status=<?php echo $status_filter; ?>&search=<?php echo urlencode($search_query); ?>&sort=' + this.value">
             <option value="latest" <?php echo $sort_by == 'latest' ? 'selected' : ''; ?>>Latest First</option>
             <option value="oldest" <?php echo $sort_by == 'oldest' ? 'selected' : ''; ?>>Oldest First</option>
-            <option value="title_asc" <?php echo $sort_by == 'title_asc' ? 'selected' : ''; ?>>Title (A-Z)</option>
-            <option value="title_desc" <?php echo $sort_by == 'title_desc' ? 'selected' : ''; ?>>Title (Z-A)</option>
-            <option value="date_asc" <?php echo $sort_by == 'date_asc' ? 'selected' : ''; ?>>Date (Earliest)</option>
-            <option value="date_desc" <?php echo $sort_by == 'date_desc' ? 'selected' : ''; ?>>Date (Latest)</option>
             <option value="fee_asc" <?php echo $sort_by == 'fee_asc' ? 'selected' : ''; ?>>Fee (Low to High)</option>
             <option value="fee_desc" <?php echo $sort_by == 'fee_desc' ? 'selected' : ''; ?>>Fee (High to Low)</option>
             <option value="participants" <?php echo $sort_by == 'participants' ? 'selected' : ''; ?>>Max Participants</option>

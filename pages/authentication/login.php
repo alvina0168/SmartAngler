@@ -102,7 +102,7 @@ include '../../includes/header.php';
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     width: 100%;
-    max-width: 420px;
+    max-width: 500px;
     text-align: center;
 }
 
@@ -260,7 +260,7 @@ include '../../includes/header.php';
 
 <div class="login-page">
     <div class="login-card">
-        <h2><i class="fas fa-sign-in-alt"></i> Login to SmartAngler</h2>
+        <h2> Login to SmartAngler</h2>
         <p class="login-subtitle">Choose your login type</p>
 
         <!-- Login Type Tabs -->
@@ -271,7 +271,7 @@ include '../../includes/header.php';
             </button>
             <button class="login-tab <?php echo $login_type == 'admin' ? 'active' : ''; ?>" 
                     onclick="switchLoginType('admin')">
-                <i class="fas fa-user-shield"></i> Admin Login
+                <i class="fas fa-user-shield"></i> Admin/Organizer Login
             </button>
         </div>
 
@@ -292,7 +292,6 @@ include '../../includes/header.php';
             
             <div class="form-group">
                 <label>
-                    <i class="fas fa-user"></i> 
                     <?php echo $login_type == 'admin' ? 'Username' : 'Email Address'; ?>
                 </label>
                 <input type="text" 
@@ -302,18 +301,18 @@ include '../../includes/header.php';
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-lock"></i> Password</label>
+                <label></i> Password</label>
                 <input type="password" name="password" placeholder="Enter your password" required>
             </div>
 
             <div class="forgot-password">
                 <a href="../profile/forgot-password.php">
-                    <i class="fas fa-key"></i> Forgot Password?
+                    Forgot Password?
                 </a>
             </div>
 
             <button type="submit" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i> Login
+                Login 
             </button>
         </form>
 

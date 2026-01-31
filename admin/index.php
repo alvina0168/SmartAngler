@@ -115,15 +115,9 @@ $total_activities = mysqli_num_rows($recent_activity);
         <div class="section-header-modern">
             <div>
                 <h2 class="section-title-modern">
-                    <i class="fas fa-bell"></i>
                     Recent Activity
                 </h2>
             </div>
-            <?php if ($stats['pending'] > 0): ?>
-                <a href="participant/manageParticipants.php" class="btn btn-warning btn-sm">
-                    <i class="fas fa-user-check"></i> Review
-                </a>
-            <?php endif; ?>
         </div>
 
         <div class="activity-feed" id="activityFeed">
@@ -190,7 +184,6 @@ $total_activities = mysqli_num_rows($recent_activity);
         <div class="section-header-modern">
             <div>
                 <h2 class="section-title-modern">
-                    <i class="fas fa-chart-pie"></i>
                     Tournament Status
                 </h2>
             </div>
@@ -234,22 +227,6 @@ $total_activities = mysqli_num_rows($recent_activity);
                         <div class="status-bar-fill" style="width: <?php echo $stats['tournaments'] > 0 ? ($stats['completed'] / $stats['tournaments'] * 100) : 0; ?>%;"></div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Quick Stats Summary -->
-        <div class="quick-stats-summary">
-            <div class="summary-item">
-                <i class="fas fa-trophy"></i>
-                <span><?php echo $stats['tournaments']; ?> Total</span>
-            </div>
-            <div class="summary-item">
-                <i class="fas fa-users"></i>
-                <span><?php echo $stats['total_participants']; ?> Participants</span>
-            </div>
-            <div class="summary-item">
-                <i class="fas fa-user-check"></i>
-                <span><?php echo $stats['recent_registrations']; ?> New (7d)</span>
             </div>
         </div>
     </div>

@@ -60,21 +60,23 @@ foreach ($all_prizes as $prize) {
     $prizes_by_category[$cat_id]['prizes'][] = $prize;
 }
 
-// Fetch results
+// Fetch results with weighing station
 $results_query = "
     SELECT 
         r.*,
         u.full_name,
-        u.email,
+        u.phone_number,
         fc.fish_weight,
         fc.fish_species,
         fc.catch_time,
+        ws.station_name AS weighing_station,
         tp.prize_description,
         tp.prize_value
     FROM RESULT r
     JOIN USER u ON r.user_id = u.user_id
     JOIN CATEGORY c ON r.category_id = c.category_id
     LEFT JOIN FISH_CATCH fc ON r.catch_id = fc.catch_id
+    LEFT JOIN WEIGHING_STATION ws ON fc.station_id = ws.station_id
     LEFT JOIN TOURNAMENT_PRIZE tp ON tp.tournament_id = r.tournament_id 
         AND tp.category_id = r.category_id 
         AND CAST(tp.prize_ranking AS UNSIGNED) = r.ranking_position
@@ -199,16 +201,16 @@ include '../../includes/header.php';
 }
 
 .category-header {
-    background: linear-gradient(135deg, var(--ocean-light) 0%, var(--ocean-teal) 100%);
-    color: var(--white);
-    padding: 18px 24px;
-    border-radius: 16px 16px 0 0;
+    padding: 0 0 12px 0;
+    border-bottom: 3px solid var(--ocean-light);
+    margin-bottom: 20px;
 }
 
 .category-title {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 800;
     margin: 0;
+    color: var(--ocean-blue);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -216,29 +218,27 @@ include '../../includes/header.php';
 
 .target-weight-badge {
     display: inline-block;
-    margin-top: 8px;
-    padding: 4px 12px;
+    padding: 6px 14px;
     background: rgba(255, 152, 0, 0.2);
-    border-radius: 6px;
-    font-size: 12px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
     color: #FF9800;
+    vertical-align: middle;
 }
 
 /* Results Table */
 .results-table-container {
     background: var(--white);
-    border: 1px solid var(--border);
-    border-top: none;
-    border-radius: 0 0 16px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .results-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
 }
 
 .results-table thead th {
@@ -249,18 +249,14 @@ include '../../includes/header.php';
     font-weight: 700;
     font-size: 13px;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--border);
+    border: 1px solid #6694B4;
 }
 
 .results-table tbody td {
     padding: 16px;
-    border-bottom: 1px solid var(--border);
+    border: 1px solid var(--border);
     color: var(--text-dark);
     font-size: 14px;
-}
-
-.results-table tbody tr:last-child td {
-    border-bottom: none;
 }
 
 .results-table tbody tr:hover {
@@ -273,6 +269,12 @@ include '../../includes/header.php';
 }
 
 .angler-email {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.angler-phone {
     font-size: 12px;
     color: var(--text-muted);
     margin-top: 2px;
@@ -343,7 +345,7 @@ include '../../includes/header.php';
     }
     
     .results-table {
-        min-width: 900px;
+        min-width: 1000px;
     }
 }
 </style>
@@ -392,14 +394,13 @@ include '../../includes/header.php';
             <div class="category-section">
                 <div class="category-header">
                     <h2 class="category-title">
-                        <i class="fas fa-award"></i>
                         <?php echo htmlspecialchars($category['category_name']); ?>
+                        <?php if ($category['target_weight']): ?>
+                            <span class="target-weight-badge" style="margin-left: 12px;">
+                                Target: <?php echo $category['target_weight']; ?> KG
+                            </span>
+                        <?php endif; ?>
                     </h2>
-                    <?php if ($category['target_weight']): ?>
-                        <div class="target-weight-badge">
-                            <i class="fas fa-weight"></i> Target Weight: <?php echo $category['target_weight']; ?> KG (Exact Match Required)
-                        </div>
-                    <?php endif; ?>
                 </div>
                 
                 <div class="results-table-container">
@@ -410,13 +411,15 @@ include '../../includes/header.php';
                                 <th>Participant Name</th>
                                 <?php if ($category['category_type'] === 'most_catches'): ?>
                                     <th style="width: 150px; text-align: center;">Total Catches</th>
+                                    <th style="width: 180px; text-align: center;">Weighing Station</th>
                                 <?php else: ?>
-                                    <th style="width: 150px;">Fish Species</th>
-                                    <th style="width: 120px; text-align: right;">Weight (KG)</th>
-                                    <th style="width: 180px;">Catch Time</th>
+                                    <th style="width: 150px; text-align: center;">Fish Species</th>
+                                    <th style="width: 120px; text-align: center;">Weight (KG)</th>
+                                    <th style="width: 120px; text-align: center;">Catch Time</th>
+                                    <th style="width: 180px; text-align: center;">Weighing Station</th>
                                 <?php endif; ?>
-                                <th style="width: 200px;">Prize</th>
-                                <th style="width: 120px; text-align: right;">Value (RM)</th>
+                                <th style="width: 200px; text-align: center;">Prize</th>
+                                <th style="width: 200px; text-align: center;">Value (RM)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -436,7 +439,7 @@ include '../../includes/header.php';
                                 <td>
                                     <?php if ($result): ?>
                                         <div class="angler-name"><?php echo htmlspecialchars($result['full_name']); ?></div>
-                                        <div class="angler-email"><?php echo htmlspecialchars($result['email']); ?></div>
+                                        <div class="angler-email"><?php echo htmlspecialchars($result['phone_number']); ?></div>
                                     <?php else: ?>
                                         <span class="no-winner">No winner yet</span>
                                     <?php endif; ?>
@@ -451,14 +454,19 @@ include '../../includes/header.php';
                                             <span>-</span>
                                         <?php endif; ?>
                                     </td>
+                                    
+                                    <!-- Weighing Station -->
+                                    <td style="text-align: center;">
+                                        <?php echo $result && $result['weighing_station'] ? htmlspecialchars($result['weighing_station']) : '-'; ?>
+                                    </td>
                                 <?php else: ?>
                                     <!-- Fish Species -->
-                                    <td>
+                                    <td style="text-align: center;">
                                         <?php echo $result && $result['fish_species'] ? htmlspecialchars($result['fish_species']) : '-'; ?>
                                     </td>
                                     
                                     <!-- Weight -->
-                                    <td style="text-align: right;">
+                                    <td style="text-align: center;">
                                         <?php if ($result && $result['fish_weight']): ?>
                                             <span class="weight-value"><?php echo number_format($result['fish_weight'], 2); ?></span>
                                         <?php else: ?>
@@ -466,23 +474,28 @@ include '../../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     
-                                    <!-- Catch Time -->
-                                    <td>
+                                    <!-- Catch Time (Time only, no date) -->
+                                    <td style="text-align: center;">
                                         <?php if ($result && $result['catch_time']): ?>
-                                            <?php echo date('d M Y, g:i A', strtotime($result['catch_time'])); ?>
+                                            <?php echo date('g:i A', strtotime($result['catch_time'])); ?>
                                         <?php else: ?>
                                             <span>-</span>
                                         <?php endif; ?>
                                     </td>
+                                    
+                                    <!-- Weighing Station -->
+                                    <td style="text-align: center;">
+                                        <?php echo $result && $result['weighing_station'] ? htmlspecialchars($result['weighing_station']) : '-'; ?>
+                                    </td>
                                 <?php endif; ?>
                                 
                                 <!-- Prize Description -->
-                                <td>
+                                <td style="text-align: center;">
                                     <?php echo htmlspecialchars($prize['prize_description']); ?>
                                 </td>
                                 
                                 <!-- Prize Value -->
-                                <td style="text-align: right;">
+                                <td style="text-align: center;">
                                     <span class="prize-value">RM <?php echo number_format($prize['prize_value'], 2); ?></span>
                                 </td>
                             </tr>

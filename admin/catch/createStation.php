@@ -53,9 +53,6 @@ include '../includes/header.php';
     <a href="<?php echo SITE_URL; ?>/admin/catch/stationList.php?tournament_id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back
     </a>
-    <h2 style="margin: 0; color: var(--color-blue-primary); font-size: 1.5rem;">
-        <i class="fas fa-weight"></i> Create Weighing Station
-    </h2>
 </div>
 <p style="color: var(--color-gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
     Tournament: <strong><?php echo htmlspecialchars($tournament['tournament_title']); ?></strong>
@@ -74,14 +71,14 @@ include '../includes/header.php';
         <!-- Station Name -->
         <div class="form-group" style="margin-bottom: 1rem;">
             <label style="font-weight: 600;">Station Name <span style="color: red;">*</span></label>
-            <input type="text" name="station_name" class="form-control" placeholder="e.g., S1, S2, Station A" required>
+            <input type="text" name="station_name" class="form-control" placeholder="Enter Station Name" required>
             <small class="form-hint">Give a unique name to identify this station</small>
         </div>
 
         <!-- Marshal Name -->
         <div class="form-group" style="margin-bottom: 1rem;">
             <label style="font-weight: 600;">Marshal Name</label>
-            <input type="text" name="marshal_name" class="form-control" placeholder="e.g., John Doe">
+            <input type="text" name="marshal_name" class="form-control" placeholder="Marshal Name">
             <small class="form-hint">Person in charge of this station</small>
         </div>
 

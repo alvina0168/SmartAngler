@@ -17,7 +17,6 @@ include 'includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .hero {
     background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
     color: var(--white);
@@ -321,17 +320,14 @@ include 'includes/header.php';
 }
 </style>
 
-<!-- Hero Section - Split Layout -->
 <section class="hero-split">
     <div class="container hero-split-container">
-        <!-- Left Content -->
         <div class="hero-text">
             <h1>Compete, Track and Win with <span>SmartAngler</span></h1>
-            <p>SmartAngler makes fishing competitions easy! Create and join tournaments, log your catches, and compete with anglers for great prizes.</p>
+            <p>SmartAngler makes fishing competitions easy! Create and join tournaments, log your catches and compete with anglers for great prizes.</p>
             <a href="pages/authentication/login.php" class="btn btn-primary btn-hero">Get Started</a>
         </div>
 
-        <!-- Right Image -->
         <div class="hero-image">
             <img src="images/angler.webp" alt="Fishing GIF">
         </div>
@@ -418,7 +414,7 @@ include 'includes/header.php';
                 </div>
                 <h3 class="account-card-title">Angler</h3>
                 <p class="account-card-description">
-                    Join fishing tournaments, track your catches, and compete with other anglers in your area.
+                    Join fishing tournaments, track your catches and compete with other anglers in your area.
                 </p>
                 <a href="pages/authentication/login.php" class="account-card-button">
                     <i class="fas fa-sign-in-alt"></i> Login as Angler
@@ -435,7 +431,7 @@ include 'includes/header.php';
                     Organize and manage fishing tournaments, track participants, and oversee competitions.
                 </p>
                 <button onclick="openAdminRequestModal()" class="account-card-button">
-                    <i class="fas fa-paper-plane"></i> Request Admin Access
+                    <i class="fas fa-paper-plane"></i> Request Organizer Access
                 </button>
             </div>
         </div>
@@ -448,7 +444,7 @@ include 'includes/header.php';
         <button class="modal-close" onclick="closeAdminRequestModal()">&times;</button>
         
         <div class="modal-header">
-            <h2><i class="fas fa-user-shield"></i> Request Admin Access</h2>
+            <h2>Request Admin Access</h2>
             <p>Fill out this form and we'll review your request within 24-48 hours</p>
         </div>
         
@@ -467,18 +463,18 @@ include 'includes/header.php';
             
             <div class="form-group">
                 <label for="phone">Phone Number *</label>
-                <input type="tel" id="phone" name="phone" required placeholder="e.g., 012-345-6789">
+                <input type="tel" id="phone" name="phone" required placeholder="012-xxxxxxx">
             </div>
             
             <div class="form-group">
                 <label for="id_card">ID Card Number *</label>
-                <input type="text" id="id_card" name="id_card" required placeholder="e.g., 990101-01-1234">
+                <input type="text" id="id_card" name="id_card" required placeholder="xxxxxx-xx-xxxx">
                 <small>Your IC number for verification purposes</small>
             </div>
             
             <div class="form-group">
-                <label for="location">Pond/Tournament Location *</label>
-                <input type="text" id="location" name="location" required placeholder="e.g., Tawau Fishing Pond, Sabah">
+                <label for="location">Tournament Location *</label>
+                <input type="text" id="location" name="location" required placeholder="Location Name">
                 <small>Where you organize or plan to organize tournaments</small>
             </div>
             
@@ -517,13 +513,11 @@ include 'includes/header.php';
 </div>
 
 <script>
-// Open modal
 function openAdminRequestModal() {
     document.getElementById('adminRequestModal').style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
 }
 
-// Close modal
 function closeAdminRequestModal() {
     document.getElementById('adminRequestModal').style.display = 'none';
     document.body.style.overflow = 'auto'; // Restore scrolling
@@ -533,14 +527,12 @@ function closeAdminRequestModal() {
     document.getElementById('alertMessage').innerHTML = '';
 }
 
-// Close modal when clicking outside
 document.getElementById('adminRequestModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeAdminRequestModal();
     }
 });
 
-// Preview uploaded files
 function previewFile(input, previewId) {
     const preview = document.getElementById(previewId);
     const file = input.files[0];
@@ -591,7 +583,6 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
             document.getElementById('idPreview').style.display = 'none';
             document.getElementById('locationPreview').style.display = 'none';
             
-            // Close modal after 3 seconds
             setTimeout(() => {
                 closeAdminRequestModal();
             }, 3000);
@@ -611,7 +602,6 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
         `;
     })
     .finally(() => {
-        // Re-enable submit button
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
     });
@@ -619,7 +609,6 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
 </script>
 <?php endif; ?>
 
-<!-- Features Section -->
 <section class="features">
     <div class="container">
         <h2>Everything a <span>Champion Angler Needs.</span></h2>
@@ -649,53 +638,6 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
                 <h3>Live Leaderboard</h3>
                 <p>Follow the action! Best boat rankings and results at the tournament in real-time. See where you stand compared to fellow anglers.</p>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- Latest Tournaments Section -->
-<section style="padding: 80px 0; background-color: #F5EFE6;">
-    <div class="container">
-        <h2 style="text-align: center; font-size: 36px; margin-bottom: 50px;">
-            Upcoming <span style="color: #6D94C5;">Tournaments</span>
-        </h2>
-
-        <div class="features-grid">
-            <?php
-            $sql = "SELECT t.*, u.full_name as organizer_name 
-                    FROM TOURNAMENT t 
-                    LEFT JOIN USER u ON t.user_id = u.user_id 
-                    WHERE t.status = 'upcoming' 
-                    ORDER BY t.tournament_date ASC 
-                    LIMIT 3";
-
-            $tournaments = $db->fetchAll($sql);
-
-            if ($tournaments && count($tournaments) > 0): 
-                foreach ($tournaments as $tournament): ?>
-                    <div class="card">
-                        <img src="assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
-                             alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>" 
-                             class="card-image">
-                        <div class="card-content">
-                            <h3 class="card-title"><?php echo htmlspecialchars($tournament['tournament_title']); ?></h3>
-                            <p class="card-text">
-                                <i class="fas fa-calendar"></i> <?php echo formatDate($tournament['tournament_date']); ?><br>
-                                <i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars(substr($tournament['location'], 0, 50)); ?>...<br>
-                                <i class="fas fa-dollar-sign"></i> RM <?php echo number_format($tournament['tournament_fee'], 2); ?>
-                            </p>
-                            <a href="pages/tournament/tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" class="btn btn-primary">View Details</a>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-
-            <?php else: ?>
-                <p style="text-align: center; grid-column: 1 / -1;">No upcoming tournaments at the moment. Check back soon!</p>
-            <?php endif; ?>
-        </div>
-
-        <div style="text-align: center; margin-top: 40px;">
-            <a href="pages/tournament/tournaments.php" class="btn btn-secondary">View All Tournaments</a>
         </div>
     </div>
 </section>

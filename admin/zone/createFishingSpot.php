@@ -549,7 +549,8 @@ map.on('click', function(e) {
         })
     }).addTo(map);
     
-    marker.bindPopup(`<b>Spot ${spotNumber}</b><br>Lat: ${lat}<br>Lng: ${lng}`).openPopup();
+    // CHANGED: Removed .openPopup() - popup will only show when user clicks the marker
+    marker.bindPopup(`<b>Spot ${spotNumber}</b><br>Lat: ${lat}<br>Lng: ${lng}`);
     
     // Store spot
     const spotData = {
@@ -602,10 +603,10 @@ map.on('click', function(e) {
         marker.setPopupContent(`<b>Spot ${spot.number}</b><br>Lat: ${newLat}<br>Lng: ${newLng}`);
     });
     
-    // Click event - show coordinates
+    // Click event - show coordinates and popup
     marker.on('click', function() {
-        document.getElementById('currentLat').value = spot.lat;
-        document.getElementById('currentLng').value = spot.lng;
+        document.getElementById('currentLat').value = spotData.lat;
+        document.getElementById('currentLng').value = spotData.lng;
     });
 });
 

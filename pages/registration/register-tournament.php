@@ -276,10 +276,12 @@ include '../../includes/header.php';
 /* Leaflet Map */
 #fishingMap {
     width: 100%;
-    height: 400px;
+    height: 500px;
     border-radius: 12px;
     margin-bottom: 20px;
     z-index: 1;
+    border: 3px solid var(--ocean-light);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 .zone-info {
@@ -615,6 +617,15 @@ include '../../includes/header.php';
     font-size: 14px;
 }
 
+.leaflet-control-layers {
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.leaflet-bar {
+    border-radius: 8px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero-title {
@@ -650,7 +661,7 @@ include '../../includes/header.php';
 <!-- Hero Section -->
 <div class="register-hero">
     <div class="hero-content">
-        <h1 class="hero-title">🎣 Register for Tournament</h1>
+        <h1 class="hero-title">Register for Tournament</h1>
         <p class="hero-subtitle"><?php echo htmlspecialchars($tournament['tournament_title']); ?></p>
     </div>
 </div>
@@ -713,10 +724,16 @@ include '../../includes/header.php';
                                 <!-- Interactive Map -->
                                 <?php if (count($all_spots_with_coords) > 0): ?>
                                 <div id="fishingMap"></div>
+                                
+                                <div class="info-box" style="margin-top: 16px;">
+                                    <p class="info-box-text" style="margin: 0;">
+                                        <i class="fas fa-info-circle"></i> Click on any blue marker on the map to select your fishing spot. 
+                                    </p>
+                                </div>
                                 <?php endif; ?>
 
-                                <!-- Zone Tabs -->
-                                <div class="zone-tabs">
+                                <!-- Zone Tabs - Hidden -->
+                                <div class="zone-tabs" style="display: none;">
                                     <?php foreach ($zones as $index => $zone): ?>
                                         <button type="button" 
                                                 class="zone-tab <?php echo $index === 0 ? 'active' : ''; ?>" 
@@ -728,23 +745,11 @@ include '../../includes/header.php';
                                     <?php endforeach; ?>
                                 </div>
 
-                                <!-- Zone Contents -->
-                                <div class="map-container">
+                                <!-- Zone Contents - Hidden spot grid -->
+                                <div class="map-container" style="display: none;">
                                     <?php foreach ($zones as $index => $zone): ?>
                                         <div class="zone-content <?php echo $index === 0 ? 'active' : ''; ?>" 
                                              id="zone_<?php echo $zone['zone_id']; ?>">
-                                            
-                                            <div class="zone-info">
-                                                <div class="zone-title">
-                                                    <i class="fas fa-map-marker-alt"></i>
-                                                    <?php echo htmlspecialchars($zone['zone_name']); ?>
-                                                </div>
-                                                <?php if ($zone['zone_description']): ?>
-                                                    <div class="zone-description">
-                                                        <?php echo htmlspecialchars($zone['zone_description']); ?>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
 
                                             <div class="spots-visualization">
                                                 <?php 
@@ -761,7 +766,7 @@ include '../../includes/header.php';
                                                                data-lat="<?php echo $spot['latitude']; ?>"
                                                                data-lng="<?php echo $spot['longitude']; ?>"
                                                                onchange="updateSelectedSpot(this)">
-                                                        <label for="spot_<?php echo $spot['spot_id']; ?>" class="spot-box">
+                                                        <label for="spot_<?php echo $spot['spot_id']; ?>" class="spot-box" style="display: none;">
                                                             <i class="fas fa-anchor spot-icon"></i>
                                                             <div class="spot-number">#<?php echo $spot['spot_number']; ?></div>
                                                         </label>
@@ -830,19 +835,23 @@ include '../../includes/header.php';
     <!-- Payment Proof Upload -->
     <div class="form-group"> 
         <label class="form-label required">Payment Proof</label> 
-        <div class="file-upload"> <input type="file" name="payment_proof" id="payment_proof" accept="image/*,.pdf" required onchange="updateFileName(this)"> 
-        <label for="payment_proof" class="file-upload-label"> <i class="fas fa-cloud-upload-alt file-upload-icon"></i> 
-        <span> <strong>Click to upload</strong> or drag and drop<br> <small style="color: var(--text-muted);">PNG, JPG or PDF (max 5MB)</small> </span> </label> </div> 
-        <div id="file-name" class="file-name"></div> <small class="form-text"> Registration Fee: RM <?php echo number_format($tournament['tournament_fee'], 2); ?><br> Upload your payment receipt or proof of payment </small> </div>
+        <div class="file-upload"> 
+            <input type="file" name="payment_proof" id="payment_proof" accept="image/*,.pdf" required onchange="updateFileName(this)"> 
+            <label for="payment_proof" class="file-upload-label"> 
+                <i class="fas fa-cloud-upload-alt file-upload-icon"></i> 
+                <span> 
+                    <strong>Click to upload</strong> or drag and drop<br> 
+                    <small style="color: var(--text-muted);">PNG, JPG or PDF (max 5MB)</small> 
+                </span> 
+            </label> 
+        </div> 
+        <div id="file-name" class="file-name"></div> 
+        <small class="form-text"> 
+            Registration Fee: RM <?php echo number_format($tournament['tournament_fee'], 2); ?><br> 
+            Upload your payment receipt or proof of payment 
+        </small> 
+    </div>
 </div>
-
-<script>
-function displayFileName(input) {
-    const fileName = input.files.length > 0 ? input.files[0].name : 'Click to upload payment receipt/screenshot';
-    document.getElementById('file-name').textContent = fileName;
-}
-</script>
-
 
                     <!-- Submit Buttons -->
                     <div class="btn-group">
@@ -868,6 +877,7 @@ function displayFileName(input) {
 <script>
 let map;
 let markers = {};
+let selectedMarker = null;
 
 // Initialize Leaflet Map
 <?php if (count($all_spots_with_coords) > 0): ?>
@@ -880,20 +890,69 @@ document.addEventListener('DOMContentLoaded', function() {
         const firstSpot = spots[0];
         map = L.map('fishingMap').setView([firstSpot.latitude, firstSpot.longitude], 13);
         
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
+        // Google Hybrid Layer (Satellite + Roads/Labels) - like create zone
+        const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google Maps'
+        }).addTo(map);
+        
+        // Google Satellite Layer
+        const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google Maps'
+        });
+        
+        // Google Street Layer
+        const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google Maps'
+        });
+        
+        // Google Terrain Layer
+        const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google Maps'
+        });
+        
+        // Layer Control
+        const baseLayers = {
+            "🌍 Hybrid (Recommended)": googleHybrid,
+            "🛰️ Satellite": googleSatellite,
+            "🗺️ Street Map": googleStreets,
+            "🏔️ Terrain": googleTerrain
+        };
+        
+        L.control.layers(baseLayers, null, {
+            position: 'topright'
+        }).addTo(map);
+        
+        // Add scale control
+        L.control.scale({
+            metric: true,
+            imperial: false
         }).addTo(map);
         
         // Add markers for each spot
         spots.forEach(spot => {
             if (spot.latitude && spot.longitude) {
+                // Create blue marker (default/unselected)
                 const marker = L.marker([spot.latitude, spot.longitude], {
-                    title: `${spot.zone_name} - Spot #${spot.spot_number}`
+                    title: `${spot.zone_name} - Spot #${spot.spot_number}`,
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background: #007bff; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                                <span style="transform: rotate(45deg); color: white; font-weight: bold; font-size: 14px;">${spot.spot_number}</span>
+                               </div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32]
+                    })
                 }).addTo(map);
                 
-                // Bind popup
+                // Bind popup with zone name at top
                 marker.bindPopup(`
                     <div style="text-align: center; padding: 8px;">
                         <strong style="color: var(--ocean-blue); font-size: 16px;">
@@ -901,19 +960,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         </strong><br>
                         <span style="color: var(--text-muted); font-size: 14px;">
                             Spot #${spot.spot_number}
-                        </span><br>
-                        <button onclick="selectSpotFromMap(${spot.spot_id})" 
-                                style="margin-top: 8px; padding: 6px 12px; background: var(--ocean-light); 
-                                       color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
-                            Select This Spot
-                        </button>
+                        </span>
                     </div>
                 `, {
                     className: 'custom-popup'
                 });
                 
-                // Store marker reference
-                markers[spot.spot_id] = marker;
+                // Store marker reference with spot data
+                markers[spot.spot_id] = {
+                    marker: marker,
+                    spotNumber: spot.spot_number,
+                    zoneName: spot.zone_name,
+                    lat: spot.latitude,
+                    lng: spot.longitude
+                };
                 
                 // Click event to select spot
                 marker.on('click', function() {
@@ -932,20 +992,43 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 
 function selectSpotFromMap(spotId) {
-    const radio = document.getElementById('spot_' + spotId);
-    if (radio) {
-        radio.checked = true;
-        updateSelectedSpot(radio);
+    // Change previous selected marker back to blue
+    if (selectedMarker && markers[selectedMarker]) {
+        const prevMarkerData = markers[selectedMarker];
+        prevMarkerData.marker.setIcon(L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #007bff; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    <span style="transform: rotate(45deg); color: white; font-weight: bold; font-size: 14px;">${prevMarkerData.spotNumber}</span>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        }));
+    }
+    
+    // Change current marker to red
+    if (markers[spotId]) {
+        const markerData = markers[spotId];
+        markerData.marker.setIcon(L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #dc3545; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    <span style="transform: rotate(45deg); color: white; font-weight: bold; font-size: 14px;">${markerData.spotNumber}</span>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        }));
         
-        // Scroll to spot grid
-        radio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        selectedMarker = spotId;
         
-        // Highlight the spot box briefly
-        const spotBox = radio.nextElementSibling;
-        spotBox.style.animation = 'pulse 0.5s ease';
-        setTimeout(() => {
-            spotBox.style.animation = '';
-        }, 500);
+        // Update the radio button selection
+        const radio = document.getElementById('spot_' + spotId);
+        if (radio) {
+            radio.checked = true;
+            updateSelectedSpot(radio);
+        }
+        
+        // Pan map to selected spot
+        map.setView([markerData.lat, markerData.lng], 15, { animate: true });
+        markerData.marker.openPopup();
     }
 }
 
@@ -981,10 +1064,9 @@ function updateSelectedSpot(radio) {
     document.getElementById('selectedSpotText').textContent = `${zoneName} - Spot #${spotNumber}`;
     document.getElementById('selectedSpotDisplay').classList.add('active');
     
-    // Pan map to selected spot if it has coordinates
-    if (map && lat && lng && markers[spotId]) {
-        map.setView([lat, lng], 15, { animate: true });
-        markers[spotId].openPopup();
+    // Update map marker to red if clicked from grid
+    if (map && markers[spotId]) {
+        selectSpotFromMap(spotId);
     }
 }
 
