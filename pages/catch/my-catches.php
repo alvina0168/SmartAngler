@@ -2,10 +2,8 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Require login
 requireLogin();
 
-// Admins shouldn't access this page
 if (isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
@@ -14,7 +12,6 @@ $user_id = $_SESSION['user_id'];
 $tournament_id = isset($_GET['tournament_id']) ? intval($_GET['tournament_id']) : 0;
 $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'time_desc';
 
-// Get tournament details if tournament_id is provided
 $tournament = null;
 if ($tournament_id > 0) {
     $tournament_query = "SELECT * FROM TOURNAMENT WHERE tournament_id = ?";
@@ -25,7 +22,6 @@ if ($tournament_id > 0) {
     $stmt->close();
 }
 
-// Build query for catches
 $where_clause = "WHERE fc.user_id = ?";
 $params = [$user_id];
 $param_types = "i";
@@ -36,7 +32,6 @@ if ($tournament_id > 0) {
     $param_types .= "i";
 }
 
-// Determine sort order
 $order_by = "ORDER BY ";
 switch ($sort_by) {
     case 'time_asc':
@@ -58,7 +53,6 @@ switch ($sort_by) {
         $order_by .= "fc.catch_time DESC";
 }
 
-// Get catches
 $catches_query = "
     SELECT 
         fc.catch_id,
@@ -97,7 +91,6 @@ include '../../includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .catches-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 60px 0 100px;
@@ -122,7 +115,6 @@ include '../../includes/header.php';
     margin: 0;
 }
 
-/* Filter Section */
 .filter-section {
     max-width: 100%;
     margin: -50px 60px 0;
@@ -192,7 +184,6 @@ include '../../includes/header.php';
     box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.1);
 }
 
-/* Catches Container */
 .catches-page {
     background: var(--white);
     padding: 40px 0 60px;
@@ -203,7 +194,6 @@ include '../../includes/header.php';
     padding: 0 60px;
 }
 
-/* Catches Table */
 .catches-table-container {
     background: var(--white);
     border-radius: 12px;
@@ -262,7 +252,6 @@ include '../../includes/header.php';
     margin-top: 2px;
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: 80px 20px;
@@ -317,7 +306,6 @@ include '../../includes/header.php';
     box-shadow: 0 8px 20px rgba(8, 131, 149, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 1400px) {
     .catches-container,
     .filter-section,
@@ -366,7 +354,6 @@ include '../../includes/header.php';
 }
 </style>
 
-<!-- Hero Section -->
 <div class="catches-hero">
     <div class="hero-content">
         <h1 class="hero-title">My Fish Catches</h1>
@@ -455,9 +442,6 @@ include '../../includes/header.php';
             </div>
         <?php else: ?>
             <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-fish"></i>
-                </div>
                 <h3 class="empty-title">No Catches Yet</h3>
                 <p class="empty-text">
                     <?php if ($tournament_id > 0): ?>

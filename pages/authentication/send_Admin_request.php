@@ -1,20 +1,10 @@
 <?php
-/**
- * ═══════════════════════════════════════════════════════════════
- *         ADMIN REQUEST - SIMPLE EMAIL ONLY (NO DATABASE)
- * ═══════════════════════════════════════════════════════════════
- */
-
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
     exit;
 }
-
-// ═══════════════════════════════════════════════════════════════
-//                  VALIDATE INPUTS
-// ═══════════════════════════════════════════════════════════════
 
 $errors = [];
 
@@ -44,10 +34,6 @@ if (!empty($errors)) {
     exit;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//                  HANDLE FILE UPLOADS
-// ═══════════════════════════════════════════════════════════════
-
 $upload_dir = dirname(__DIR__) . '/assets/images/admin_requests/';
 
 if (!file_exists($upload_dir)) {
@@ -60,7 +46,6 @@ $max_file_size = 5 * 1024 * 1024; // 5MB
 $id_card_photo_path = '';
 $location_proof_path = '';
 
-// Handle ID Card Photo (Required)
 if (isset($_FILES['id_card_photo']) && $_FILES['id_card_photo']['error'] === UPLOAD_ERR_OK) {
     $file = $_FILES['id_card_photo'];
     
@@ -108,10 +93,6 @@ if (isset($_FILES['location_proof']) && $_FILES['location_proof']['error'] === U
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//                  SEND EMAIL WITH PHPMAILER
-// ═══════════════════════════════════════════════════════════════
-
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -131,7 +112,7 @@ try {
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
     
-    // ✅ FIXED: From email MUST match Gmail account
+    // From email MUST match Gmail account
     $mail->setFrom('alvinaao0168@gmail.com', 'SmartAngler');
     $mail->addAddress('alvinaao0168@gmail.com');
     $mail->addReplyTo($email, $name);
@@ -166,7 +147,7 @@ try {
     <body>
         <div class='container'>
             <div class='header'>
-                <h1>🎣 New Admin Access Request</h1>
+                <h1>New Admin Access Request</h1>
                 <p>Someone wants to become a tournament admin!</p>
             </div>
             
@@ -271,10 +252,6 @@ Please review the attached documents and contact the applicant.
     exit;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//                  SEND CONFIRMATION TO APPLICANT
-// ═══════════════════════════════════════════════════════════════
-
 try {
     $confirmMail = new PHPMailer(true);
     
@@ -285,12 +262,9 @@ try {
     $confirmMail->Password = 'xmwxeyplblbyjeaj';
     $confirmMail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $confirmMail->Port = 587;
-    
-    // ✅ FIXED: From email MUST match Gmail account
     $confirmMail->setFrom('alvinaao0168@gmail.com', 'SmartAngler');
     $confirmMail->addAddress($email, $name);
     $confirmMail->addReplyTo('alvinaao0168@gmail.com', 'SmartAngler Admin');
-    
     $confirmMail->isHTML(true);
     $confirmMail->Subject = 'Admin Access Request Received - SmartAngler';
     
@@ -353,10 +327,6 @@ try {
 } catch (Exception $e) {
     error_log("Confirmation email error: " . $confirmMail->ErrorInfo);
 }
-
-// ═══════════════════════════════════════════════════════════════
-//                  RETURN SUCCESS
-// ═══════════════════════════════════════════════════════════════
 
 echo json_encode([
     'success' => true,

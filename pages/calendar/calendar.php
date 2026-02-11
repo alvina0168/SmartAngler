@@ -40,7 +40,6 @@ include '../../includes/header.php';
     --green: #10B981;
 }
 
-/* Hero */
 .calendar-hero {
     background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
     padding: 50px 60px;
@@ -59,13 +58,11 @@ include '../../includes/header.php';
     margin: 0;
 }
 
-/* Container */
 .calendar-page {
     background: #FAFAFA;
     padding: 30px 60px 50px;
 }
 
-/* Navigation */
 .nav-bar {
     display: flex;
     justify-content: space-between;
@@ -105,7 +102,6 @@ include '../../includes/header.php';
     color: var(--ocean-light);
 }
 
-/* Legend */
 .calendar-legend {
     display: flex;
     justify-content: center;
@@ -140,7 +136,6 @@ include '../../includes/header.php';
 .dot-ongoing { background: var(--orange); }
 .dot-completed { background: var(--green); }
 
-/* Calendar Grid */
 .calendar-grid {
     background: #F3F4F6;
     border: 2px solid #9CA3AF;
@@ -206,7 +201,6 @@ include '../../includes/header.php';
     background: #EFF6FF;
 }
 
-/* Day Cell */
 .day-cell {
     height: 100%;
     display: flex;
@@ -231,7 +225,6 @@ include '../../includes/header.php';
     border-radius: 50%;
 }
 
-/* Tournaments */
 .tournament-list {
     display: flex;
     flex-direction: column;
@@ -301,7 +294,6 @@ include '../../includes/header.php';
     text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .calendar-hero, .calendar-page {
         padding-left: 20px;
@@ -315,7 +307,6 @@ include '../../includes/header.php';
 }
 </style>
 
-<!-- Hero -->
 <div class="calendar-hero">
     <h1 class="hero-title">Tournament Calendar</h1>
     <p class="hero-subtitle">View and track upcoming fishing tournaments</p>
@@ -323,7 +314,6 @@ include '../../includes/header.php';
 
 <!-- Calendar -->
 <div class="calendar-page">
-    <!-- Navigation -->
     <div class="nav-bar">
         <div class="month-display">
             <?php echo date('F Y', strtotime("$year-$month-01")); ?>
@@ -354,7 +344,6 @@ include '../../includes/header.php';
         </div>
     </div>
 
-    <!-- Calendar Grid -->
     <div class="calendar-grid">
         <table class="calendar-table">
             <thead>

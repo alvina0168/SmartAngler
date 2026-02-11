@@ -14,7 +14,6 @@ if (!isset($_GET['id'])) {
 $user_id = $_SESSION['user_id'];
 $review_id = intval($_GET['id']);
 
-// Delete review (only if it belongs to the user)
 $delete_query = "DELETE FROM REVIEW WHERE review_id = $review_id AND user_id = $user_id";
 
 if (mysqli_query($conn, $delete_query)) {

@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Find zones that are NOT assigned to tournaments with conflicting date/time
     $query = "
         SELECT z.zone_id, z.zone_name, z.zone_description,
                (SELECT COUNT(*) FROM FISHING_SPOT WHERE zone_id = z.zone_id) as spot_count

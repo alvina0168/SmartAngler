@@ -16,7 +16,6 @@ if (!isset($_GET['tournament_id'])) {
 $user_id = $_SESSION['user_id'];
 $tournament_id = intval($_GET['tournament_id']);
 
-// Check if user participated in this tournament
 $participation_query = "
     SELECT tr.*, t.tournament_title, t.tournament_date, t.status
     FROM TOURNAMENT_REGISTRATION tr
@@ -34,13 +33,11 @@ if (!$participation_result || mysqli_num_rows($participation_result) == 0) {
 
 $tournament = mysqli_fetch_assoc($participation_result);
 
-// Check if tournament is completed
 if ($tournament['status'] != 'completed') {
     $_SESSION['error'] = 'You can only review completed tournaments!';
     redirect(SITE_URL . '/pages/tournament/tournaments.php');
 }
 
-// Check if user already reviewed this tournament
 $existing_review_query = "
     SELECT review_id FROM REVIEW 
     WHERE user_id = $user_id AND tournament_id = $tournament_id
@@ -52,13 +49,11 @@ if (mysqli_num_rows($existing_review_result) > 0) {
     redirect(SITE_URL . '/pages/review/myReviews.php');
 }
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rating = intval($_POST['rating']);
     $review_text = mysqli_real_escape_string($conn, trim($_POST['review_text']));
     $is_anonymous = isset($_POST['is_anonymous']) ? 1 : 0;
 
-    // Handle image upload
     $review_image = null;
     if (isset($_FILES['review_image']) && $_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['review_image']['tmp_name'];
@@ -121,14 +116,12 @@ include '../../includes/header.php';
     --white: #FFFFFF;
 }
 
-/* Container */
 .review-container {
     max-width: 800px;
     margin: 2rem auto;
     padding: 0 1rem;
 }
 
-/* Section Card */
 .section-card {
     background: var(--white);
     border-radius: 16px;
@@ -137,7 +130,6 @@ include '../../includes/header.php';
     margin-bottom: 2rem;
 }
 
-/* Tournament Info Badge */
 .tournament-info {
     background: #e3f2fd;
     border-left: 4px solid var(--ocean-light);
@@ -155,14 +147,12 @@ include '../../includes/header.php';
     color: var(--ocean-light);
 }
 
-/* Rating Stars */
 #ratingStars i {
     font-size: 2.5rem;
     cursor: pointer;
     transition: color 0.2s ease;
 }
 
-/* Form Fields */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -183,7 +173,6 @@ textarea.form-control:focus {
     border-color: var(--ocean-light);
 }
 
-/* Anonymous Checkbox */
 .checkbox-wrapper {
     display: flex;
     align-items: center;
@@ -211,7 +200,6 @@ textarea.form-control:focus {
     color: var(--text-muted);
 }
 
-/* Buttons */
 .form-actions {
     display: flex;
     gap: 1rem;

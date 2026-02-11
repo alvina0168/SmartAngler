@@ -2,12 +2,9 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Don't require login - tournament details should be public
-// Only check if user is logged in for personalized features
 $isLoggedIn = isLoggedIn();
 $currentUserId = $isLoggedIn ? $_SESSION['user_id'] : null;
 
-// Admins shouldn't access this page
 if ($isLoggedIn && isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
@@ -18,7 +15,6 @@ if (!isset($_GET['id'])) {
 
 $tournament_id = intval($_GET['id']);
 
-// Auto-update tournament status
 $update_query = "
     UPDATE TOURNAMENT
     SET status = CASE
@@ -34,7 +30,6 @@ $stmt->bind_param("i", $tournament_id);
 $stmt->execute();
 $stmt->close();
 
-// Get tournament details with save and registration status
 if ($isLoggedIn) {
     $query = "SELECT t.*, u.full_name as organizer_name,
               (SELECT COUNT(*) FROM SAVED 
@@ -58,7 +53,6 @@ if ($isLoggedIn) {
     $stmt = $conn->prepare($query);
     $stmt->bind_param("iiii", $currentUserId, $currentUserId, $currentUserId, $tournament_id);
 } else {
-    // Guest users - no personalization
     $query = "SELECT t.*, u.full_name as organizer_name,
               0 as is_saved,
               NULL as user_registration_id,
@@ -81,7 +75,6 @@ if (!$tournament) {
     redirect(SITE_URL . '/pages/tournament/tournaments.php');
 }
 
-// Get available spots count
 $spots_query = "
     SELECT 
         COUNT(*) AS total_spots,
@@ -97,7 +90,6 @@ $result = $stmt->get_result();
 $spots_data = $result->fetch_assoc();
 $stmt->close();
 
-// Get registered participants count
 $participants_query = "SELECT COUNT(*) as registered 
                        FROM TOURNAMENT_REGISTRATION 
                        WHERE tournament_id = ? AND approval_status IN ('pending', 'approved')";
@@ -108,7 +100,6 @@ $result = $stmt->get_result();
 $participants_data = $result->fetch_assoc();
 $stmt->close();
 
-// Check if spots are full
 $spotsAvailable = $tournament['max_participants'] - $participants_data['registered'];
 $isFull = $spotsAvailable <= 0;
 
@@ -128,7 +119,6 @@ include '../../includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Page Container */
 .details-page {
     background: var(--sand);
     min-height: 100vh;
@@ -140,7 +130,6 @@ include '../../includes/header.php';
     padding: 0 60px;
 }
 
-/* Back Button */
 .back-button {
     display: inline-flex;
     align-items: center;
@@ -158,7 +147,6 @@ include '../../includes/header.php';
     gap: 12px;
 }
 
-/* Tournament Header Card */
 .tournament-header-card {
     background: var(--white);
     border-radius: 20px;
@@ -182,7 +170,6 @@ include '../../includes/header.php';
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* Status Badge */
 .status-badge {
     display: inline-block;
     padding: 8px 20px;
@@ -211,7 +198,6 @@ include '../../includes/header.php';
     margin-bottom: 30px;
 }
 
-/* Quick Info Grid */
 .quick-info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -257,7 +243,6 @@ include '../../includes/header.php';
     font-size: 15px;
 }
 
-/* Status Messages */
 .status-message {
     padding: 16px 20px;
     border-radius: 12px;
@@ -300,7 +285,6 @@ include '../../includes/header.php';
     border: 2px solid #93C5FD;
 }
 
-/* Action Buttons */
 .action-buttons {
     display: flex;
     gap: 12px;
@@ -372,7 +356,6 @@ include '../../includes/header.php';
     color: var(--white);
 }
 
-/* Content Cards */
 .content-card {
     background: var(--white);
     border-radius: 20px;
@@ -398,7 +381,6 @@ include '../../includes/header.php';
     font-size: 15px;
 }
 
-/* Prize Tables */
 .prize-category {
     margin-bottom: 32px;
 }
@@ -466,7 +448,6 @@ include '../../includes/header.php';
     color: #10B981;
 }
 
-/* Sponsors Grid */
 .sponsors-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -506,7 +487,6 @@ include '../../includes/header.php';
     line-height: 1.6;
 }
 
-/* Reviews */
 .reviews-header {
     display: flex;
     justify-content: space-between;
@@ -632,7 +612,6 @@ include '../../includes/header.php';
     margin-bottom: 16px;
 }
 
-/* Responsive */
 @media (max-width: 1400px) {
     .details-container {
         padding: 0 40px;

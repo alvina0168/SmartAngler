@@ -2,13 +2,11 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['error'] = 'Please login to continue';
     redirect(SITE_URL . '/login.php');
 }
 
-// Ensure tournament ID exists
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = 'Tournament ID is required';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -18,15 +16,10 @@ $tournament_id = intval($_GET['id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL - ONLY CHANGED SECTION
-// ═══════════════════════════════════════════════════════════════
-
 // Check access permissions
 $has_access = false;
 
 if ($logged_in_role === 'organizer') {
-    // Organizer can access their tournaments or tournaments created by their admins
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
         WHERE tournament_id = '$tournament_id'
@@ -38,7 +31,6 @@ if ($logged_in_role === 'organizer') {
         )
     ";
 } elseif ($logged_in_role === 'admin') {
-    // Admin can access their tournaments or their organizer's tournaments
     $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
     $creator_result = mysqli_query($conn, $get_creator_query);
     $creator_row = mysqli_fetch_assoc($creator_result);
@@ -58,7 +50,6 @@ if ($logged_in_role === 'organizer') {
         ";
     }
 } else {
-    // Other roles - no access
     $_SESSION['error'] = 'Access denied';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
@@ -70,13 +61,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-// ═══════════════════════════════════════════════════════════════
-//              END OF ACCESS CONTROL CHANGES
-// ═══════════════════════════════════════════════════════════════
-
-/* -----------------------------------------------------------
-   Auto-update tournament status based on date/time
------------------------------------------------------------ */
 $update_status_query = "
     UPDATE TOURNAMENT
     SET status = CASE
@@ -89,7 +73,6 @@ $update_status_query = "
 ";
 mysqli_query($conn, $update_status_query);
 
-// Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_tournament') {
     $tournament_title = mysqli_real_escape_string($conn, $_POST['tournament_title']);
     $tournament_date = mysqli_real_escape_string($conn, $_POST['tournament_date']);
@@ -121,7 +104,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         WHERE tournament_id='$tournament_id'
     ";
 
-    // Handle tournament image upload
     if (!empty($_FILES['tournament_image']['name'])) {
         $image_name = time() . '_' . basename($_FILES['tournament_image']['name']);
         $target_dir = "../../assets/images/tournaments/";
@@ -132,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 
-    // Handle bank QR image upload
     if (!empty($_FILES['bank_qr_image']['name'])) {
         $qr_name = time() . '_' . basename($_FILES['bank_qr_image']['name']);
         $qr_dir = "../../assets/images/qrcodes/";
@@ -152,7 +133,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     redirect(SITE_URL . '/admin/tournament/viewTournament.php?id=' . $tournament_id);
 }
 
-// Fetch tournament with statistics AND assigned zone_id
 $query = "
     SELECT t.*, u.full_name AS organizer_name,
         (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION WHERE tournament_id=t.tournament_id) AS total_registrations,
@@ -180,7 +160,6 @@ if (!$result || mysqli_num_rows($result) == 0) {
 
 $tournament = mysqli_fetch_assoc($result);
 
-// Fetch selected categories with their prizes
 $categories_query = "
     SELECT DISTINCT c.*, 
            (SELECT COUNT(*) FROM TOURNAMENT_PRIZE WHERE tournament_id='$tournament_id' AND category_id=c.category_id) as prize_count
@@ -190,8 +169,6 @@ $categories_query = "
     ORDER BY c.category_id
 ";
 $categories_result = mysqli_query($conn, $categories_query);
-
-// Fetch sponsors
 $sponsors_query = "SELECT * FROM SPONSOR WHERE tournament_id = '$tournament_id' ORDER BY sponsor_id";
 $sponsors_result = mysqli_query($conn, $sponsors_query);
 
@@ -201,7 +178,6 @@ include '../includes/header.php';
 ?>
 
 <style>
-/* Edit Mode Styles */
 .edit-only {
     display: none;
 }
@@ -220,7 +196,6 @@ include '../includes/header.php';
     display: block;
 }
 
-/* Tournament Image Container */
 .tournament-image-container {
     width: 100%;
     height: 300px;
@@ -235,7 +210,6 @@ include '../includes/header.php';
     object-fit: cover;
 }
 
-/* QR Code Container */
 .qr-container {
     width: 250px;
     height: 250px;
@@ -255,7 +229,6 @@ include '../includes/header.php';
     padding: 1rem;
 }
 
-/* Management Grid */
 .management-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -310,7 +283,6 @@ include '../includes/header.php';
     font-size: 0.875rem;
 }
 
-/* Info Grid */
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -327,7 +299,6 @@ include '../includes/header.php';
     }
 }
 
-/* Info Items */
 .info-item {
     margin-bottom: 1rem;
 }
@@ -347,7 +318,6 @@ include '../includes/header.php';
     font-weight: 500;
 }
 
-/* Form Controls */
 .form-control {
     width: 100%;
     padding: 0.75rem;
@@ -368,7 +338,6 @@ textarea.form-control {
     min-height: 100px;
 }
 
-/* Status Badges */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -385,7 +354,6 @@ textarea.form-control {
 .badge-cancelled { background: #ffebee; color: #d32f2f; }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="tournamentList.php" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to List
@@ -394,8 +362,6 @@ textarea.form-control {
 
 <form id="tournamentForm" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="action" value="update_tournament">
-    
-    <!-- Header with Actions -->
     <div class="section">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
@@ -418,7 +384,6 @@ textarea.form-control {
         </div>
     </div>
 
-    <!-- Quick Management Cards -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -428,7 +393,6 @@ textarea.form-control {
         </div>
         
         <div class="management-grid">
-            <!-- Participants -->
             <a href="../participant/manageParticipants.php?id=<?= $tournament_id ?>" class="management-card">
                 <div class="management-card-header">
                     <div class="management-card-icon">
@@ -516,7 +480,6 @@ textarea.form-control {
         </div>
 
         <div class="info-grid">
-            <!-- Left Column -->
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <div class="info-item">
                     <div class="info-label">Tournament Title</div>
@@ -574,7 +537,6 @@ textarea.form-control {
                 </div>
             </div>
 
-            <!-- Right Column -->
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <div class="info-item">
                     <div class="info-label">Organized By</div>
@@ -883,13 +845,11 @@ textarea.form-control {
         ?>
 
         <?php if (mysqli_num_rows($reviews_result) > 0): ?>
-            <!-- Reviews Summary -->
             <?php
             $total_reviews = mysqli_num_rows($reviews_result);
             $total_rating = 0;
             $rating_counts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
             
-            // Calculate statistics
             mysqli_data_seek($reviews_result, 0);
             while ($review = mysqli_fetch_assoc($reviews_result)) {
                 $total_rating += $review['rating'];
@@ -929,7 +889,6 @@ textarea.form-control {
                 </div>
             </div>
 
-            <!-- Individual Reviews -->
             <div style="display: grid; gap: 1rem;">
                 <?php mysqli_data_seek($reviews_result, 0); ?>
                 <?php while ($review = mysqli_fetch_assoc($reviews_result)): ?>
@@ -1013,7 +972,6 @@ function cancelEdit() {
     btn.className = 'btn btn-primary';
 }
 
-// Prevent accidental navigation away
 let formChanged = false;
 document.getElementById('tournamentForm').addEventListener('input', function() {
     formChanged = true;

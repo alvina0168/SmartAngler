@@ -3,7 +3,6 @@ ob_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check if user is logged in
 if (!isLoggedIn() || isAdmin()) {
     setFlashMessage('Please log in to view notifications', 'error');
     redirect(SITE_URL . '/pages/authentication/login.php');
@@ -14,7 +13,6 @@ require_once '../../includes/header.php';
 
 $user_id = $_SESSION['user_id'];
 
-// Handle actions (mark as read, delete)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
@@ -45,10 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get filter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-
-// Build query based on filter
 $baseQuery = "SELECT n.*, t.tournament_title 
               FROM NOTIFICATION n
               LEFT JOIN TOURNAMENT t ON n.tournament_id = t.tournament_id
@@ -63,11 +58,7 @@ if ($filter === 'unread') {
 }
 
 $baseQuery .= " ORDER BY n.sent_date DESC";
-
-// Get notifications
 $notifications = $db->fetchAll($baseQuery, $params);
-
-// Count notifications by status
 $countQuery = "SELECT 
                 SUM(CASE WHEN read_status = 0 THEN 1 ELSE 0 END) as unread_count,
                 SUM(CASE WHEN read_status = 1 THEN 1 ELSE 0 END) as read_count,
@@ -80,7 +71,6 @@ $unread_count = $counts['unread_count'] ?? 0;
 $read_count = $counts['read_count'] ?? 0;
 $total_count = $counts['total_count'] ?? 0;
 
-// Function to get relative time
 function getRelativeTime($datetime) {
     $now = time();
     $time = strtotime($datetime);
@@ -102,7 +92,6 @@ function getRelativeTime($datetime) {
     }
 }
 
-// Function to get notification icon based on content
 function getNotificationIcon($title, $message) {
     $content = strtolower($title . ' ' . $message);
     
@@ -136,7 +125,6 @@ function getNotificationIcon($title, $message) {
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .notifications-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 60px 0 100px;
@@ -161,7 +149,6 @@ function getNotificationIcon($title, $message) {
     margin: 0;
 }
 
-/* Filter Section */
 .filter-section {
     max-width: 100%;
     margin: -50px 60px 0;
@@ -248,7 +235,6 @@ function getNotificationIcon($title, $message) {
     color: var(--ocean-light);
 }
 
-/* Notifications Container */
 .notifications-page {
     background: var(--white);
     padding: 40px 0 60px;
@@ -259,7 +245,6 @@ function getNotificationIcon($title, $message) {
     padding: 0 60px;
 }
 
-/* Notifications List */
 .notifications-list {
     display: flex;
     flex-direction: column;
@@ -437,7 +422,6 @@ function getNotificationIcon($title, $message) {
     background: #FEE2E2;
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: 80px 20px;
@@ -472,7 +456,6 @@ function getNotificationIcon($title, $message) {
     margin: 0;
 }
 
-/* Responsive */
 @media (max-width: 1400px) {
     .notifications-container,
     .filter-section,
@@ -534,7 +517,6 @@ function getNotificationIcon($title, $message) {
 }
 </style>
 
-<!-- Hero Section -->
 <div class="notifications-hero">
     <div class="hero-content">
         <h1 class="hero-title">Notifications</h1>

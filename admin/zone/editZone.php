@@ -69,7 +69,6 @@ include '../includes/header.php';
     <?php endif; ?>
 
     <form method="POST" action="" class="form">
-        <!-- Zone Information Section -->
         <div class="form-section">
             <h3 class="form-section-title">
                 <i class="fas fa-info-circle"></i> Zone Information
@@ -102,8 +101,7 @@ include '../includes/header.php';
                 </select>
             </div>
         </div>
-
-        <!-- Buttons -->
+        
         <div class="form-actions">
             <a href="viewZone.php?id=<?php echo $zone_id; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel

@@ -714,7 +714,6 @@ function checkZoneAvailability() {
     });
 }
 
-// Zone selection handler
 document.getElementById('zoneSelect').addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
     const zoneId = this.value;

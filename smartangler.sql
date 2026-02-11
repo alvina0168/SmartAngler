@@ -1,6 +1,3 @@
--- =========================================================
--- DATABASE INITIALIZATION - FIXED VERSION (NO SAMPLE DATA)
--- =========================================================
 CREATE DATABASE IF NOT EXISTS smartangler;
 USE smartangler;
 

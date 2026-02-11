@@ -2,8 +2,10 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (
+    !isset($_SESSION['user_id']) ||
+    !in_array($_SESSION['role'], ['admin', 'organizer'])
+) {
     redirect(SITE_URL . '/login.php');
 }
 
@@ -16,7 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $registration_id = intval($_POST['registration_id']);
     $status = $_POST['status']; // 'rejected'
-    $notes = mysqli_real_escape_string($conn, $_POST['notes'] ?? '');
+    $notes = mysqli_real_escape_string($conn, $_POST['reject_note'] ?? '');
+
 } else {
     // Coming from Approve GET link
     if (!isset($_GET['registration_id']) || !isset($_GET['status'])) {

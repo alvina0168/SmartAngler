@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check access - both organizer and admin can create zones
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['organizer', 'admin'])) {
     redirect(SITE_URL . '/login.php');
 }
@@ -22,14 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (empty($spots_data)) {
         $error = 'Please add at least one spot by clicking on the map';
     } else {
-        // Insert zone (without tournament_id - zones are not assigned to tournaments at creation)
         $insert_zone = "INSERT INTO ZONE (zone_name, zone_description, created_at) 
                         VALUES ('$zone_name', '$zone_description', NOW())";
         
         if (mysqli_query($conn, $insert_zone)) {
             $zone_id = mysqli_insert_id($conn);
-            
-            // Insert all spots with sequential numbering
+
             $spot_number = 1;
             $added_count = 0;
             
@@ -57,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 include '../includes/header.php';
 ?>
 
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
@@ -148,7 +144,6 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="zoneList.php" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Zones
@@ -169,7 +164,6 @@ include '../includes/header.php';
     <?php endif; ?>
 
     <form method="POST" id="createZoneForm">
-        <!-- Zone Information -->
         <div class="form-group">
             <label>Fishing Zone Name <span class="required">*</span></label>
             <input type="text" name="zone_name" class="form-control" placeholder="Zone Name" required>
@@ -198,9 +192,8 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <!-- Map and Coordinates Grid -->
+        <!-- Map -->
         <div class="info-grid" style="margin-bottom: 1.5rem;">
-            <!-- Map -->
             <div>
                 <label style="display: block; font-weight: 600; margin-bottom: 0.75rem;">
                     <i class="fas fa-map"></i> Add Fishing Spots (Click on Map)
@@ -208,7 +201,6 @@ include '../includes/header.php';
                 <div id="spotMap"></div>
             </div>
             
-            <!-- Coordinates Panel -->
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <div>
                     <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Current Latitude</label>
@@ -230,7 +222,6 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <!-- Spots Table -->
         <div style="margin-top: 2rem;">
             <h4 style="color: var(--color-blue-primary); margin-bottom: 1rem; font-size: 1.125rem;">
                 <i class="fas fa-list"></i> Added Spots (<span id="spotCount">0</span>)
@@ -256,10 +247,8 @@ include '../includes/header.php';
             </table>
         </div>
 
-        <!-- Hidden input for spots data -->
         <input type="hidden" name="spots_data" id="spotsData">
 
-        <!-- Form Actions -->
         <div class="form-actions">
             <a href="zoneList.php" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
@@ -271,41 +260,33 @@ include '../includes/header.php';
     </form>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Initialize map centered on Sabah, Malaysia with higher max zoom
 const map = L.map('spotMap').setView([5.4164, 116.0553], 10);
-
-// Google Maps-style Street Layer
 const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Satellite Layer
 const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Hybrid Layer (Satellite + Roads/Labels)
 const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Terrain Layer
 const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Add Google Hybrid as default (best for fishing spots)
 googleHybrid.addTo(map);
 
 // Layer Control
@@ -324,12 +305,10 @@ let spots = [];
 let spotCounter = 0;
 let searchMarker = null;
 
-// Update zoom level display
 map.on('zoomend', function() {
     document.getElementById('zoomLevel').value = map.getZoom();
 });
 
-// Location Search using Nominatim with better error handling
 const searchInput = document.getElementById('locationSearch');
 const searchResults = document.getElementById('searchResults');
 let searchTimeout;
@@ -348,7 +327,6 @@ searchInput.addEventListener('input', function() {
     searchResults.style.display = 'block';
     
     searchTimeout = setTimeout(() => {
-        // Use Nominatim API with proper CORS handling
         const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=my&limit=10&addressdetails=1`;
         
         fetch(apiUrl, {
@@ -382,11 +360,8 @@ searchInput.addEventListener('input', function() {
             data.forEach(result => {
                 const item = document.createElement('div');
                 item.className = 'search-result-item';
-                
-                // Get better display name
                 const placeName = result.name || result.display_name.split(',')[0];
                 const address = result.display_name;
-                
                 item.innerHTML = `
                     <div class="search-result-title">
                         <i class="fas fa-map-marker-alt" style="color: var(--color-blue-primary); margin-right: 0.5rem;"></i>
@@ -399,15 +374,12 @@ searchInput.addEventListener('input', function() {
                     const lat = parseFloat(result.lat);
                     const lng = parseFloat(result.lon);
                     
-                    // Zoom to location with higher zoom level
                     map.setView([lat, lng], 18);
                     
-                    // Remove previous search marker
                     if (searchMarker) {
                         map.removeLayer(searchMarker);
                     }
                     
-                    // Add temporary marker at searched location
                     searchMarker = L.marker([lat, lng], {
                         icon: L.divIcon({
                             className: 'search-marker',
@@ -423,11 +395,9 @@ searchInput.addEventListener('input', function() {
                         <small style="color: #28a745;"><i class="fas fa-info-circle"></i> Click on map to add spots here</small>
                     `).openPopup();
                     
-                    // Clear search
                     searchInput.value = placeName;
                     searchResults.style.display = 'none';
-                    
-                    // Update coordinates display
+
                     document.getElementById('currentLat').value = lat.toFixed(8);
                     document.getElementById('currentLng').value = lng.toFixed(8);
                 });
@@ -449,24 +419,20 @@ searchInput.addEventListener('input', function() {
     }, 500);
 });
 
-// Close search results when clicking outside
 document.addEventListener('click', function(e) {
     if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
         searchResults.style.display = 'none';
     }
 });
 
-// Update spot count display
 function updateSpotCount() {
     document.getElementById('spotCount').textContent = spots.length;
     document.getElementById('submitBtn').disabled = (spots.length === 0);
 }
 
-// Add spot to table
 function addSpotToTable(spot) {
     const tbody = document.getElementById('spotsTableBody');
     
-    // Remove "no spots" row if exists
     if (tbody.querySelector('tr td[colspan="5"]')) {
         tbody.innerHTML = '';
     }
@@ -489,14 +455,12 @@ function addSpotToTable(spot) {
     updateSpotCount();
 }
 
-// Remove spot from table
 function removeSpotFromTable(spotId) {
     const row = document.getElementById(`spot-row-${spotId}`);
     if (row) {
         row.remove();
     }
-    
-    // Add "no spots" row if table is empty
+
     const tbody = document.getElementById('spotsTableBody');
     if (tbody.children.length === 0) {
         tbody.innerHTML = `
@@ -508,13 +472,11 @@ function removeSpotFromTable(spotId) {
             </tr>
         `;
     }
-    
-    // Renumber remaining spots
+
     renumberSpots();
     updateSpotCount();
 }
 
-// Renumber spots sequentially
 function renumberSpots() {
     spots.forEach((spot, index) => {
         spot.number = index + 1;
@@ -526,16 +488,12 @@ function renumberSpots() {
     });
 }
 
-// Click event - add new spot
 map.on('click', function(e) {
     const lat = e.latlng.lat.toFixed(8);
     const lng = e.latlng.lng.toFixed(8);
-    
     spotCounter++;
     const spotId = spotCounter;
     const spotNumber = spots.length + 1;
-    
-    // Create marker with custom icon
     const marker = L.marker([lat, lng], {
         draggable: true,
         title: `Spot ${spotNumber}`,
@@ -548,11 +506,8 @@ map.on('click', function(e) {
             iconAnchor: [16, 32]
         })
     }).addTo(map);
-    
-    // CHANGED: Removed .openPopup() - popup will only show when user clicks the marker
+
     marker.bindPopup(`<b>Spot ${spotNumber}</b><br>Lat: ${lat}<br>Lng: ${lng}`);
-    
-    // Store spot
     const spotData = {
         id: spotId,
         number: spotNumber,
@@ -562,14 +517,10 @@ map.on('click', function(e) {
     };
     spots.push(spotData);
     
-    // Update current coordinates display
     document.getElementById('currentLat').value = lat;
     document.getElementById('currentLng').value = lng;
-    
-    // Add to table
     addSpotToTable(spotData);
     
-    // Right-click to remove
     marker.on('contextmenu', function() {
         if (confirm('Remove this spot?')) {
             map.removeLayer(marker);
@@ -577,8 +528,7 @@ map.on('click', function(e) {
             removeSpotFromTable(spotId);
         }
     });
-    
-    // Drag event
+
     marker.on('dragend', function(e) {
         const newLat = e.target.getLatLng().lat.toFixed(8);
         const newLng = e.target.getLatLng().lng.toFixed(8);
@@ -587,23 +537,19 @@ map.on('click', function(e) {
         if (spot) {
             spot.lat = newLat;
             spot.lng = newLng;
-            
-            // Update table
             const row = document.getElementById(`spot-row-${spotId}`);
             if (row) {
                 row.cells[1].textContent = newLat;
                 row.cells[2].textContent = newLng;
             }
             
-            // Update coordinates display
             document.getElementById('currentLat').value = newLat;
             document.getElementById('currentLng').value = newLng;
         }
         
         marker.setPopupContent(`<b>Spot ${spot.number}</b><br>Lat: ${newLat}<br>Lng: ${newLng}`);
     });
-    
-    // Click event - show coordinates and popup
+
     marker.on('click', function() {
         document.getElementById('currentLat').value = spotData.lat;
         document.getElementById('currentLng').value = spotData.lng;
@@ -657,8 +603,7 @@ document.getElementById('createZoneForm').addEventListener('submit', function(e)
         alert('Please add at least one spot by clicking on the map');
         return false;
     }
-    
-    // Sort spots by number and prepare data
+
     spots.sort((a, b) => a.number - b.number);
     
     const spotsData = spots.map(spot => ({
@@ -669,7 +614,6 @@ document.getElementById('createZoneForm').addEventListener('submit', function(e)
     document.getElementById('spotsData').value = JSON.stringify(spotsData);
 });
 
-// Add scale control
 L.control.scale({
     metric: true,
     imperial: false

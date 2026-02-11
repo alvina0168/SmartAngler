@@ -1,18 +1,14 @@
 <?php
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
-
-// Require login
 requireLogin();
 
-// Admins shouldn't access this page
 if (isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
 
 $user_id = $_SESSION['user_id'];
 
-// Get user statistics
 $stats_query = "
     SELECT 
         (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
@@ -32,7 +28,6 @@ $stmt->execute();
 $stats = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// Get registered tournaments (including pending)
 $tournaments_query = "
     SELECT 
         t.*,
@@ -76,7 +71,6 @@ include '../../includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .dashboard-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 60px 0;
@@ -101,7 +95,6 @@ include '../../includes/header.php';
     margin: 0;
 }
 
-/* Dashboard Container */
 .dashboard-page {
     background: var(--white);
     padding: 40px 0 60px;
@@ -112,7 +105,6 @@ include '../../includes/header.php';
     padding: 0 60px;
 }
 
-/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -177,7 +169,6 @@ include '../../includes/header.php';
     font-weight: 600;
 }
 
-/* Section Header */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -194,7 +185,6 @@ include '../../includes/header.php';
     gap: 12px;
 }
 
-/* Tournaments Grid */
 .tournaments-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -347,7 +337,6 @@ include '../../includes/header.php';
     border-color: var(--border);
 }
 
-/* Pending Indicator */
 .pending-indicator {
     position: absolute;
     top: 12px;
@@ -367,7 +356,6 @@ include '../../includes/header.php';
     }
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: 80px 20px;
@@ -422,7 +410,6 @@ include '../../includes/header.php';
     box-shadow: 0 8px 20px rgba(8, 131, 149, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 1400px) {
     .dashboard-container,
     .hero-content {
@@ -462,7 +449,6 @@ include '../../includes/header.php';
 }
 </style>
 
-<!-- Hero Section -->
 <div class="dashboard-hero">
     <div class="hero-content">
         <h1 class="hero-title">My Dashboard</h1>
@@ -470,10 +456,8 @@ include '../../includes/header.php';
     </div>
 </div>
 
-<!-- Dashboard Page -->
 <div class="dashboard-page">
     <div class="dashboard-container">
-        <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon tournaments">

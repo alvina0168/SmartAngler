@@ -31,7 +31,6 @@ if (!$token) {
     }
 }
 
-// Handle new password submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
     $password = sanitize($_POST['password']);
     $confirm_password = sanitize($_POST['confirm_password']);
@@ -41,12 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters.";
     } else {
-        // Update password (plain text) and clear token
         $stmt = $conn->prepare("UPDATE USER SET password=?, reset_token=NULL, reset_expiry=NULL WHERE user_id=?");
         $stmt->bind_param("si", $password, $user_id);
         $stmt->execute();
-
-        // Set success message
         $success = "Your password has been reset successfully.";
     }
 }
@@ -64,7 +60,6 @@ include '../../includes/header.php';
     --text-muted: #6B7280;
 }
 
-/* Reset Password Page */
 .reset-page {
     min-height: 90vh;
     display: flex;
@@ -173,7 +168,6 @@ include '../../includes/header.php';
 .alert-danger { background: #FEE2E2; color: #B91C1C; }
 .alert-success { background: #D1FAE5; color: #065F46; }
 
-/* Responsive */
 @media (max-width: 480px) {
     .reset-card {
         padding: 30px 20px;

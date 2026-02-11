@@ -37,8 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Create reset link
         $reset_link = SITE_URL . "/pages/profile/reset-password.php?token=$token";
-
-        // Send email
         $mail = new PHPMailer(true);
 
         try {
@@ -84,7 +82,6 @@ include '../../includes/header.php';
     --text-muted: #6B7280;
 }
 
-/* Forgot Password Page */
 .forgot-page {
     min-height: 90vh;
     display: flex;
@@ -188,7 +185,6 @@ include '../../includes/header.php';
     text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 480px) {
     .forgot-card {
         padding: 30px 20px;

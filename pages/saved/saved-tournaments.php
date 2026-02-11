@@ -35,7 +35,6 @@ $savedTournaments = $db->fetchAll($sql, [$_SESSION['user_id']]);
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .saved-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 60px 0 100px;
@@ -60,7 +59,6 @@ $savedTournaments = $db->fetchAll($sql, [$_SESSION['user_id']]);
     margin: 0;
 }
 
-/* Filter Section */
 .filter-section {
     max-width: 100%;
     margin: -50px 60px 0;
@@ -148,7 +146,6 @@ $savedTournaments = $db->fetchAll($sql, [$_SESSION['user_id']]);
     min-width: 200px;
 }
 
-/* Saved Tournaments Container */
 .saved-page {
     background: var(--white);
     padding: 40px 0 60px;
@@ -159,7 +156,6 @@ $savedTournaments = $db->fetchAll($sql, [$_SESSION['user_id']]);
     padding: 0 60px;
 }
 
-/* Tournament Grid - 3 Columns */
 .tournaments-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -341,7 +337,6 @@ $savedTournaments = $db->fetchAll($sql, [$_SESSION['user_id']]);
     background: var(--ocean-blue);
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: 80px 20px;
@@ -397,7 +392,6 @@ $savedTournaments = $db->fetchAll($sql, [$_SESSION['user_id']]);
     box-shadow: 0 8px 20px rgba(8, 131, 149, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 1400px) {
     .saved-container,
     .filter-section,
@@ -587,7 +581,6 @@ function unsaveTournament(tournamentId, savedId) {
     }
 }
 
-// Search functionality
 document.getElementById('searchInput').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const cards = document.querySelectorAll('.tournament-card');

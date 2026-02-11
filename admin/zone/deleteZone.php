@@ -10,7 +10,6 @@ if (!isset($_GET['id'])) {
 
 $zone_id = intval($_GET['id']);
 
-// Delete zone (CASCADE will delete all spots)
 $delete_query = "DELETE FROM ZONE WHERE zone_id = '$zone_id'";
 
 if (mysqli_query($conn, $delete_query)) {

@@ -15,14 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $tournament_id = intval($_POST['tournament_id']);
 $user_id = $_SESSION['user_id'];
 
-// Validate inputs
 $full_name = mysqli_real_escape_string($conn, $_POST['full_name']);
 $email = mysqli_real_escape_string($conn, $_POST['email']);
 $phone_number = mysqli_real_escape_string($conn, $_POST['phone_number']);
 $emergency_contact = isset($_POST['emergency_contact']) ? mysqli_real_escape_string($conn, $_POST['emergency_contact']) : '';
 $spot_id = intval($_POST['spot_id']);
 
-// Check if already registered
 $check_query = "SELECT registration_id FROM TOURNAMENT_REGISTRATION 
                 WHERE tournament_id = ? AND user_id = ?";
 $stmt = $conn->prepare($check_query);
@@ -36,7 +34,6 @@ if ($existing) {
     redirect(SITE_URL . '/pages/tournament/tournament-details.php?id=' . $tournament_id);
 }
 
-// Handle payment proof upload
 $payment_proof = null;
 if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === 0) {
     $allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
@@ -45,7 +42,6 @@ if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === 0) 
     if (in_array($file_type, $allowed_types)) {
         $upload_dir = '../../assets/images/payments/';
         
-        // Create directory if it doesn't exist
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
@@ -64,7 +60,6 @@ if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === 0) 
     }
 }
 
-// Insert registration
 $insert_query = "INSERT INTO TOURNAMENT_REGISTRATION 
     (tournament_id, user_id, spot_id, full_name, email, phone_number, emergency_contact, payment_proof, approval_status, registration_date) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
@@ -84,14 +79,12 @@ $stmt->bind_param("iiisssss",
 if ($stmt->execute()) {
     $registration_id = $stmt->insert_id;
     
-    // Update fishing spot status to reserved
     $update_spot = "UPDATE FISHING_SPOT SET spot_status = 'reserved' WHERE spot_id = ?";
     $spot_stmt = $conn->prepare($update_spot);
     $spot_stmt->bind_param("i", $spot_id);
     $spot_stmt->execute();
     $spot_stmt->close();
-    
-    // Create notification for user
+
     $notif_query = "INSERT INTO NOTIFICATION (user_id, tournament_id, title, message, read_status) 
                     VALUES (?, ?, 'Registration Submitted', 'Your registration is pending approval.', 0)";
     $notif_stmt = $conn->prepare($notif_query);

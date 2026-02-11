@@ -1,25 +1,14 @@
 <?php
-/**
- * Database Class
- * Handles database connection and operations
- */
 class Database {
     private $host = DB_HOST;
     private $username = DB_USER;
     private $password = DB_PASS;
     private $database = DB_NAME;
     private $conn = null;
-    
-    /**
-     * Constructor - automatically establish connection
-     */
     public function __construct() {
         $this->getConnection();
     }
-    
-    /**
-     * Get database connection
-     */
+
     public function getConnection() {
         if ($this->conn === null) {
             try {
@@ -40,16 +29,10 @@ class Database {
         return $this->conn;
     }
     
-    /**
-     * Close database connection
-     */
     public function closeConnection() {
         $this->conn = null;
     }
     
-    /**
-     * Execute a query and return results
-     */
     public function query($sql, $params = []) {
         try {
             $stmt = $this->conn->prepare($sql);
@@ -61,33 +44,21 @@ class Database {
         }
     }
     
-    /**
-     * Get single row
-     */
     public function fetchOne($sql, $params = []) {
         $stmt = $this->query($sql, $params);
         return $stmt ? $stmt->fetch() : false;
     }
     
-    /**
-     * Get all rows
-     */
     public function fetchAll($sql, $params = []) {
         $stmt = $this->query($sql, $params);
         return $stmt ? $stmt->fetchAll() : false;
     }
     
-    /**
-     * Insert data and return last insert ID
-     */
     public function insert($sql, $params = []) {
         $stmt = $this->query($sql, $params);
         return $stmt ? $this->conn->lastInsertId() : false;
     }
     
-    /**
-     * Update/Delete data and return affected rows
-     */
     public function execute($sql, $params = []) {
         $stmt = $this->query($sql, $params);
         return $stmt ? $stmt->rowCount() : false;

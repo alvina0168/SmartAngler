@@ -8,7 +8,6 @@ if (isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
 
-// Check if registration ID is provided
 if (!isset($_GET['id'])) {
     redirect(SITE_URL . '/user/my-registrations.php');
 }
@@ -16,7 +15,6 @@ if (!isset($_GET['id'])) {
 $registration_id = intval($_GET['id']);
 $user_id = $_SESSION['user_id'];
 
-// Fetch a single registration for this user
 $query = "SELECT tr.*, t.tournament_title, t.tournament_date, t.start_time, t.end_time, 
                  t.location, t.tournament_fee, t.image, t.status as tournament_status,
                  fs.spot_id AS spot_number, z.zone_name
@@ -33,7 +31,6 @@ $result = $stmt->get_result();
 $registration = $result->fetch_assoc();
 $stmt->close();
 
-// If registration not found, redirect
 if (!$registration) {
     setFlashMessage("Registration not found.", "error");
     redirect(SITE_URL . '/user/my-registrations.php');

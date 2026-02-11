@@ -8,7 +8,6 @@ if (!isset($_GET['id'])) {
 
 $spot_id = intval($_GET['id']);
 
-// Get spot info
 $spot_query = "SELECT fs.*, z.zone_name, z.zone_id 
                FROM FISHING_SPOT fs
                JOIN ZONE z ON fs.zone_id = z.zone_id
@@ -115,7 +114,6 @@ include '../includes/header.php';
     <?php endif; ?>
 
     <form method="POST" class="card p-6 shadow-md rounded-lg">
-        <!-- Spot Information -->
         <div class="form-section mb-6">
             <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Spot Information</h3>
             <div class="form-group">
@@ -129,7 +127,6 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <!-- Map Section -->
         <div class="form-section mb-6">
             <h3 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Spot Location</h3>
             <div class="alert alert-info mb-4">
@@ -152,7 +149,6 @@ include '../includes/header.php';
             <input type="hidden" name="longitude" id="spotLng" value="<?php echo $spot['longitude'] ?? ''; ?>">
         </div>
 
-        <!-- Buttons -->
         <div class="flex justify-end gap-3">
             <a href="viewZone.php?id=<?php echo $spot['zone_id']; ?>" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
@@ -166,41 +162,32 @@ const existingLat = <?php echo !empty($spot['latitude']) ? $spot['latitude'] : '
 const existingLng = <?php echo !empty($spot['longitude']) ? $spot['longitude'] : '116.0553'; ?>;
 const hasCoords = <?php echo !empty($spot['latitude']) && !empty($spot['longitude']) ? 'true' : 'false'; ?>;
 
-// Initialize map with Google Maps tiles
 const map = L.map('spotMap').setView([existingLat, existingLng], hasCoords ? 18 : 10);
-
-// Google Maps-style Street Layer
 const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Satellite Layer
 const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Hybrid Layer (Satellite + Roads/Labels)
 const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Terrain Layer
 const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Add Google Hybrid as default (best for precise location editing)
 googleHybrid.addTo(map);
-
-// Layer Control
 const baseLayers = {
     "🌍 Hybrid (Recommended)": googleHybrid,
     "🛰️ Satellite": googleSatellite,
@@ -212,13 +199,11 @@ L.control.layers(baseLayers, null, {
     position: 'topright'
 }).addTo(map);
 
-// Add scale control
 L.control.scale({
     metric: true,
     imperial: false
 }).addTo(map);
 
-// Create marker with custom styling
 let marker = null;
 if (hasCoords) {
     marker = L.marker([existingLat, existingLng], { 

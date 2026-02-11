@@ -16,13 +16,11 @@ if (!isset($_GET['id'])) {
 $user_id = $_SESSION['user_id'];
 $review_id = intval($_GET['id']);
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rating = intval($_POST['rating']);
     $review_text = mysqli_real_escape_string($conn, trim($_POST['review_text']));
     $is_anonymous = isset($_POST['is_anonymous']) ? 1 : 0;
 
-    // Handle image upload
     $review_image = null;
     if (isset($_FILES['review_image']) && $_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['review_image']['tmp_name'];
@@ -31,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
         $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
-        if (in_array($fileExt, $allowedExts) && $fileSize <= 5 * 1024 * 1024) { // max 5MB
+        if (in_array($fileExt, $allowedExts) && $fileSize <= 5 * 1024 * 1024) { 
             $newFileName = uniqid('review_', true) . '.' . $fileExt;
             $uploadPath = '../../uploads/reviews/' . $newFileName;
 
@@ -72,7 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch review
 $query = "
     SELECT r.*, t.tournament_title, t.tournament_date
     FROM REVIEW r
@@ -101,14 +98,12 @@ include '../../includes/header.php';
     --sand: #F8F6F0;
 }
 
-/* Container */
 .review-container {
     max-width: 800px;
     margin: 2rem auto;
     padding: 0 1rem;
 }
 
-/* Card */
 .section-card {
     background: var(--white);
     border-radius: 16px;
@@ -117,7 +112,6 @@ include '../../includes/header.php';
     margin-bottom: 2rem;
 }
 
-/* Tournament Info */
 .tournament-info {
     background: #e3f2fd;
     border-left: 4px solid var(--ocean-light);
@@ -128,17 +122,14 @@ include '../../includes/header.php';
 .tournament-info .title { font-weight: 600; color: var(--ocean-blue); margin-bottom: 0.25rem; }
 .tournament-info .date { font-size: 0.875rem; color: var(--ocean-light); }
 
-/* Rating Stars */
 #ratingStars i { font-size: 2.5rem; cursor: pointer; transition: color 0.2s ease; }
 
-/* Form Fields */
 .form-group { margin-bottom: 1.5rem; }
 label { font-weight: 600; color: var(--text-dark); }
 textarea.form-control { width: 100%; padding: 12px; border: 2px solid #E5E7EB; border-radius: 12px; resize: vertical; font-size: 14px; }
 textarea.form-control:focus { outline: none; border-color: var(--ocean-light); }
 input[type="file"] { border-radius: 12px; padding: 0.5rem; }
 
-/* Image Preview */
 .image-preview {
     margin-top: 0.75rem;
     max-width: 200px;
@@ -146,7 +137,6 @@ input[type="file"] { border-radius: 12px; padding: 0.5rem; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* Anonymous Checkbox */
 .checkbox-wrapper {
     display: flex;
     align-items: center;
@@ -161,7 +151,6 @@ input[type="file"] { border-radius: 12px; padding: 0.5rem; }
 .checkbox-wrapper .text .title { font-weight: 600; color: var(--text-dark); }
 .checkbox-wrapper .text .description { font-size: 0.8125rem; color: var(--text-muted); }
 
-/* Buttons */
 .form-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
 .btn-submit, .btn-cancel {
     padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;
@@ -214,7 +203,7 @@ input[type="file"] { border-radius: 12px; padding: 0.5rem; }
                 </div>
             <?php endif; ?>
 
-            <!-- Upload New Image -->
+            <!-- Upload Image -->
             <div class="form-group">
                 <label>Upload a New Image (optional)</label>
                 <input type="file" name="review_image" accept=".jpg,.jpeg,.png,.gif">

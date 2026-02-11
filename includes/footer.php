@@ -1,13 +1,11 @@
 <footer class="footer">
     <div class="container">
         <div class="footer-content">
-            <!-- About Section -->
             <div class="footer-section about">
                 <h3>About SmartAngler</h3>
                 <p>SmartAngler makes fishing competitions easy! Create and join tournaments, log your catches, and compete with anglers for great prizes!</p>
             </div>
 
-            <!-- Quick Links Section -->
             <div class="footer-section links">
     <h3>Quick Links</h3>
     <ul>
@@ -16,9 +14,6 @@
         <li><a href="<?php echo SITE_URL; ?>/pages/calendar/calendar.php">Calendar</a></li>
     </ul>
 </div>
-
-
-            <!-- Contact Section -->
             <div class="footer-section contact">
                 <h3>Contact</h3>
                 <p><i class="fas fa-envelope"></i> alvina@smartangler.com</p>
@@ -33,7 +28,6 @@
             </div>
         </div>
 
-        <!-- Footer Bottom -->
         <div class="footer-bottom">
             <p>&copy; <?php echo date('Y'); ?> SmartAngler | All rights reserved.</p>
         </div>
@@ -41,10 +35,10 @@
 </footer>
 
 <style>
-/* Footer Styles */
+
 .footer {
-    background-color: #0A4D68; /* deep ocean blue */
-    color: #f8f6f0; /* light sand text */
+    background-color: #0A4D68; 
+    color: #f8f6f0; 
     padding: 2rem 1rem 1rem 1rem;
     font-family: 'Segoe UI', sans-serif;
 }
@@ -56,7 +50,7 @@
 }
 
 .footer a:hover {
-    color: #05BFDB; /* teal highlight on hover */
+    color: #05BFDB; 
 }
 
 .footer-content {
@@ -138,7 +132,6 @@
     color: rgba(248, 246, 240, 0.8);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .footer-content {
         flex-direction: column;

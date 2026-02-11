@@ -1,45 +1,28 @@
 <?php
-/**
- * SmartAngler Configuration File
- */
-
-// Database Configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'smartangler');
 
-// Site Configuration - Dynamic URL Detection
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-// Check if running on ngrok or localhost
 if (strpos($host, 'ngrok') !== false) {
-    // Running on ngrok - use HTTPS
     define('SITE_URL', 'https://' . $host . '/SmartAngler');
 } else {
-    // Running locally - use HTTP
     define('SITE_URL', 'http://' . $host . '/SmartAngler');
 }
 
 define('SITE_NAME', 'SmartAngler');
-
-// Session Configuration
-define('SESSION_TIMEOUT', 3600); // 1 hour in seconds
-
-// Upload Configuration
+define('SESSION_TIMEOUT', 3600); 
 define('UPLOAD_PATH', __DIR__ . '/../assets/images/');
-define('MAX_FILE_SIZE', 5242880); // 5MB in bytes
+define('MAX_FILE_SIZE', 5242880); 
 define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'gif']);
-
-// Timezone
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-// Error Reporting (disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -51,7 +34,5 @@ $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
 }
-
-// Set charset to UTF-8
 mysqli_set_charset($conn, "utf8mb4");
 ?>

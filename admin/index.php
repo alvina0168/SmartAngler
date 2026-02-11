@@ -3,9 +3,8 @@ $page_title = 'Dashboard';
 $page_description = 'Overview of your fishing tournament management';
 include 'includes/header.php';
 
-$admin_id = $current_user['user_id']; // Logged-in admin
+$admin_id = $current_user['user_id']; 
 
-// Get statistics
 $stats_queries = [
     'tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE created_by = $admin_id",
     'active_tournaments' => "SELECT COUNT(*) as total FROM TOURNAMENT WHERE status = 'ongoing' AND created_by = $admin_id",
@@ -29,7 +28,6 @@ foreach ($stats_queries as $key => $query) {
     $stats[$key] = mysqli_fetch_assoc($result)['total'];
 }
 
-// Get all recent activity
 $recent_activity_query = "
     SELECT 
         tr.registration_date,
@@ -47,7 +45,6 @@ $recent_activity = mysqli_query($conn, $recent_activity_query);
 $total_activities = mysqli_num_rows($recent_activity);
 ?>
 
-<!-- Welcome Section -->
 <div class="welcome-card">
     <div class="welcome-content">
         <h1>Welcome back, <?php echo htmlspecialchars($current_user['full_name']); ?>!</h1>
@@ -59,7 +56,6 @@ $total_activities = mysqli_num_rows($recent_activity);
     </div>
 </div>
 
-<!-- Main Statistics Grid -->
 <div class="stats-grid-main">
     <div class="stat-card-large">
         <div class="stat-card-icon tournaments">
@@ -108,9 +104,7 @@ $total_activities = mysqli_num_rows($recent_activity);
     </div>
 </div>
 
-<!-- Two Column Layout: Recent Activity (Left) + Tournament Status (Right) -->
 <div class="dashboard-two-col">
-    <!-- Left Column: Recent Activity -->
     <div class="dashboard-section">
         <div class="section-header-modern">
             <div>
@@ -179,7 +173,6 @@ $total_activities = mysqli_num_rows($recent_activity);
         <?php endif; ?>
     </div>
 
-    <!-- Right Column: Tournament Status -->
     <div class="dashboard-section">
         <div class="section-header-modern">
             <div>
@@ -262,7 +255,6 @@ function toggleActivities() {
     }
 }
 
-// Hide activities on page load
 document.addEventListener('DOMContentLoaded', function() {
     const hiddenActivities = document.querySelectorAll('.activity-hidden');
     hiddenActivities.forEach(activity => {

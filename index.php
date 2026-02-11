@@ -400,7 +400,6 @@ include 'includes/header.php';
 </style>
 
 <?php if (!isLoggedIn()): ?>
-<!-- Account Type Selection Section - Only visible when NOT logged in -->
 <section class="account-type-section">
     <div class="account-type-container">
         <h1 class="account-type-title">Welcome to SmartAngler</h1>
@@ -612,7 +611,7 @@ document.getElementById('adminRequestForm').addEventListener('submit', function(
 <section class="features">
     <div class="container">
         <h2>Everything a <span>Champion Angler Needs.</span></h2>
-        <p class="features-subtitle">SmartAngler brings competitive angling features to your device. Register, Compete, and Track your fishing performance in real-time. Sign up and be part of the digital angling revolution.</p>
+        <p class="features-subtitle">SmartAngler brings competitive angling features to your device. Register, Compete and Track your fishing performance in real-time. Sign up and be part of the digital angling revolution.</p>
 
         <div class="features-grid">
             <div class="feature-card">

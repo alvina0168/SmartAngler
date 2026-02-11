@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// If already logged in, redirect
 if (isLoggedIn()) {
     if (isAdmin()) {
         redirect(SITE_URL . '/admin/index.php');
@@ -21,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $full_name = sanitize($_POST['full_name']);
     $phone_number = sanitize($_POST['phone_number']);
     
-    // Validation
     if (empty($email) || empty($password) || empty($full_name) || empty($phone_number)) {
         $error = 'Please fill in all fields';
     } elseif ($password !== $confirm_password) {
@@ -36,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (mysqli_num_rows($check_result) > 0) {
             $error = 'Email already registered';
         } else {
-            // Insert new user
             $insert_query = "INSERT INTO USER (email, password, full_name, phone_number, role, status) 
                             VALUES ('$email', '$password', '$full_name', '$phone_number', 'angler', 'active')";
             
@@ -64,7 +61,6 @@ include '../../includes/header.php';
     --white: #FFFFFF;
 }
 
-/* Register Page Styles */
 .register-page {
     min-height: 80vh;
     display: flex;
@@ -168,7 +164,6 @@ include '../../includes/header.php';
     color: var(--ocean-teal);
 }
 
-/* Responsive */
 @media (max-width: 480px) {
     .register-card {
         padding: 30px 20px;

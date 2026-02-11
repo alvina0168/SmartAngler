@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// If already logged in, redirect
 if (isLoggedIn()) {
     if (hasAdminAccess()) {
         redirect(SITE_URL . '/admin/index.php');
@@ -13,22 +12,20 @@ if (isLoggedIn()) {
 
 $error = '';
 $success = '';
-$login_type = isset($_GET['type']) ? $_GET['type'] : 'user'; // 'user' or 'admin'
+$login_type = isset($_GET['type']) ? $_GET['type'] : 'user'; 
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $login_input = sanitize($_POST['login_input']); // Can be email OR username
     $password = sanitize($_POST['password']);
-    $login_as = sanitize($_POST['login_as']); // 'user' or 'admin'
+    $login_as = sanitize($_POST['login_as']);
     
     if (empty($login_input) || empty($password)) {
         $error = 'Please fill in all fields';
     } else {
-        // Check if login input is email or username
         if (filter_var($login_input, FILTER_VALIDATE_EMAIL)) {
             // It's an email
             $query = "SELECT * FROM USER WHERE email = '$login_input' AND password = '$password' AND status = 'active'";
         } else {
-            // It's a username
             $query = "SELECT * FROM USER WHERE username = '$login_input' AND password = '$password' AND status = 'active'";
         }
         
@@ -37,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (mysqli_num_rows($result) == 1) {
             $user = mysqli_fetch_assoc($result);
             
-            // Check if login type matches user role
             if ($login_as == 'admin') {
-                // Admin login - only organizer and admin can login here
                 if ($user['role'] == 'organizer' || $user['role'] == 'admin') {
                     $_SESSION['user_id'] = $user['user_id'];
                     $_SESSION['email'] = $user['email'];
@@ -52,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $error = 'Invalid credentials for admin login';
                 }
             } else {
-                // User login - only anglers can login here
                 if ($user['role'] == 'angler') {
                     $_SESSION['user_id'] = $user['user_id'];
                     $_SESSION['email'] = $user['email'];
@@ -86,7 +80,6 @@ include '../../includes/header.php';
     --white: #FFFFFF;
 }
 
-/* Login Page Styles */
 .login-page {
     min-height: 90vh;
     display: flex;
@@ -119,7 +112,6 @@ include '../../includes/header.php';
     margin-bottom: 24px;
 }
 
-/* Login Type Tabs */
 .login-tabs {
     display: flex;
     gap: 8px;
@@ -246,7 +238,6 @@ include '../../includes/header.php';
     color: var(--ocean-teal);
 }
 
-/* Responsive */
 @media (max-width: 480px) {
     .login-card {
         padding: 30px 20px;
@@ -262,8 +253,6 @@ include '../../includes/header.php';
     <div class="login-card">
         <h2> Login to SmartAngler</h2>
         <p class="login-subtitle">Choose your login type</p>
-
-        <!-- Login Type Tabs -->
         <div class="login-tabs">
             <button class="login-tab <?php echo $login_type == 'user' ? 'active' : ''; ?>" 
                     onclick="switchLoginType('user')">

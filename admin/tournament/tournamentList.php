@@ -12,22 +12,15 @@ if (!function_exists('sanitize')) {
     }
 }
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../login.php");
     exit;
 }
 
-// Get logged-in user info
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-/* -----------------------------------------------------------
-   Auto-update tournament status based on date/time
------------------------------------------------------------ */
-// Build the WHERE clause for status update based on role
 if ($logged_in_role === 'organizer') {
-    // Organizer can update their tournaments and tournaments created by their admins
     $status_update_where = "
         (created_by = '$logged_in_user_id' 
         OR created_by IN (
@@ -35,7 +28,6 @@ if ($logged_in_role === 'organizer') {
         ))
     ";
 } elseif ($logged_in_role === 'admin') {
-    // Admin can update their tournaments and their organizer's tournaments
     $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
     $creator_result = mysqli_query($conn, $get_creator_query);
     $creator_row = mysqli_fetch_assoc($creator_result);
@@ -62,23 +54,14 @@ $update_query = "
 ";
 mysqli_query($conn, $update_query);
 
-// --- Pagination ---
-$limit = 10; // tournaments per page
+$limit = 10; 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $limit;
-
-// --- Status filter ---
 $status_filter = isset($_GET['status']) ? sanitize($_GET['status']) : 'all';
-
-// --- Search filter ---
 $search_query = isset($_GET['search']) ? sanitize($_GET['search']) : '';
-
-// --- Sort filter ---
 $sort_by = isset($_GET['sort']) ? sanitize($_GET['sort']) : 'latest';
 
-// Build WHERE clause based on role
 if ($logged_in_role === 'organizer') {
-    // Organizer sees their tournaments and tournaments created by their admins
     $where_conditions = [
         "(t.created_by = '$logged_in_user_id' 
         OR t.created_by IN (
@@ -86,7 +69,6 @@ if ($logged_in_role === 'organizer') {
         ))"
     ];
 } elseif ($logged_in_role === 'admin') {
-    // Admin sees their tournaments and their organizer's tournaments
     if (isset($organizer_id) && $organizer_id) {
         $where_conditions = ["(t.created_by = '$logged_in_user_id' OR t.created_by = '$organizer_id')"];
     } else {
@@ -100,7 +82,6 @@ if ($status_filter != 'all') {
     $where_conditions[] = "t.status = '$status_filter'";
 }
 
-// Add search condition
 if (!empty($search_query)) {
     $where_conditions[] = "(t.tournament_title LIKE '%$search_query%' 
                             OR t.location LIKE '%$search_query%' 
@@ -109,8 +90,6 @@ if (!empty($search_query)) {
 }
 
 $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
-
-// Determine ORDER BY clause based on sort option
 $order_by = "ORDER BY ";
 switch($sort_by) {
     case 'oldest':
@@ -143,13 +122,11 @@ switch($sort_by) {
         break;
 }
 
-// --- Get total tournaments for pagination ---
 $total_query = "SELECT COUNT(*) as total FROM TOURNAMENT t LEFT JOIN USER u ON t.created_by = u.user_id $where_clause";
 $total_result = mysqli_query($conn, $total_query);
 $total_tournaments = mysqli_fetch_assoc($total_result)['total'];
 $total_pages = ceil($total_tournaments / $limit);
 
-// --- Get tournaments with creator info ---
 $tournaments_query = "
     SELECT t.*, u.full_name as creator_name, u.user_id as creator_id
     FROM TOURNAMENT t
@@ -307,9 +284,7 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Create Tournament Button & Filter Tabs -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-    <!-- Filter Tabs -->
     <div class="filter-tabs" style="margin: 0;">
         <?php 
         $statuses = ['all'=>'All Tournaments', 'upcoming'=>'Upcoming', 'ongoing'=>'Ongoing', 'completed'=>'Completed'];
@@ -322,7 +297,6 @@ include '../includes/header.php';
         <?php endforeach; ?>
     </div>
     
-    <!-- Create Button -->
     <div>
         <a href="createTournament.php" class="create-btn">
             <i class="fas fa-plus-circle"></i> Create Tournament
@@ -330,7 +304,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Search and Sort Bar -->
 <div class="search-sort-bar">
     <div class="search-box">
         <i class="fas fa-search search-icon"></i>
@@ -360,7 +333,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Active Filters Display -->
 <?php if (!empty($search_query) || $status_filter != 'all' || $sort_by != 'latest'): ?>
 <div class="filter-tags">
     <span style="font-weight: 600; color: var(--color-gray-700);">
@@ -412,7 +384,6 @@ include '../includes/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Tournaments Table -->
 <?php if (mysqli_num_rows($tournaments_result) > 0): ?>
     <div class="section">
         <div class="section-header">
@@ -495,7 +466,6 @@ include '../includes/header.php';
             </tbody>
         </table>
 
-        <!-- Pagination -->
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php for ($p=1; $p <= $total_pages; $p++): ?>
@@ -527,18 +497,17 @@ include '../includes/header.php';
 <?php endif; ?>
 
 <script>
-// Auto-submit search form on input with debounce
-let searchTimeout;
-document.getElementById('searchInput').addEventListener('input', function(e) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        this.form.submit();
-    }, 500);
-});
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 500);
+    });
 
-function clearSearch() {
-    window.location.href = '?status=<?php echo $status_filter; ?>&sort=<?php echo $sort_by; ?>';
-}
+    function clearSearch() {
+        window.location.href = '?status=<?php echo $status_filter; ?>&sort=<?php echo $sort_by; ?>';
+    }
 </script>
 
 <?php include '../includes/footer.php'; ?>

@@ -20,7 +20,6 @@ $user_id = $_SESSION['user_id'];
 
 try {
     if ($action === 'save') {
-        // Try INSERT with ON DUPLICATE KEY UPDATE
         $sql = "INSERT INTO SAVED (user_id, tournament_id, is_saved) 
                 VALUES (?, ?, 1)
                 ON DUPLICATE KEY UPDATE is_saved = 1";
@@ -45,7 +44,6 @@ try {
         ]);
 
     } elseif ($action === 'unsave') {
-        // Unsave tournament
         $sql = "UPDATE SAVED SET is_saved = 0 WHERE user_id = ? AND tournament_id = ?";
         
         $stmt = $conn->prepare($sql);

@@ -2,11 +2,9 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Don't require login - results should be public for completed tournaments
 $isLoggedIn = isLoggedIn();
 $currentUserId = $isLoggedIn ? $_SESSION['user_id'] : null;
 
-// Admins shouldn't access this page
 if ($isLoggedIn && isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
@@ -17,7 +15,6 @@ if (!isset($_GET['tournament_id'])) {
 
 $tournament_id = intval($_GET['tournament_id']);
 
-// Fetch tournament info
 $tournament_q = $conn->prepare("SELECT tournament_title, tournament_date, status, location FROM TOURNAMENT WHERE tournament_id = ?");
 $tournament_q->bind_param("i", $tournament_id);
 $tournament_q->execute();
@@ -28,7 +25,6 @@ if (!$tournament) {
     redirect(SITE_URL . '/pages/tournament/tournaments.php');
 }
 
-// Get all prizes grouped by category
 $prizes_query = "
     SELECT 
         tp.*,
@@ -45,7 +41,6 @@ $stmt->execute();
 $all_prizes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Group prizes by category
 $prizes_by_category = [];
 foreach ($all_prizes as $prize) {
     $cat_id = $prize['category_id'];
@@ -60,7 +55,6 @@ foreach ($all_prizes as $prize) {
     $prizes_by_category[$cat_id]['prizes'][] = $prize;
 }
 
-// Fetch results with weighing station
 $results_query = "
     SELECT 
         r.*,
@@ -89,7 +83,6 @@ $stmt->execute();
 $all_results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Group results by category and ranking
 $results_by_category = [];
 foreach ($all_results as $result) {
     $cat_id = $result['category_id'];
@@ -113,7 +106,6 @@ include '../../includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .results-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 60px 0 100px;
@@ -148,7 +140,6 @@ include '../../includes/header.php';
     gap: 8px;
 }
 
-/* Filter Section */
 .filter-section {
     max-width: 100%;
     margin: -50px 60px 0;
@@ -184,7 +175,6 @@ include '../../includes/header.php';
     font-size: 12px;
 }
 
-/* Results Container */
 .results-page {
     background: var(--white);
     padding: 40px 0 60px;
@@ -195,7 +185,6 @@ include '../../includes/header.php';
     padding: 0 60px;
 }
 
-/* Category Cards */
 .category-section {
     margin-bottom: 40px;
 }
@@ -227,7 +216,6 @@ include '../../includes/header.php';
     vertical-align: middle;
 }
 
-/* Results Table */
 .results-table-container {
     background: var(--white);
     border: 2px solid var(--border);
@@ -297,7 +285,6 @@ include '../../includes/header.php';
     font-style: italic;
 }
 
-/* Status Badge */
 .status-badge {
     display: inline-block;
     padding: 6px 14px;
@@ -312,7 +299,6 @@ include '../../includes/header.php';
 .status-badge.ongoing { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
 .status-badge.completed { background: rgba(16, 185, 129, 0.2); color: #10B981; }
 
-/* Responsive */
 @media (max-width: 1400px) {
     .results-container,
     .filter-section,

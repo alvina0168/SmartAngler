@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Fetch user's reviews
 $reviews_query = "
     SELECT r.*, t.tournament_title, t.tournament_date, t.tournament_id
     FROM REVIEW r
@@ -36,7 +35,6 @@ include '../../includes/header.php';
     --orange: #ff9800;
 }
 
-/* Hero Section */
 .reviews-hero {
     background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
     color: var(--white);
@@ -46,10 +44,8 @@ include '../../includes/header.php';
 .reviews-hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 12px; }
 .reviews-hero p { font-size: 18px; opacity: 0.9; }
 
-/* Container */
 .reviews-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
 
-/* Review Card */
 .review-card {
     background: var(--white);
     border-radius: 16px;
@@ -61,7 +57,6 @@ include '../../includes/header.php';
 }
 .review-card:hover { transform: translateY(-3px); }
 
-/* Tournament Info */
 .review-card .tournament-title {
     font-size: 1.2rem;
     font-weight: 700;
@@ -73,7 +68,6 @@ include '../../includes/header.php';
 }
 .review-card .tournament-date { font-size: 0.875rem; color: var(--text-muted); }
 
-/* Action Buttons */
 .review-card .action-btns { display: flex; gap: 10px; margin-top: 10px; }
 .review-card .action-btns a, .review-card .action-btns button {
     font-size: 0.875rem;
@@ -97,12 +91,10 @@ include '../../includes/header.php';
 }
 .review-card .action-btns button.btn-danger:hover { background: #DC2626; }
 
-/* Rating Stars */
 .review-card .rating { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
 .review-card .rating i { font-size: 1.25rem; }
 .review-card .rating .score { font-weight: 600; font-size: 1.125rem; color: var(--text-dark); }
 
-/* Anonymous Badge */
 .review-card .badge-anonymous {
     background: #9e9e9e;
     color: var(--white);
@@ -111,7 +103,6 @@ include '../../includes/header.php';
     font-size: 0.75rem;
 }
 
-/* Review Text */
 .review-card .review-text {
     background: var(--sand);
     padding: 1rem;
@@ -121,7 +112,6 @@ include '../../includes/header.php';
     color: var(--text-dark);
 }
 
-/* Review Image */
 .review-card .review-image {
     max-width: 200px;
     border-radius: 12px;
@@ -129,7 +119,6 @@ include '../../includes/header.php';
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* Admin Response */
 .review-card .admin-response {
     background: #e3f2fd;
     border-left: 4px solid var(--ocean-blue);
@@ -139,7 +128,6 @@ include '../../includes/header.php';
 }
 .review-card .admin-response strong { color: var(--ocean-blue); font-size: 0.95rem; }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     margin-top: 3rem;
@@ -154,14 +142,12 @@ include '../../includes/header.php';
 .empty-state .btn { background: var(--ocean-light); color: var(--white); padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; }
 .empty-state .btn:hover { background: var(--ocean-blue); }
 
-/* Responsive */
 @media (max-width: 768px) {
     .review-card { padding: 20px; }
     .review-card .action-btns { flex-wrap: wrap; gap: 5px; }
 }
 </style>
 
-<!-- Hero Section -->
 <div class="reviews-hero">
     <h1> My Reviews</h1>
     <p>All the reviews you've submitted for tournaments</p>
@@ -172,7 +158,6 @@ include '../../includes/header.php';
     <?php if (mysqli_num_rows($reviews_result) > 0): ?>
         <?php while ($review = mysqli_fetch_assoc($reviews_result)): ?>
             <div class="review-card">
-                <!-- Tournament Info and Actions -->
                 <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
                     <div>
                         <div class="tournament-title">

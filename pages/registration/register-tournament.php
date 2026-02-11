@@ -123,7 +123,6 @@ include '../../includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Hero Section */
 .register-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 60px 0 100px;
@@ -148,7 +147,6 @@ include '../../includes/header.php';
     margin: 0;
 }
 
-/* Registration Container */
 .register-page {
     background: var(--white);
     padding: 0 0 60px;
@@ -162,7 +160,6 @@ include '../../includes/header.php';
     z-index: 10;
 }
 
-/* Registration Card */
 .register-card {
     background: var(--white);
     border-radius: 16px;
@@ -186,7 +183,6 @@ include '../../includes/header.php';
     padding: 32px;
 }
 
-/* Form Styles */
 .form-group {
     margin-bottom: 24px;
 }
@@ -232,7 +228,6 @@ include '../../includes/header.php';
     display: block;
 }
 
-/* Map Section */
 .map-section {
     margin: 24px 0;
 }
@@ -273,7 +268,6 @@ include '../../includes/header.php';
     min-height: 400px;
 }
 
-/* Leaflet Map */
 #fishingMap {
     width: 100%;
     height: 500px;
@@ -369,7 +363,6 @@ include '../../includes/header.php';
     display: block;
 }
 
-/* Payment Information Card */
 .payment-info-box {
     background: var(--white);
     border: 1px solid var(--border);
@@ -401,7 +394,6 @@ include '../../includes/header.php';
     color: var(--text-muted);
 }
 
-/* QR Code */
 .qr-code-box {
     text-align: center;
     padding: 16px;
@@ -417,7 +409,6 @@ include '../../includes/header.php';
     border-radius: 8px;
 }
 
-/* File Upload */
 .file-upload {
     position: relative;
     margin-top: 12px;
@@ -459,7 +450,6 @@ include '../../includes/header.php';
     }
 }
 
-/* File Upload */
 .file-upload {
     position: relative;
 }
@@ -501,7 +491,6 @@ include '../../includes/header.php';
     margin-top: 8px;
 }
 
-/* Buttons */
 .btn-group {
     display: flex;
     gap: 12px;
@@ -544,7 +533,6 @@ include '../../includes/header.php';
     border-color: var(--ocean-light);
 }
 
-/* Info Box */
 .info-box {
     background: linear-gradient(135deg, rgba(8, 131, 149, 0.05) 0%, rgba(5, 191, 219, 0.05) 100%);
     border-left: 4px solid var(--ocean-light);
@@ -567,7 +555,6 @@ include '../../includes/header.php';
     line-height: 1.6;
 }
 
-/* Selected Spot Display */
 .selected-spot-display {
     background: linear-gradient(135deg, rgba(8, 131, 149, 0.1) 0%, rgba(5, 191, 219, 0.1) 100%);
     border: 2px solid var(--ocean-light);
@@ -606,7 +593,6 @@ include '../../includes/header.php';
     color: var(--ocean-blue);
 }
 
-/* Leaflet Popup Custom Style */
 .custom-popup .leaflet-popup-content-wrapper {
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -626,7 +612,6 @@ include '../../includes/header.php';
     border-radius: 8px;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .hero-title {
         font-size: 36px;
@@ -657,8 +642,6 @@ include '../../includes/header.php';
     }
 }
 </style>
-
-<!-- Hero Section -->
 <div class="register-hero">
     <div class="hero-content">
         <h1 class="hero-title">Register for Tournament</h1>
@@ -686,7 +669,6 @@ include '../../includes/header.php';
                     <input type="hidden" name="tournament_id" value="<?php echo $tournament_id; ?>">
                     <input type="hidden" name="spot_id" id="selected_spot_id" value="">
                     
-                    <!-- Personal Information -->
                     <div class="form-group">
                         <label class="form-label required">Full Name</label>
                         <input type="text" name="full_name" class="form-control" 
@@ -715,13 +697,12 @@ include '../../includes/header.php';
                         <small class="form-text">Optional: Contact person in case of emergency</small>
                     </div>
 
-                    <!-- Fishing Spot Selection with Map -->
+                    <!-- Fishing Spot Map -->
                     <div class="form-group">
                         <label class="form-label required">Select Fishing Spot</label>
                         
                         <?php if (count($zones) > 0): ?>
                             <div class="map-section">
-                                <!-- Interactive Map -->
                                 <?php if (count($all_spots_with_coords) > 0): ?>
                                 <div id="fishingMap"></div>
                                 
@@ -732,7 +713,6 @@ include '../../includes/header.php';
                                 </div>
                                 <?php endif; ?>
 
-                                <!-- Zone Tabs - Hidden -->
                                 <div class="zone-tabs" style="display: none;">
                                     <?php foreach ($zones as $index => $zone): ?>
                                         <button type="button" 
@@ -745,7 +725,6 @@ include '../../includes/header.php';
                                     <?php endforeach; ?>
                                 </div>
 
-                                <!-- Zone Contents - Hidden spot grid -->
                                 <div class="map-container" style="display: none;">
                                     <?php foreach ($zones as $index => $zone): ?>
                                         <div class="zone-content <?php echo $index === 0 ? 'active' : ''; ?>" 
@@ -780,7 +759,6 @@ include '../../includes/header.php';
                                     <?php endforeach; ?>
                                 </div>
 
-                                <!-- Selected Spot Display -->
                                 <div class="selected-spot-display" id="selectedSpotDisplay">
                                     <i class="fas fa-check-circle"></i>
                                     <div class="selected-spot-text">
@@ -853,7 +831,6 @@ include '../../includes/header.php';
     </div>
 </div>
 
-                    <!-- Submit Buttons -->
                     <div class="btn-group">
                         <a href="<?php echo SITE_URL; ?>/pages/tournament/tournament-details.php?id=<?php echo $tournament_id; ?>" 
                            class="btn btn-secondary">
@@ -871,7 +848,6 @@ include '../../includes/header.php';
     </div>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
@@ -882,43 +858,36 @@ let selectedMarker = null;
 // Initialize Leaflet Map
 <?php if (count($all_spots_with_coords) > 0): ?>
 document.addEventListener('DOMContentLoaded', function() {
-    // Get spots data
     const spots = <?php echo json_encode($all_spots_with_coords); ?>;
     
     if (spots.length > 0) {
-        // Initialize map centered on first spot
         const firstSpot = spots[0];
         map = L.map('fishingMap').setView([firstSpot.latitude, firstSpot.longitude], 13);
         
-        // Google Hybrid Layer (Satellite + Roads/Labels) - like create zone
         const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google Maps'
         }).addTo(map);
         
-        // Google Satellite Layer
         const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google Maps'
         });
         
-        // Google Street Layer
         const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google Maps'
         });
         
-        // Google Terrain Layer
         const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google Maps'
         });
         
-        // Layer Control
         const baseLayers = {
             "🌍 Hybrid (Recommended)": googleHybrid,
             "🛰️ Satellite": googleSatellite,
@@ -936,7 +905,6 @@ document.addEventListener('DOMContentLoaded', function() {
             imperial: false
         }).addTo(map);
         
-        // Add markers for each spot
         spots.forEach(spot => {
             if (spot.latitude && spot.longitude) {
                 // Create blue marker (default/unselected)
@@ -951,8 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         iconAnchor: [16, 32]
                     })
                 }).addTo(map);
-                
-                // Bind popup with zone name at top
+
                 marker.bindPopup(`
                     <div style="text-align: center; padding: 8px;">
                         <strong style="color: var(--ocean-blue); font-size: 16px;">
@@ -966,7 +933,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     className: 'custom-popup'
                 });
                 
-                // Store marker reference with spot data
                 markers[spot.spot_id] = {
                     marker: marker,
                     spotNumber: spot.spot_number,
@@ -974,15 +940,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     lat: spot.latitude,
                     lng: spot.longitude
                 };
-                
-                // Click event to select spot
+
                 marker.on('click', function() {
                     selectSpotFromMap(spot.spot_id);
                 });
             }
         });
         
-        // Fit map to show all markers
         if (spots.length > 1) {
             const bounds = L.latLngBounds(spots.map(s => [s.latitude, s.longitude]));
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -992,7 +956,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 
 function selectSpotFromMap(spotId) {
-    // Change previous selected marker back to blue
     if (selectedMarker && markers[selectedMarker]) {
         const prevMarkerData = markers[selectedMarker];
         prevMarkerData.marker.setIcon(L.divIcon({
@@ -1004,8 +967,7 @@ function selectSpotFromMap(spotId) {
             iconAnchor: [16, 32]
         }));
     }
-    
-    // Change current marker to red
+
     if (markers[spotId]) {
         const markerData = markers[spotId];
         markerData.marker.setIcon(L.divIcon({
@@ -1019,34 +981,28 @@ function selectSpotFromMap(spotId) {
         
         selectedMarker = spotId;
         
-        // Update the radio button selection
         const radio = document.getElementById('spot_' + spotId);
         if (radio) {
             radio.checked = true;
             updateSelectedSpot(radio);
         }
-        
-        // Pan map to selected spot
+
         map.setView([markerData.lat, markerData.lng], 15, { animate: true });
         markerData.marker.openPopup();
     }
 }
 
 function switchZone(zoneId) {
-    // Hide all zone contents
     document.querySelectorAll('.zone-content').forEach(content => {
         content.classList.remove('active');
     });
-    
-    // Remove active class from all tabs
+
     document.querySelectorAll('.zone-tab').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Show selected zone content
     document.getElementById('zone_' + zoneId).classList.add('active');
     
-    // Add active class to clicked tab
     event.target.closest('.zone-tab').classList.add('active');
 }
 
@@ -1057,14 +1013,10 @@ function updateSelectedSpot(radio) {
     const lat = radio.dataset.lat;
     const lng = radio.dataset.lng;
     
-    // Update hidden input
     document.getElementById('selected_spot_id').value = spotId;
-    
-    // Update display
     document.getElementById('selectedSpotText').textContent = `${zoneName} - Spot #${spotNumber}`;
     document.getElementById('selectedSpotDisplay').classList.add('active');
-    
-    // Update map marker to red if clicked from grid
+
     if (map && markers[spotId]) {
         selectSpotFromMap(spotId);
     }
@@ -1081,7 +1033,6 @@ function updateFileName(input) {
     }
 }
 
-// Form validation
 document.getElementById('registrationForm').addEventListener('submit', function(e) {
     const spotId = document.getElementById('selected_spot_id').value;
     if (!spotId) {

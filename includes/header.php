@@ -9,10 +9,8 @@ require_once __DIR__ . '/functions.php';
 // Create PDO Database object for pages that need it
 $db = new Database();
 
-// Check session timeout
 checkSessionTimeout();
 
-// Get current user if logged in
 $currentUser = null;
 $savedCount = 0;
 $notificationCount = 0;
@@ -20,14 +18,12 @@ $notificationCount = 0;
 if (isLoggedIn()) {
     $currentUser = getCurrentUser($db);
     
-    // Get saved tournaments count for anglers
     if (!isAdmin()) {
         $savedCountQuery = "SELECT COUNT(*) as count FROM SAVED 
                            WHERE user_id = ? AND is_saved = 1";
         $savedResult = $db->fetchOne($savedCountQuery, [$_SESSION['user_id']]);
         $savedCount = $savedResult ? $savedResult['count'] : 0;
         
-        // Get unread notifications count (last 7 days)
         $notifCountQuery = "SELECT COUNT(*) as count FROM NOTIFICATION 
                            WHERE user_id = ? 
                            AND sent_date > DATE_SUB(NOW(), INTERVAL 7 DAY)";
@@ -36,7 +32,6 @@ if (isLoggedIn()) {
     }
 }
 
-// Get page title
 $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
 ?>
 <!DOCTYPE html>
@@ -46,13 +41,8 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
     
     <style>
@@ -86,7 +76,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             line-height: 1.6;
         }
 
-        /* Modern Header */
         .main-header {
             background: var(--white);
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
@@ -105,7 +94,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             height: 72px;
         }
 
-        /* Logo Section */
         .logo-section {
             display: flex;
             align-items: center;
@@ -142,7 +130,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             color: var(--ocean-light);
         }
 
-        /* Navigation */
         .main-nav {
             display: flex;
             align-items: center;
@@ -188,7 +175,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             font-size: 16px;
         }
 
-        /* Right Actions */
         .header-actions {
             display: flex;
             align-items: center;
@@ -220,7 +206,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             font-size: 18px;
         }
 
-        /* Notification Badge */
         .notification-badge {
             position: absolute;
             top: -4px;
@@ -239,7 +224,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             padding: 0 4px;
         }
 
-        /* User Profile Dropdown */
         .user-profile {
             display: flex;
             align-items: center;
@@ -306,7 +290,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             margin-left: 4px;
         }
 
-        /* Dropdown Menu */
         .dropdown-menu {
             position: absolute;
             top: calc(100% + 8px);
@@ -384,7 +367,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             transform: translateY(-1px);
         }
 
-        /* Mobile Menu Toggle */
         .mobile-menu-btn {
             display: none;
             width: 40px;
@@ -407,7 +389,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             transition: all 0.3s ease;
         }
 
-        /* Mobile Navigation */
         .mobile-nav {
             display: none;
             background: var(--white);
@@ -432,7 +413,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             display: flex;
         }
 
-        /* Flash Messages */
         .flash-message-container {
             position: fixed;
             top: 88px;
@@ -498,7 +478,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             opacity: 1;
         }
 
-        /* Responsive */
         @media (max-width: 1024px) {
             .header-container {
                 padding: 0 40px;
@@ -542,7 +521,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             }
         }
 
-        /* Container for content */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -552,10 +530,8 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
 </head>
 <body>
 
-<!-- Main Header -->
 <header class="main-header">
     <div class="header-container">
-        <!-- Logo -->
         <a href="<?php echo SITE_URL; ?>/index.php" class="logo-section">
             <div class="logo-icon">
                 <?php if (file_exists(__DIR__ . '/../assets/images/logo.png')): ?>
@@ -569,10 +545,8 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
             </div>
         </a>
 
-        <!-- Header Actions -->
         <div class="header-actions">
 
-    <!-- Main Navigation -->
     <nav class="main-nav">
         <a href="<?php echo SITE_URL; ?>/index.php" 
            class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
@@ -652,7 +626,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
 
     <?php endif; ?>
 
-    <!-- Mobile Menu Toggle -->
     <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
         <span></span>
         <span></span>
@@ -707,7 +680,6 @@ $pageTitle = isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME;
     </div>
 </header>
 
-<!-- Flash Messages -->
 <?php
 $flash = getFlashMessage();
 if ($flash):
@@ -735,7 +707,6 @@ function toggleDropdown(event) {
     userProfile.classList.toggle('active');
 }
 
-// Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
     const userProfile = document.querySelector('.user-profile');
     if (userProfile && !userProfile.contains(event.target)) {
@@ -743,7 +714,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Close mobile menu when clicking outside
 document.addEventListener('click', function(event) {
     const mobileNav = document.getElementById('mobileNav');
     const menuBtn = document.querySelector('.mobile-menu-btn');

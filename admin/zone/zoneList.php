@@ -5,10 +5,7 @@ require_once '../../includes/functions.php';
 $page_title = 'Fishing Zones';
 $page_description = 'Manage fishing zones and spots';
 
-// Get logged-in admin user ID
 $logged_in_user_id = intval($_SESSION['user_id']);
-
-// Get all zones **created by this admin**
 $zones_query = "
     SELECT z.*, 
            COUNT(DISTINCT fs.spot_id) as total_spots,
@@ -43,11 +40,10 @@ include '../includes/header.php';
     gap: 0.5rem;
 }
 .action-btns button, .action-btns a {
-    pointer-events: all; /* allows clicking buttons without triggering row click */
+    pointer-events: all; 
 }
 </style>
 
-<!-- Create Button -->
 <div class="text-right mb-3">
     <a href="createFishingSpot.php" class="create-btn">
         <i class="fas fa-plus-circle"></i>
@@ -55,7 +51,6 @@ include '../includes/header.php';
     </a>
 </div>
 
-<!-- Zones Table -->
 <?php if (mysqli_num_rows($zones_result) > 0): ?>
     <div class="section">
         <div class="section-header">
@@ -81,7 +76,6 @@ include '../includes/header.php';
             <tbody>
                 <?php while ($zone = mysqli_fetch_assoc($zones_result)): ?>
                     <tr onclick="window.location.href='viewZone.php?id=<?php echo $zone['zone_id']; ?>'">
-                        <!-- Zone Name -->
                         <td>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-blue-primary), var(--color-blue-light)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.125rem; flex-shrink: 0;">
@@ -99,7 +93,6 @@ include '../includes/header.php';
                             </div>
                         </td>
 
-                        <!-- Description -->
                         <td>
                             <?php if (!empty($zone['zone_description'])): ?>
                                 <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-gray-600); font-size: 0.875rem;" title="<?php echo htmlspecialchars($zone['zone_description']); ?>">
@@ -110,7 +103,6 @@ include '../includes/header.php';
                             <?php endif; ?>
                         </td>
 
-                        <!-- Tournament -->
                         <td>
                             <?php if (!empty($zone['tournament_title'])): ?>
                                 <span class="badge badge-info">
@@ -122,7 +114,6 @@ include '../includes/header.php';
                             <?php endif; ?>
                         </td>
 
-                        <!-- Total Spots -->
                         <td style="text-align: center;">
                             <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: var(--color-blue-light); color: var(--color-blue-primary); border-radius: var(--radius-sm); font-weight: 600; font-size: 0.875rem;">
                                 <i class="fas fa-map-pin"></i>
@@ -130,7 +121,6 @@ include '../includes/header.php';
                             </div>
                         </td>
 
-                        <!-- Available -->
                         <td style="text-align: center;">
                             <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: #e8f5e9; color: #2e7d32; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.875rem;">
                                 <i class="fas fa-check-circle"></i>
@@ -138,7 +128,6 @@ include '../includes/header.php';
                             </div>
                         </td>
 
-                        <!-- Booked -->
                         <td style="text-align: center;">
                             <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: #fff3e0; color: #f57c00; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.875rem;">
                                 <i class="fas fa-bookmark"></i>
@@ -146,7 +135,6 @@ include '../includes/header.php';
                             </div>
                         </td>
 
-                        <!-- Maintenance -->
                         <td style="text-align: center;">
                             <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: #ffebee; color: #c62828; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.875rem;">
                                 <i class="fas fa-tools"></i>
@@ -154,7 +142,6 @@ include '../includes/header.php';
                             </div>
                         </td>
 
-                        <!-- Actions -->
                         <td>
                             <div class="action-btns">
                                 <button onclick="event.stopPropagation(); deleteZone(<?php echo $zone['zone_id']; ?>)" 

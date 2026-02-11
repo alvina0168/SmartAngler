@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Redirect if already logged in
 if (isLoggedIn()) {
     if (isAdmin()) {
         header('Location: ../admin/dashboard.php');
@@ -271,7 +270,6 @@ $page_title = 'Organizer Registration';
     </div>
 
     <script>
-        // Toggle password visibility
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = input.nextElementSibling;
@@ -287,17 +285,14 @@ $page_title = 'Organizer Registration';
             }
         }
 
-        // Handle form submission
         document.getElementById('organizerRegisterForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const submitBtn = document.getElementById('submitBtn');
             const alertMessage = document.getElementById('alertMessage');
             
-            // Get form data
             const formData = new FormData(this);
             
-            // Validate passwords match
             const password = formData.get('password');
             const confirmPassword = formData.get('confirm_password');
             
@@ -311,7 +306,6 @@ $page_title = 'Organizer Registration';
                 return;
             }
 
-            // Validate password length
             if (password.length < 6) {
                 alertMessage.innerHTML = `
                     <div class="alert alert-error">
@@ -322,11 +316,9 @@ $page_title = 'Organizer Registration';
                 return;
             }
             
-            // Disable submit button
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
-            
-            // Send request
+
             fetch('process-organizer-register.php', {
                 method: 'POST',
                 body: formData
@@ -341,10 +333,9 @@ $page_title = 'Organizer Registration';
                         </div>
                     `;
                     
-                    // Redirect to login after 2 seconds
                     setTimeout(() => {
                         window.location.href = 'login.php';
-                    }, 2000);
+                    }, 1000);
                 } else {
                     alertMessage.innerHTML = `
                         <div class="alert alert-error">
@@ -353,7 +344,6 @@ $page_title = 'Organizer Registration';
                         </div>
                     `;
                     
-                    // Re-enable submit button
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Organizer Account';
                 }
@@ -366,7 +356,6 @@ $page_title = 'Organizer Registration';
                     </div>
                 `;
                 
-                // Re-enable submit button
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Organizer Account';
             });

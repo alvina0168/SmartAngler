@@ -2,12 +2,9 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Don't require login - tournaments should be public
-// Only check if user is logged in for personalized features
 $isLoggedIn = isLoggedIn();
 $currentUserId = $isLoggedIn ? $_SESSION['user_id'] : null;
 
-// Admins shouldn't access this page
 if ($isLoggedIn && isAdmin()) {
     redirect(SITE_URL . '/admin/index.php');
 }
@@ -15,7 +12,6 @@ if ($isLoggedIn && isAdmin()) {
 $page_title = 'Tournaments';
 include '../../includes/header.php';
 
-// Auto-update tournament status
 $update_query = "
     UPDATE TOURNAMENT
     SET status = CASE
@@ -28,12 +24,10 @@ $update_query = "
 ";
 $db->execute($update_query);
 
-// Get filters
 $status_filter = isset($_GET['status']) ? $_GET['status'] : 'all';
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
-$sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'date_asc';
+$sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'date_desc';
 
-// Build query
 $where_conditions = [];
 $params = [];
 
@@ -52,7 +46,6 @@ if (!empty($search_query)) {
 
 $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-// Determine sort order
 $order_by = "ORDER BY ";
 switch ($sort_by) {
     case 'date_desc':
@@ -74,7 +67,6 @@ switch ($sort_by) {
         $order_by .= "t.tournament_date ASC";
 }
 
-// Build the SQL query - handle both logged-in and guest users
 if ($isLoggedIn) {
     $sql = "SELECT t.*, u.full_name as organizer_name,
             (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
@@ -95,7 +87,6 @@ if ($isLoggedIn) {
     
     array_unshift($params, $currentUserId, $currentUserId);
 } else {
-    // Guest users - no personalization
     $sql = "SELECT t.*, u.full_name as organizer_name,
             (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION 
              WHERE tournament_id = t.tournament_id 
@@ -122,76 +113,85 @@ $tournaments = $db->fetchAll($sql, $params);
     --white: #FFFFFF;
 }
 
-/* Hero Section */
-.tournaments-hero {
-    background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
-    padding: 60px 0 100px;
-    position: relative;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.hero-content {
-    max-width: 100%;
-    padding: 0 60px;
+body {
+    background: #FAFAFA;
+    min-height: 100vh;
+}
+
+/* Hero Section - Match Calendar Style */
+.tournaments-hero {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--ocean-light));
+    padding: 50px 60px;
 }
 
 .hero-title {
-    font-size: 48px;
+    font-size: 42px;
     font-weight: 800;
-    color: var(--white);
-    margin: 0 0 12px;
+    color: white;
+    margin: 0 0 8px;
+    letter-spacing: -0.5px;
 }
 
 .hero-subtitle {
-    font-size: 18px;
+    font-size: 16px;
     color: rgba(255, 255, 255, 0.9);
     margin: 0;
+    font-weight: 400;
 }
 
-/* Filter Section */
 .filter-section {
-    max-width: 100%;
-    margin: -50px 60px 0;
-    position: relative;
-    z-index: 10;
+    background: #FAFAFA;
+    padding: 30px 60px 0;
 }
 
 .filter-card {
     background: var(--white);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E5E7EB;
+    margin-bottom: 20px;
 }
 
 .filter-tabs {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 16px;
     flex-wrap: wrap;
 }
 
 .filter-tab {
     padding: 10px 20px;
-    border-radius: 10px;
-    background: #F3F4F6;
+    border-radius: 6px;
+    background: #F9FAFB;
     color: var(--text-muted);
     font-weight: 600;
     font-size: 14px;
     text-decoration: none;
     transition: all 0.2s ease;
+    border: 1px solid #E5E7EB;
 }
 
 .filter-tab:hover {
-    background: #E5E7EB;
+    background: #F3F4F6;
+    border-color: var(--ocean-light);
 }
 
 .filter-tab.active {
     background: var(--ocean-light);
     color: var(--white);
+    border-color: var(--ocean-light);
 }
 
 .search-controls {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr 200px;
     gap: 12px;
 }
 
@@ -201,29 +201,32 @@ $tournaments = $db->fetchAll($sql, $params);
 
 .search-input {
     width: 100%;
-    padding: 12px 16px 12px 44px;
-    border: 2px solid #E5E7EB;
-    border-radius: 12px;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
     font-size: 14px;
+    transition: all 0.2s ease;
 }
 
 .search-input:focus {
     outline: none;
     border-color: var(--ocean-light);
+    box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.1);
 }
 
 .search-icon {
     position: absolute;
-    left: 16px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
+    font-size: 14px;
 }
 
 .sort-select {
-    padding: 12px 40px 12px 16px;
-    border: 2px solid #E5E7EB;
-    border-radius: 12px;
+    padding: 10px 30px 10px 14px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     background: var(--white);
@@ -231,43 +234,52 @@ $tournaments = $db->fetchAll($sql, $params);
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 16px center;
-    min-width: 200px;
+    background-position: right 12px center;
+    transition: all 0.2s ease;
 }
 
-/* Tournament Grid - 3 Columns Full Width */
+.sort-select:focus {
+    outline: none;
+    border-color: var(--ocean-light);
+    box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.1);
+}
+
 .tournaments-container {
-    max-width: 100%;
-    padding: 40px 60px 60px;
+    background: #FAFAFA;
+    padding: 0 60px 50px;
 }
 
-.tournaments-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+.tournaments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .tournament-card {
     background: var(--white);
-    border-radius: 16px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 360px 1fr auto;
+    align-items: center;
+    gap: 24px;
+    padding-right: 24px;
     border: 1px solid #E5E7EB;
 }
 
 .tournament-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--ocean-light);
 }
 
 .card-image {
     position: relative;
-    width: 100%;
-    height: 200px;
+    width: 360px;
+    height: 240px;
     overflow: hidden;
 }
 
@@ -287,16 +299,28 @@ $tournaments = $db->fetchAll($sql, $params);
     top: 12px;
     left: 12px;
     padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 10px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
     backdrop-filter: blur(10px);
 }
 
-.status-badge.upcoming { background: rgba(59, 130, 246, 0.9); color: white; }
-.status-badge.ongoing { background: rgba(245, 158, 11, 0.9); color: white; }
-.status-badge.completed { background: rgba(16, 185, 129, 0.9); color: white; }
+.status-badge.upcoming { 
+    background: rgba(59, 130, 246, 0.95); 
+    color: white; 
+}
+
+.status-badge.ongoing { 
+    background: rgba(245, 158, 11, 0.95); 
+    color: white;
+}
+
+.status-badge.completed { 
+    background: rgba(16, 185, 129, 0.95); 
+    color: white; 
+}
 
 .save-btn {
     position: absolute;
@@ -312,6 +336,7 @@ $tournaments = $db->fetchAll($sql, $params);
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
+    z-index: 5;
 }
 
 .save-btn:hover {
@@ -328,146 +353,209 @@ $tournaments = $db->fetchAll($sql, $params);
 }
 
 .card-content {
-    padding: 16px;
     display: flex;
     flex-direction: column;
+    gap: 12px;
     flex: 1;
-}
-
-.location-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--ocean-light);
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 6px;
+    min-width: 0;
 }
 
 .card-title {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text-dark);
-    margin: 0 0 12px;
+    margin: 0;
     line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: 47px;
+    text-transform: uppercase;
 }
 
-.card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
+.organizer-info {
+    font-size: 14px;
+    color: var(--text-muted);
 }
 
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
+.organizer-info strong {
     color: var(--text-dark);
 }
 
-.meta-item i {
-    width: 16px;
-    color: var(--ocean-light);
-    font-size: 13px;
+.card-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 24px;
+    font-size: 14px;
+    color: var(--text-dark);
 }
 
-.registered-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #ECFDF5;
-    color: #065F46;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    border: 1px solid #A7F3D0;
-    align-self: flex-start;
+.detail-item strong {
+    color: var(--ocean-blue);
+    margin-right: 4px;
 }
 
-.card-footer {
+.card-actions {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 12px;
-    margin-top: auto;
-    border-top: 1px solid #F3F4F6;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    padding-left: 24px;
+    border-left: 1px solid #E5E7EB;
 }
 
 .price-tag {
-    display: flex;
-    flex-direction: column;
+    text-align: right;
 }
 
 .price-amount {
-    font-size: 24px;
+    font-size: 32px;
     font-weight: 800;
     color: var(--ocean-blue);
     line-height: 1;
+    letter-spacing: -0.5px;
+    display: block;
 }
 
 .price-label {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
     font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    display: block;
+}
+
+.participants-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #F9FAFB;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    border: 1px solid #E5E7EB;
+}
+
+.participants-badge i {
+    color: var(--ocean-light);
 }
 
 .btn-view {
-    padding: 10px 20px;
+    padding: 10px 24px;
     background: var(--ocean-light);
     color: var(--white);
     border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 13px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
 }
 
 .btn-view:hover {
     background: var(--ocean-blue);
+    transform: translateX(2px);
 }
 
-/* Responsive */
-@media (max-width: 1400px) {
-    .tournaments-container,
-    .filter-section,
-    .hero-content {
-        padding-left: 40px;
-        padding-right: 40px;
-    }
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+
+.empty-state i {
+    font-size: 56px;
+    color: #D1D5DB;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 22px;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    font-size: 15px;
 }
 
 @media (max-width: 1200px) {
-    .tournaments-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .tournament-card {
+        grid-template-columns: 280px 1fr auto;
+        gap: 20px;
+        padding-right: 20px;
+    }
+    
+    .card-image {
+        width: 280px;
+        height: 200px;
+    }
+    
+    .card-title {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 992px) {
+    .tournaments-hero,
+    .filter-section,
+    .tournaments-container {
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+    
+    .tournament-card {
+        grid-template-columns: 220px 1fr;
+        gap: 16px;
+        padding: 0;
+    }
+    
+    .card-image {
+        width: 220px;
+        height: 160px;
+    }
+    
+    .card-content {
+        padding: 16px 16px 16px 0;
+    }
+    
+    .card-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-left: none;
+        border-top: 1px solid #E5E7EB;
+    }
+    
+    .price-tag {
+        text-align: left;
     }
 }
 
 @media (max-width: 768px) {
-    .hero-title {
-        font-size: 36px;
-    }
-    
-    .tournaments-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .tournaments-container,
+    .tournaments-hero,
     .filter-section,
-    .hero-content {
+    .tournaments-container {
         padding-left: 20px;
         padding-right: 20px;
+    }
+    
+    .hero-title {
+        font-size: 32px;
+    }
+    
+    .hero-subtitle {
+        font-size: 14px;
     }
     
     .search-controls {
@@ -477,34 +565,85 @@ $tournaments = $db->fetchAll($sql, $params);
     .sort-select {
         width: 100%;
     }
+    
+    .tournament-card {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-image {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .card-content {
+        padding: 20px;
+    }
+    
+    .card-title {
+        font-size: 18px;
+    }
+    
+    .card-details {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    
+    .card-actions {
+        padding: 16px 20px;
+    }
+    
+    .btn-view {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-card {
+        padding: 16px;
+    }
+    
+    .filter-tabs {
+        gap: 8px;
+    }
+    
+    .filter-tab {
+        font-size: 12px;
+        padding: 8px 14px;
+    }
+    
+    .card-content {
+        padding: 16px;
+    }
+    
+    .price-amount {
+        font-size: 28px;
+    }
 }
 </style>
 
-<!-- Hero Section -->
 <div class="tournaments-hero">
-    <div class="hero-content">
-        <h1 class="hero-title">Discover Fishing Tournaments</h1>
-        <p class="hero-subtitle">Join exciting competitions and compete with anglers</p>
-    </div>
+    <h1 class="hero-title">Discover Fishing Tournaments</h1>
+    <p class="hero-subtitle">Join exciting competitions and compete with passionate anglers across the region</p>
 </div>
 
 <!-- Filter Section -->
 <div class="filter-section">
     <div class="filter-card">
         <div class="filter-tabs">
-            <a href="?status=all&sort=<?php echo $sort_by; ?>" 
+            <a href="?status=all&sort=<?php echo htmlspecialchars($sort_by); ?>" 
                class="filter-tab <?php echo $status_filter == 'all' ? 'active' : ''; ?>">
                 All Tournaments
             </a>
-            <a href="?status=upcoming&sort=<?php echo $sort_by; ?>" 
+            <a href="?status=upcoming&sort=<?php echo htmlspecialchars($sort_by); ?>" 
                class="filter-tab <?php echo $status_filter == 'upcoming' ? 'active' : ''; ?>">
                 Upcoming
             </a>
-            <a href="?status=ongoing&sort=<?php echo $sort_by; ?>" 
+            <a href="?status=ongoing&sort=<?php echo htmlspecialchars($sort_by); ?>" 
                class="filter-tab <?php echo $status_filter == 'ongoing' ? 'active' : ''; ?>">
                 Live Now
             </a>
-            <a href="?status=completed&sort=<?php echo $sort_by; ?>" 
+            <a href="?status=completed&sort=<?php echo htmlspecialchars($sort_by); ?>" 
                class="filter-tab <?php echo $status_filter == 'completed' ? 'active' : ''; ?>">
                 Completed
             </a>
@@ -517,7 +656,7 @@ $tournaments = $db->fetchAll($sql, $params);
                 <input type="text" 
                        name="search" 
                        class="search-input"
-                       placeholder="Search tournaments..." 
+                       placeholder="Search tournaments by title, location, or organizer..." 
                        value="<?php echo htmlspecialchars($search_query); ?>">
             </div>
             <select class="sort-select" name="sort" onchange="this.form.submit()">
@@ -530,19 +669,19 @@ $tournaments = $db->fetchAll($sql, $params);
     </div>
 </div>
 
-<!-- Tournaments Grid -->
 <div class="tournaments-container">
     <?php if ($tournaments && count($tournaments) > 0): ?>
-        <div class="tournaments-grid">
+        <div class="tournaments-list">
             <?php foreach ($tournaments as $tournament): ?>
                 <div class="tournament-card" onclick="window.location.href='tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>'">
+
                     <div class="card-image">
-                        <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? $tournament['image'] : 'default-tournament.jpg'; ?>" 
+                        <img src="<?php echo SITE_URL; ?>/assets/images/tournaments/<?php echo $tournament['image'] ? htmlspecialchars($tournament['image']) : 'default-tournament.jpg'; ?>" 
                              alt="<?php echo htmlspecialchars($tournament['tournament_title']); ?>"
                              onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-tournament.jpg'">
                         
-                        <span class="status-badge <?php echo $tournament['status']; ?>">
-                            <?php echo $tournament['status']; ?>
+                        <span class="status-badge <?php echo htmlspecialchars($tournament['status']); ?>">
+                            <?php echo htmlspecialchars(strtoupper($tournament['status'])); ?>
                         </span>
                         
                         <?php if ($tournament['user_registered'] == 0): ?>
@@ -561,60 +700,67 @@ $tournaments = $db->fetchAll($sql, $params);
                     </div>
                     
                     <div class="card-content">
-                        <div class="location-tag">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <?php 
-                            $location_parts = explode('-', $tournament['location']);
-                            echo htmlspecialchars(trim($location_parts[0]));
-                            ?>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <h3 class="card-title" style="margin:0;">
+                                <?= htmlspecialchars($tournament['tournament_title']); ?>
+                            </h3>
+
+                            <span class="status-badge <?= htmlspecialchars($tournament['status']); ?>" style="position:static;">
+                                <?= strtoupper($tournament['status']); ?>
+                            </span>
                         </div>
-                        
-                        <h3 class="card-title">
-                            <?php echo htmlspecialchars($tournament['tournament_title']); ?>
-                        </h3>
-                        
-                        <div class="card-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-calendar"></i>
-                                <span><?php echo date('M j, Y', strtotime($tournament['tournament_date'])); ?></span>
+
+                        <div class="organizer-info">
+                            Organizer: <strong><?= htmlspecialchars($tournament['organizer_name']); ?></strong>
+                        </div>
+
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <strong>Date:</strong>
+                                <?= date('d M Y', strtotime($tournament['tournament_date'])); ?>
                             </div>
-                            <div class="meta-item">
-                                <i class="fas fa-clock"></i>
-                                <span><?php echo formatTime($tournament['start_time']); ?></span>
+
+                            <div class="detail-item">
+                                <strong>Location:</strong>
+                                <?= htmlspecialchars($tournament['location']); ?>
                             </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users"></i>
-                                <span><?php echo $tournament['registered_count']; ?> Anglers</span>
+
+                            <div class="detail-item">
+                                <strong>Time:</strong>
+                                <?= formatTime($tournament['start_time']); ?>
+                            </div>
+
+                            <div class="detail-item">
+                                <strong>Anglers Registered:</strong>
+                                <?= $tournament['registered_count']; ?>
                             </div>
                         </div>
-                        
-                        <?php if ($tournament['user_registered'] > 0): ?>
-                            <div class="registered-badge">
-                                <i class="fas fa-check-circle"></i>
-                                Registered
-                            </div>
-                        <?php endif; ?>
-                        
-                        <div class="card-footer">
-                            <div class="price-tag">
-                                <span class="price-amount">RM<?php echo number_format($tournament['tournament_fee'], 0); ?></span>
-                                <span class="price-label">Entry Fee</span>
-                            </div>
-                            <a href="tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" 
-                               class="btn-view"
-                               onclick="event.stopPropagation()">
-                                View Details
-                            </a>
+                    </div>
+
+                    <div class="card-actions">
+                        <div class="price-tag">
+                            <span class="price-amount">RM<?php echo number_format($tournament['tournament_fee'], 0); ?></span>
+                            <span class="price-label">Entry Fee</span>
                         </div>
+                        <div class="participants-badge">
+                            <i class="fas fa-users"></i>
+                            <span><?php echo $tournament['registered_count']; ?> Anglers</span>
+                        </div>
+                        <a href="tournament-details.php?id=<?php echo $tournament['tournament_id']; ?>" 
+                           class="btn-view"
+                           onclick="event.stopPropagation()">
+                            View Details
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
     <?php else: ?>
-        <div style="text-align: center; padding: 60px 20px;">
-            <i class="fas fa-fish" style="font-size: 48px; color: #D1D5DB; margin-bottom: 16px;"></i>
-            <h3 style="font-size: 20px; margin-bottom: 8px;">No tournaments found</h3>
-            <p style="color: var(--text-muted);">Try adjusting your filters</p>
+        <div class="empty-state">
+            <i class="fas fa-fish"></i>
+            <h3>No tournaments found</h3>
+            <p>Try adjusting your filters or search criteria</p>
         </div>
     <?php endif; ?>
 </div>
@@ -642,7 +788,13 @@ function toggleSave(tournamentId, button) {
             button.classList.toggle('saved');
             icon.classList.toggle('fas');
             icon.classList.toggle('far');
+        } else {
+            alert(data.message || 'Failed to save tournament');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
     })
     .finally(() => button.disabled = false);
 }

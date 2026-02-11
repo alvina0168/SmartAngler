@@ -1,24 +1,19 @@
 <?php
-/**
- * SmartAngler Helper Functions
- */
-
-// Check if user is logged in
 function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
-// Check if user is organizer (super admin)
+// Check if user is organizer 
 function isOrganizer() {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'organizer';
 }
 
-// Check if user is admin (data entry)
+// Check if user is admin
 function isAdmin() {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
 
-// Check if user is angler (regular user)
+// Check if user is angler
 function isAngler() {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'angler';
 }
@@ -33,7 +28,6 @@ function hasAdminAccess() {
     return isOrganizer() || isAdmin();
 }
 
-// Get user information by user ID
 function getUserInfo($user_id) {
     global $conn;
     
@@ -52,7 +46,6 @@ function getUserInfo($user_id) {
     return null;
 }
 
-// Get tournament information by tournament ID
 function getTournamentInfo($tournament_id) {
     global $conn;
     
@@ -71,7 +64,6 @@ function getTournamentInfo($tournament_id) {
     return null;
 }
 
-// Get user's tournament count
 function getUserTournamentCount($user_id) {
     global $conn;
     
@@ -87,7 +79,6 @@ function getUserTournamentCount($user_id) {
     return 0;
 }
 
-// Get user's catches count
 function getUserCatchesCount($user_id) {
     global $conn;
     
@@ -103,7 +94,6 @@ function getUserCatchesCount($user_id) {
     return 0;
 }
 
-// Get user's wins count
 function getUserWinsCount($user_id) {
     global $conn;
     
@@ -119,7 +109,6 @@ function getUserWinsCount($user_id) {
     return 0;
 }
 
-// Check if email exists
 function emailExists($email, $exclude_user_id = null) {
     global $conn;
     
@@ -163,12 +152,10 @@ function usernameExists($username, $exclude_user_id = null) {
     return false;
 }
 
-// Validate username (alphanumeric, underscore, 3-20 characters)
 function validateUsername($username) {
     return preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username);
 }
 
-// Check if user is registered for tournament (mysqli version)
 function isUserRegisteredForTournament($user_id, $tournament_id) {
     global $conn;
     
@@ -189,7 +176,6 @@ function isUserRegisteredForTournament($user_id, $tournament_id) {
     return false;
 }
 
-// Check if tournament is full (mysqli version)
 function isTournamentFullCheck($tournament_id) {
     global $conn;
     
@@ -212,7 +198,6 @@ function isTournamentFullCheck($tournament_id) {
     return false;
 }
 
-// Get current logged in user
 function getCurrentUser($db) {
     if (!isLoggedIn()) {
         return null;
@@ -223,7 +208,6 @@ function getCurrentUser($db) {
     return $db->fetchOne($sql, [$userId]);
 }
 
-// Check session timeout
 function checkSessionTimeout() {
     if (isLoggedIn()) {
         if (isset($_SESSION['last_activity'])) {
@@ -239,13 +223,11 @@ function checkSessionTimeout() {
     }
 }
 
-// Redirect function
 function redirect($url) {
     header("Location: " . $url);
     exit();
 }
 
-// Sanitize input
 function sanitize($data) {
     $data = trim($data);
     $data = stripslashes($data);
@@ -253,25 +235,21 @@ function sanitize($data) {
     return $data;
 }
 
-// Format date
 function formatDate($date) {
     if (empty($date)) return '';
     return date('d M Y', strtotime($date));
 }
 
-// Format time
 function formatTime($time) {
     if (empty($time)) return '';
     return date('h:i A', strtotime($time));
 }
 
-// Format datetime
 function formatDateTime($datetime) {
     if (empty($datetime)) return '';
     return date('d M Y h:i A', strtotime($datetime));
 }
 
-// Get user profile image
 function getUserProfileImage($image) {
     if (!empty($image) && file_exists(__DIR__ . '/../assets/images/profiles/' . $image)) {
         return SITE_URL . '/assets/images/profiles/' . $image;
@@ -279,7 +257,6 @@ function getUserProfileImage($image) {
     return SITE_URL . '/assets/images/default-avatar.png';
 }
 
-// Flash message functions
 function setFlashMessage($message, $type = 'info') {
     $_SESSION['flash_message'] = [
         'message' => $message,
@@ -296,34 +273,28 @@ function getFlashMessage() {
     return null;
 }
 
-// Upload file
 function uploadFile($file, $folder = 'uploads') {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         return false;
     }
     
-    // Check file size
     if ($file['size'] > MAX_FILE_SIZE) {
         return false;
     }
     
-    // Check file extension
     $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($extension, ALLOWED_EXTENSIONS)) {
         return false;
     }
-    
-    // Create directory if not exists
+
     $targetDir = UPLOAD_PATH . $folder . '/';
     if (!file_exists($targetDir)) {
         mkdir($targetDir, 0777, true);
     }
-    
-    // Generate unique filename
+  
     $filename = uniqid() . '_' . time() . '.' . $extension;
     $targetPath = $targetDir . $filename;
     
-    // Move uploaded file
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
         return $filename;
     }
@@ -331,7 +302,6 @@ function uploadFile($file, $folder = 'uploads') {
     return false;
 }
 
-// Delete file
 function deleteFile($filename, $folder = 'uploads') {
     if (empty($filename)) {
         return false;
@@ -345,7 +315,6 @@ function deleteFile($filename, $folder = 'uploads') {
     return false;
 }
 
-// Generate random string
 function generateRandomString($length = 10) {
     return bin2hex(random_bytes($length / 2));
 }
@@ -360,7 +329,6 @@ function validatePhone($phone) {
     return preg_match('/^[0-9]{10,15}$/', $phone);
 }
 
-// Get tournament status badge
 function getStatusBadge($status) {
     $badges = [
         'upcoming' => 'badge-info',
@@ -372,7 +340,6 @@ function getStatusBadge($status) {
     return $badges[$status] ?? 'badge-info';
 }
 
-// Get approval status badge
 function getApprovalBadge($status) {
     $badges = [
         'pending' => 'badge-warning',
@@ -384,7 +351,6 @@ function getApprovalBadge($status) {
     return $badges[$status] ?? 'badge-info';
 }
 
-// Calculate age
 function calculateAge($birthdate) {
     $birthDate = new DateTime($birthdate);
     $today = new DateTime('today');
@@ -399,7 +365,6 @@ function truncateText($text, $length = 100, $suffix = '...') {
     return $text;
 }
 
-// Format currency
 function formatCurrency($amount) {
     return 'RM ' . number_format($amount, 2);
 }
@@ -455,7 +420,7 @@ function requireLogin() {
     }
 }
 
-// Require organizer (super admin only)
+// Require organizer 
 function requireOrganizer() {
     requireLogin();
     if (!isOrganizer()) {

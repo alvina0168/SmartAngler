@@ -2,12 +2,10 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Require login
 requireLogin();
 
 $user_id = $_SESSION['user_id'];
 
-// Fetch user
 $stmt = $conn->prepare("SELECT * FROM USER WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -23,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitize($_POST['email']);
     $phone_number = sanitize($_POST['phone_number']);
 
-    // Validate email uniqueness
     $stmt = $conn->prepare("SELECT user_id FROM USER WHERE email = ? AND user_id != ?");
     $stmt->bind_param("si", $email, $user_id);
     $stmt->execute();
@@ -33,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $stmt->close();
 
-    // Handle image upload
     $profile_image = $user['profile_image'];
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
         $ext = strtolower(pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION));
@@ -53,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Update if no errors
     if (!$error) {
         $stmt = $conn->prepare("UPDATE USER SET full_name=?, email=?, phone_number=?, profile_image=? WHERE user_id=?");
         $stmt->bind_param("ssssi", $full_name, $email, $phone_number, $profile_image, $user_id);
@@ -83,7 +78,6 @@ include '../../includes/header.php';
     --border: #E5E7EB;
 }
 
-/* Profile Hero Section */
 .profile-hero {
     background: linear-gradient(135deg, var(--ocean-blue) 0%, var(--ocean-light) 100%);
     padding: 20px 0 20px;
@@ -102,7 +96,6 @@ include '../../includes/header.php';
     opacity: 0.9;
 }
 
-/* Profile Card Section */
 .profile-section {
     background: var(--sand);
     padding: 60px 0;
@@ -131,7 +124,7 @@ include '../../includes/header.php';
     font-size: 28px;
 }
 
-/* Alerts */
+
 .alert {
     padding: 15px;
     border-radius: 8px;
@@ -152,7 +145,6 @@ include '../../includes/header.php';
     border: 2px solid #721C24;
 }
 
-/* Form Groups */
 .profile-card .form-group {
     margin-bottom: 20px;
 }
@@ -164,7 +156,6 @@ include '../../includes/header.php';
     color: var(--text-dark);
 }
 
-/* Inputs */
 .profile-card input[type="text"],
 .profile-card input[type="email"],
 .profile-card input[type="password"],
@@ -186,7 +177,6 @@ include '../../includes/header.php';
     outline: none;
 }
 
-/* Profile Image */
 .profile-card .profile-image-preview {
     display: block;
     margin: 0 auto 20px auto;
@@ -202,7 +192,6 @@ include '../../includes/header.php';
     transform: scale(1.05);
 }
 
-/* Submit Button */
 .profile-card button {
     background: var(--ocean-light);
     color: var(--white);
@@ -223,7 +212,6 @@ include '../../includes/header.php';
     transform: translateY(-2px);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .profile-card {
         padding: 25px;
@@ -237,13 +225,11 @@ include '../../includes/header.php';
 }
 </style>
 
-<!-- Hero -->
 <div class="profile-hero">
     <h1>My Profile</h1>
     <p>Update your information and profile image</p>
 </div>
 
-<!-- Profile Form Section -->
 <section class="profile-section">
     <div class="profile-card">
         <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
