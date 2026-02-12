@@ -3,19 +3,15 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include config from root includes
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
-// Check if user has admin access
 if (!isLoggedIn() || !hasAdminAccess()) {
     redirect(SITE_URL . '/pages/authentication/login.php?type=admin');
 }
 
-// Get current user info
 $current_user = getUserInfo($_SESSION['user_id']);
 
-// Fallback if user info is null
 if (!$current_user || !is_array($current_user)) {
     $current_user = [
         'full_name' => 'Admin User',
@@ -25,7 +21,6 @@ if (!$current_user || !is_array($current_user)) {
     ];
 }
 
-// Get current page for active menu highlighting
 $current_page = basename($_SERVER['PHP_SELF']);
 $current_folder = basename(dirname($_SERVER['PHP_SELF']));
 ?>
@@ -35,23 +30,15 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - Admin Panel' : 'Admin Panel'; ?> - SmartAngler</title>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Admin Styles -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/admin/assets/css/admin-style.css">
     
 </head>
 <body>
-    <!-- Mobile Toggle Button -->
     <button class="mobile-toggle" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
     </button>
-
-    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <!-- Logo Section -->
         <div class="sidebar-header">
             <div class="sidebar-logo">
                 <img src="<?php echo SITE_URL; ?>/assets/images/logo.png" alt="SmartAngler Logo" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-logo.png'">
@@ -62,9 +49,7 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </div>
         </div>
 
-        <!-- Navigation Menu -->
         <ul class="sidebar-menu">
-            <!-- Dashboard -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/index.php" class="<?php echo $current_page == 'index.php' && $current_folder == 'admin' ? 'active' : ''; ?>">
                     <i class="fas fa-tachometer-alt"></i>
@@ -72,7 +57,6 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 </a>
             </li>
 
-            <!-- Tournament -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/tournament/tournamentList.php" class="<?php echo $current_folder == 'tournament' ? 'active' : ''; ?>">
                     <i class="fas fa-trophy"></i>
@@ -80,7 +64,6 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 </a>
             </li>
 
-            <!-- Create Fishing Spot -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/zone/zoneList.php" class="<?php echo $current_folder == 'zone' ? 'active' : ''; ?>">
                     <i class="fas fa-map-marker-alt"></i>
@@ -88,7 +71,6 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 </a>
             </li>
 
-            <!-- Notifications -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/notification/notificationList.php" class="<?php echo $current_folder == 'notification' ? 'active' : ''; ?>">
                     <i class="fas fa-bell"></i>
@@ -97,15 +79,12 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </li>
 
             <?php if (isOrganizer()): ?>
-            <!-- Revenue (Organizer Only) -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/revenue/revenue.php" class="<?php echo $current_folder == 'revenue' ? 'active' : ''; ?>">
                     <i class="fas fa-money-bill-wave"></i>
                     <span>Revenue</span>
                 </a>
             </li>
-
-            <!-- Manage Admins (Organizer Only) -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/admin-management/manage-admins.php" class="<?php echo $current_folder == 'admin-management' ? 'active' : ''; ?>">
                     <i class="fas fa-users-cog"></i>
@@ -114,7 +93,6 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </li>
             <?php endif; ?>
 
-            <!-- My Profile -->
             <li>
                 <a href="<?php echo SITE_URL; ?>/admin/profile/profile.php" class="<?php echo $current_folder == 'profile' ? 'active' : ''; ?>">
                     <i class="fas fa-user"></i>
@@ -122,7 +100,6 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
                 </a>
             </li>
 
-            <!-- Logout -->
             <li class="logout-btn">
                 <a href="<?php echo SITE_URL; ?>/pages/authentication/logout.php" onclick="return confirm('Are you sure you want to logout?')">
                     <i class="fas fa-sign-out-alt"></i>
@@ -156,10 +133,8 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             </div>
         </div>
 
-        <!-- Content Container -->
         <div class="content-container">
             <?php
-            // Display flash messages
             if (isset($_SESSION['success'])):
             ?>
                 <div class="alert alert-success">
@@ -194,7 +169,6 @@ $current_folder = basename(dirname($_SERVER['PHP_SELF']));
             document.getElementById('sidebar').classList.toggle('active');
         }
 
-        // Auto-hide alerts after 5 seconds
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {

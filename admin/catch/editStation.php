@@ -8,7 +8,6 @@ if (!isset($_GET['id'])) {
 
 $station_id = intval($_GET['id']);
 
-// Get station info
 $station_query = "
     SELECT ws.*, t.tournament_title 
     FROM WEIGHING_STATION ws
@@ -56,8 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 include '../includes/header.php';
 ?>
-
-<!-- Back & Header -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <a href="<?php echo SITE_URL; ?>/admin/catch/stationList.php?tournament_id=<?php echo $station['tournament_id']; ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back
@@ -77,10 +74,8 @@ include '../includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Form Card -->
 <div class="section" style="padding: 1.5rem; background: var(--color-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
     <form method="POST" action="">
-        <!-- Station Information -->
         <div class="form-group" style="margin-bottom: 1rem;">
             <label style="font-weight: 600;">Station Name <span style="color: red;">*</span></label>
             <input type="text" name="station_name" class="form-control" 
@@ -101,7 +96,6 @@ include '../includes/header.php';
             <small class="form-hint">Optional notes or remarks</small>
         </div>
 
-        <!-- Buttons -->
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
             <a href="<?php echo SITE_URL; ?>/admin/catch/stationList.php?tournament_id=<?php echo $station['tournament_id']; ?>" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel

@@ -15,12 +15,9 @@ if (!isset($_GET['tournament_id'])) {
 
 $tournament_id = intval($_GET['tournament_id']);
 
-// Handle calculate results
 if (isset($_POST['action']) && $_POST['action'] === 'calculate_results') {
-    // Clear existing results
     mysqli_query($conn, "DELETE FROM RESULT WHERE tournament_id = $tournament_id");
-    
-    // Get all prize categories for this tournament with target weights
+
     $prizes_query = "
         SELECT DISTINCT tp.category_id, tp.target_weight, c.category_type
         FROM TOURNAMENT_PRIZE tp
@@ -38,7 +35,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'calculate_results') {
         $where_weight = $target_weight ? "AND ABS(fc.fish_weight - $target_weight) IS NOT NULL" : "";
         
         if ($category_type === 'heaviest') {
-            // Heaviest Catch - Get user with heaviest single fish
             $result_query = "
                 SELECT fc.user_id, fc.catch_id, MAX(fc.fish_weight) as max_weight
                 FROM FISH_CATCH fc
@@ -50,7 +46,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'calculate_results') {
             ";
             
         } elseif ($category_type === 'lightest') {
-            // Lightest Catch - Get user with lightest single fish
             $result_query = "
                 SELECT fc.user_id, fc.catch_id, MIN(fc.fish_weight) as min_weight
                 FROM FISH_CATCH fc
@@ -62,7 +57,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'calculate_results') {
             ";
             
         } elseif ($category_type === 'most_catches') {
-            // Most Catches - Get user with most fish caught
             $result_query = "
                 SELECT fc.user_id, NULL as catch_id, COUNT(*) as total_fish_count
                 FROM FISH_CATCH fc
@@ -74,7 +68,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'calculate_results') {
             ";
             
         } elseif ($category_type === 'exact_weight') {
-            // Exact Weight - Get user closest to target weight
             $result_query = "
                 SELECT fc.user_id, fc.catch_id, fc.fish_weight,
                        ABS(fc.fish_weight - $target_weight) as weight_diff
@@ -111,7 +104,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'calculate_results') {
     redirect(SITE_URL . '/admin/result/manageResult.php?tournament_id=' . $tournament_id);
 }
 
-// Handle finalize results
 if (isset($_POST['action']) && $_POST['action'] === 'finalize_results') {
     mysqli_query($conn, "UPDATE RESULT SET result_status = 'final' WHERE tournament_id = $tournament_id");
     mysqli_query($conn, "UPDATE TOURNAMENT SET status = 'completed' WHERE tournament_id = $tournament_id");
@@ -120,7 +112,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'finalize_results') {
     redirect(SITE_URL . '/admin/result/manageResult.php?tournament_id=' . $tournament_id);
 }
 
-// Fetch tournament info
 $tournament_query = "SELECT * FROM TOURNAMENT WHERE tournament_id = $tournament_id";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -131,7 +122,6 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
 
 $tournament = mysqli_fetch_assoc($tournament_result);
 
-// Fetch results grouped by category
 $results_query = "
     SELECT 
         r.*,
@@ -155,8 +145,6 @@ $results_query = "
     ORDER BY c.category_name, tp.target_weight, r.ranking_position
 ";
 $results_result = mysqli_query($conn, $results_query);
-
-// Group results
 $results_by_category = [];
 while ($result = mysqli_fetch_assoc($results_result)) {
     $key = $result['category_id'] . '_' . ($result['target_weight'] ?? 'null');
@@ -173,7 +161,6 @@ while ($result = mysqli_fetch_assoc($results_result)) {
     $results_by_category[$key]['results'][] = $result;
 }
 
-// Get statistics
 $stats_query = "
     SELECT 
         COUNT(DISTINCT r.user_id) as total_winners,
@@ -258,14 +245,12 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="../tournament/viewTournament.php?id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournament
     </a>
 </div>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -304,7 +289,6 @@ include '../includes/header.php';
     </div>
 
     <?php if (count($results_by_category) > 0): ?>
-    <!-- Statistics Cards -->
     <div class="dashboard-stats" style="margin-bottom: 0;">
         <div class="stat-card">
             <div class="stat-header">

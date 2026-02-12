@@ -1,13 +1,10 @@
 <?php
-// Start processing BEFORE any output
 session_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Only organizers can access this page
 requireOrganizer();
 
-// Get admin ID
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = 'Invalid admin ID';
     header('Location: ' . SITE_URL . '/admin/admin-management/manage-admins.php');

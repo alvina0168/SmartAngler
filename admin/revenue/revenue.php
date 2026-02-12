@@ -10,12 +10,6 @@ $logged_in_user_id = intval($_SESSION['user_id']);
 
 $page_title = 'Revenue Overview';
 $page_description = 'My tournament revenue statistics';
-
-/* =========================
-   REVENUE CALCULATIONS - ONLY FOR THIS ADMIN'S TOURNAMENTS
-========================= */
-
-// Total Revenue - Only from admin's tournaments
 $total_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COALESCE(SUM(t.tournament_fee), 0) AS total
     FROM TOURNAMENT_REGISTRATION tr
@@ -24,7 +18,7 @@ $total_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     AND t.created_by = '$logged_in_user_id'
 "))['total'];
 
-// Weekly Revenue - Only from admin's tournaments
+// Weekly Revenue
 $weekly_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COALESCE(SUM(t.tournament_fee), 0) AS total
     FROM TOURNAMENT_REGISTRATION tr
@@ -34,7 +28,7 @@ $weekly_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     AND tr.registration_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
 "))['total'];
 
-// Monthly Revenue - Only from admin's tournaments
+// Monthly Revenue
 $monthly_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     SELECT COALESCE(SUM(t.tournament_fee), 0) AS total
     FROM TOURNAMENT_REGISTRATION tr
@@ -45,7 +39,7 @@ $monthly_revenue = mysqli_fetch_assoc(mysqli_query($conn, "
     AND YEAR(tr.registration_date) = YEAR(CURDATE())
 "))['total'];
 
-// Revenue per tournament - Only admin's tournaments
+// Revenue per tournament
 $revenue_per_tournament = mysqli_query($conn, "
     SELECT 
         t.tournament_title,
@@ -63,7 +57,6 @@ $revenue_per_tournament = mysqli_query($conn, "
 ?>
 
 <style>
-/* ===== Revenue Page Styles ===== */
 .revenue-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -167,7 +160,6 @@ $revenue_per_tournament = mysqli_query($conn, "
 }
 </style>
 
-<!-- Page Header -->
 <div class="welcome-card">
     <div class="welcome-content">
         <h1>My Revenue Overview</h1>
@@ -179,7 +171,6 @@ $revenue_per_tournament = mysqli_query($conn, "
     </div>
 </div>
 
-<!-- Revenue Summary -->
 <div class="revenue-cards">
     <div class="revenue-card">
         <div class="revenue-icon bg-total"><i class="fas fa-wallet"></i></div>
@@ -206,7 +197,6 @@ $revenue_per_tournament = mysqli_query($conn, "
     </div>
 </div>
 
-<!-- Revenue Table -->
 <div class="dashboard-section">
     <h2 class="section-title-modern">
         Revenue Per Tournament

@@ -4,7 +4,6 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Add Sponsor';
 
-// Validate tournament ID first
 if (!isset($_GET['tournament_id']) || !is_numeric($_GET['tournament_id'])) {
     $_SESSION['error'] = 'Invalid tournament ID!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -14,11 +13,6 @@ $tournament_id = (int) $_GET['tournament_id'];
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -62,8 +56,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
 }
 
 $tournament_id = (int) $_GET['tournament_id'];
-
-// Fetch tournament info
 $tournament_query = "
     SELECT tournament_title 
     FROM TOURNAMENT 
@@ -78,7 +70,6 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) === 0) {
 
 $tournament = mysqli_fetch_assoc($tournament_result);
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $sponsor_name        = mysqli_real_escape_string($conn, trim($_POST['sponsor_name']));
@@ -87,14 +78,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contact_email       = mysqli_real_escape_string($conn, trim($_POST['contact_email']));
     $sponsored_amount    = isset($_POST['sponsored_amount']) ? floatval($_POST['sponsored_amount']) : 0.00;
 
-    // Validation
     if (empty($sponsor_name)) {
         $_SESSION['error'] = 'Sponsor name is required!';
     } elseif (!empty($contact_email) && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['error'] = 'Invalid email format!';
     } else {
 
-        // Handle logo upload
         $sponsor_logo = NULL;
 
         if (!empty($_FILES['sponsor_logo']['name'])) {
@@ -141,14 +130,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="sponsorList.php?tournament_id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Sponsors
     </a>
 </div>
 
-<!-- Add Sponsor Form -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -163,7 +150,6 @@ include '../includes/header.php';
 
     <form method="POST" action="" enctype="multipart/form-data">
         <div class="info-grid">
-            <!-- Left Column -->
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <div class="form-group">
                     <label>Sponsor Name <span class="required">*</span></label>
@@ -205,7 +191,6 @@ include '../includes/header.php';
                 </div>
             </div>
 
-            <!-- Right Column -->
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <div class="form-group">
                     <label>Sponsor Logo</label>

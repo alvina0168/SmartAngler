@@ -16,7 +16,6 @@ $tournament_id = intval($_GET['id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// Check access permissions
 $has_access = false;
 
 if ($logged_in_role === 'organizer') {
@@ -406,7 +405,6 @@ textarea.form-control {
                 </div>
             </a>
 
-            <!-- Fishing Spots -->
             <?php if (!empty($tournament['assigned_zone_id'])): ?>
                 <a href="../zone/viewZone.php?id=<?= $tournament['assigned_zone_id'] ?>" class="management-card">
                     <div class="management-card-header">
@@ -433,7 +431,6 @@ textarea.form-control {
                 </div>
             <?php endif; ?>
 
-            <!-- Catch Records -->
             <a href="../catch/stationList.php?tournament_id=<?= $tournament_id ?>" class="management-card">
                 <div class="management-card-header">
                     <div class="management-card-icon">
@@ -462,7 +459,6 @@ textarea.form-control {
         </div>
     </div>
 
-    <!-- Tournament Information -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -570,7 +566,6 @@ textarea.form-control {
         </div>
     </div>
 
-    <!-- Description -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -585,7 +580,6 @@ textarea.form-control {
         <textarea name="description" class="form-control edit-only" rows="5" placeholder="Enter tournament description..."><?= htmlspecialchars($tournament['description']) ?></textarea>
     </div>
 
-    <!-- Tournament Rules -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -604,7 +598,6 @@ textarea.form-control {
         <textarea name="tournament_rules" class="form-control edit-only" rows="6" placeholder="Enter tournament rules and regulations..."><?= htmlspecialchars($tournament['tournament_rules']) ?></textarea>
     </div>
 
-    <!-- Payment Information -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -711,7 +704,6 @@ textarea.form-control {
                 ?>
             </div>
             
-            <!-- Total Sponsorship Summary -->
             <?php
             mysqli_data_seek($sponsors_result, 0);
             $total_sponsorship = 0;
@@ -739,7 +731,6 @@ textarea.form-control {
         <?php endif; ?>
     </div>
 
-    <!-- Categories & Prizes Section -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -823,7 +814,6 @@ textarea.form-control {
         <?php endif; ?>
     </div>
 
-    <!-- Reviews Section -->
     <div class="section">
         <div class="section-header">
             <h3 class="section-title">
@@ -833,7 +823,6 @@ textarea.form-control {
         </div>
 
         <?php
-        // Fetch reviews for this tournament
         $reviews_query = "
             SELECT r.*, u.full_name, u.profile_image
             FROM REVIEW r
@@ -956,8 +945,6 @@ function toggleEditMode() {
         form.classList.add("edit-mode");
         btn.innerHTML = '<i class="fas fa-eye"></i> View Mode';
         btn.className = 'btn btn-secondary';
-        
-        // Scroll to top of form
         form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }

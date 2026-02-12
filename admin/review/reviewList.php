@@ -14,8 +14,6 @@ if (!isset($_GET['tournament_id'])) {
 }
 
 $tournament_id = intval($_GET['tournament_id']);
-
-// Fetch tournament info
 $tournament_query = "SELECT tournament_title FROM TOURNAMENT WHERE tournament_id = $tournament_id";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -25,11 +23,8 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
 }
 
 $tournament = mysqli_fetch_assoc($tournament_result);
-
-// Get filter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 
-// Build WHERE clause
 $where_clause = "r.tournament_id = $tournament_id";
 if ($filter == 'pending') {
     $where_clause .= " AND r.admin_response IS NULL";
@@ -37,7 +32,6 @@ if ($filter == 'pending') {
     $where_clause .= " AND r.admin_response IS NOT NULL";
 }
 
-// Fetch reviews
 $reviews_query = "
     SELECT r.*, u.full_name, u.email
     FROM REVIEW r
@@ -46,8 +40,6 @@ $reviews_query = "
     ORDER BY r.review_date DESC
 ";
 $reviews_result = mysqli_query($conn, $reviews_query);
-
-// Calculate statistics
 $stats_query = "
     SELECT 
         COUNT(*) as total_reviews,
@@ -59,8 +51,6 @@ $stats_query = "
 ";
 $stats_result = mysqli_query($conn, $stats_query);
 $stats = mysqli_fetch_assoc($stats_result);
-
-// Handle NULL values
 $stats['total_reviews'] = $stats['total_reviews'] ?? 0;
 $stats['avg_rating'] = $stats['avg_rating'] ?? 0;
 $stats['pending_reviews'] = $stats['pending_reviews'] ?? 0;
@@ -69,14 +59,12 @@ $stats['responded_reviews'] = $stats['responded_reviews'] ?? 0;
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="../tournament/viewTournament.php?id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournament
     </a>
 </div>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -89,7 +77,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="dashboard-stats" style="margin-bottom: 1rem;">
         <div class="stat-card">
             <div class="stat-header">
@@ -132,7 +119,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Filter Tabs -->
     <div class="filter-tabs">
         <a href="?tournament_id=<?= $tournament_id ?>&filter=all" class="filter-btn <?= $filter == 'all' ? 'active' : '' ?>">
             <i class="fas fa-list"></i> All Reviews
@@ -146,7 +132,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Reviews List -->
 <?php if (mysqli_num_rows($reviews_result) > 0): ?>
     <div class="section">
         <?php while ($review = mysqli_fetch_assoc($reviews_result)): ?>
@@ -190,14 +175,11 @@ include '../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Review Content -->
                 <div style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                     <div style="color: #495057; line-height: 1.6;">
                         <?= nl2br(htmlspecialchars($review['review_text'])) ?>
                     </div>
                 </div>
-
-                <!-- Admin Response -->
                 <?php if (!empty($review['admin_response'])): ?>
                     <div style="background: #e3f2fd; border-left: 4px solid var(--color-blue-primary); border-radius: 8px; padding: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">

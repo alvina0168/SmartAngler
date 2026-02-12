@@ -8,7 +8,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     redirect(SITE_URL . '/login.php');
 }
 
-// Fetch all categories with usage stats
 $query = "
     SELECT c.*, 
            COUNT(DISTINCT tp.prize_id) as prize_count,
@@ -23,14 +22,12 @@ $result = mysqli_query($conn, $query);
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="../tournament/tournamentList.php" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournaments
     </a>
 </div>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>

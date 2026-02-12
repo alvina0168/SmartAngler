@@ -8,7 +8,6 @@ if (!isset($_GET['tournament_id'])) {
 
 $tournament_id = intval($_GET['tournament_id']);
 
-// Get tournament info
 $tournament_query = "SELECT * FROM TOURNAMENT WHERE tournament_id = '$tournament_id'";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -22,7 +21,6 @@ $tournament = mysqli_fetch_assoc($tournament_result);
 $page_title = 'Weighing Stations - ' . $tournament['tournament_title'];
 $page_description = 'Manage weighing stations and record catches';
 
-// Get all stations for this tournament
 $stations_query = "
     SELECT ws.*, 
            COUNT(DISTINCT fc.catch_id) as catch_count,
@@ -38,16 +36,13 @@ $stations_result = mysqli_query($conn, $stations_query);
 include '../includes/header.php';
 ?>
 
-<!-- Header Buttons -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-    <!-- Back Button (Left) -->
     <div>
         <a href="<?php echo SITE_URL; ?>/admin/tournament/viewTournament.php?id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Back 
         </a>
     </div>
 
-    <!-- Add Station Button (Right) -->
     <div>
         <a href="createStation.php?tournament_id=<?php echo $tournament_id; ?>" class="create-btn">
             <i class="fas fa-plus-circle"></i> Add Station
@@ -55,7 +50,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Tournament Info -->
 <div class="section">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div>
@@ -73,7 +67,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Stations Table -->
 <?php if (mysqli_num_rows($stations_result) > 0): ?>
     <div class="section">
         <div class="section-header">

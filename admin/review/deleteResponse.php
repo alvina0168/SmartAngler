@@ -12,13 +12,10 @@ if (!isset($_GET['id'])) {
 }
 
 $review_id = intval($_GET['id']);
-
-// Get tournament_id before deleting (for redirect)
 $get_tournament_query = "SELECT tournament_id FROM REVIEW WHERE review_id = $review_id";
 $result = mysqli_query($conn, $get_tournament_query);
 $tournament_id = mysqli_fetch_assoc($result)['tournament_id'] ?? null;
 
-// Delete response (set to NULL)
 $update_query = "
     UPDATE REVIEW SET
         admin_response = NULL,
@@ -32,7 +29,6 @@ if (mysqli_query($conn, $update_query)) {
     $_SESSION['error'] = 'Failed to delete response: ' . mysqli_error($conn);
 }
 
-// Check if redirect parameter is set
 if (isset($_GET['redirect']) && $_GET['redirect'] == 'all') {
     redirect(SITE_URL . '/admin/review/allReviews.php');
 } elseif ($tournament_id) {

@@ -8,7 +8,6 @@ if (!isset($_GET['station_id'])) {
 
 $station_id = intval($_GET['station_id']);
 
-// Get station and tournament info
 $station_query = "
     SELECT ws.*, t.tournament_title, t.tournament_id, t.tournament_date, t.status as tournament_status
     FROM WEIGHING_STATION ws
@@ -26,8 +25,6 @@ $station = mysqli_fetch_assoc($station_result);
 
 $page_title = 'Fish Catch Record - ' . $station['station_name'];
 $page_description = 'Manage fish catch records for this station';
-
-// Get registered AND APPROVED participants for THIS TOURNAMENT ONLY
 $participants_query = "
     SELECT DISTINCT u.user_id, u.full_name
     FROM TOURNAMENT_REGISTRATION tr
@@ -37,11 +34,7 @@ $participants_query = "
     ORDER BY u.user_id ASC
 ";
 $participants_result = mysqli_query($conn, $participants_query);
-
-// DEBUG: Count participants
 $participant_count = mysqli_num_rows($participants_result);
-
-// Build participants array for JavaScript
 $participants_array = [];
 while ($participant = mysqli_fetch_assoc($participants_result)) {
     $participants_array[] = [
@@ -53,8 +46,6 @@ while ($participant = mysqli_fetch_assoc($participants_result)) {
 
 $error = '';
 $success = '';
-
-// Handle form submission (Insert Catch)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'insert') {
 
     $angler_id_input = sanitize($_POST['angler_id']);
@@ -62,13 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $fish_weight = sanitize($_POST['fish_weight']);
     $catch_time_only = sanitize($_POST['catch_time']);
     $notes = sanitize($_POST['notes'] ?? '');
-
-    // Extract user_id from Angler ID (A001 -> 1)
     $user_id = intval(ltrim(str_replace('A', '', strtoupper($angler_id_input)), '0'));
 
-    /* =======================
-       VALIDATION
-    ======================== */
     if (
         empty($angler_id_input) ||
         empty($fish_species) ||
@@ -81,10 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     } elseif ($user_id <= 0) {
         $error = 'Invalid Angler ID';
     } else {
-
-        /* =======================
-           GET REGISTRATION ID
-        ======================== */
         $reg_query = "
             SELECT registration_id
             FROM TOURNAMENT_REGISTRATION
@@ -102,12 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $registration = mysqli_fetch_assoc($reg_result);
             $registration_id = $registration['registration_id'];
 
-            // Combine tournament date + catch time
             $catch_datetime = $station['tournament_date'] . ' ' . $catch_time_only . ':00';
 
-            /* =======================
-               INSERT FISH CATCH
-            ======================== */
             $insert_query = "
                 INSERT INTO FISH_CATCH (
                     station_id,
@@ -142,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 }
 
 
-// Get all catches for this station
 $catches_query = "
     SELECT fc.*, u.full_name as participant_name
     FROM FISH_CATCH fc
@@ -152,7 +129,6 @@ $catches_query = "
 ";
 $catches_result = mysqli_query($conn, $catches_query);
 
-// Get statistics
 $stats_query = "
     SELECT 
         COUNT(*) as total_catches,
@@ -169,7 +145,6 @@ include '../includes/header.php';
 ?>
 
 <style>
-/* Inline Form Styling */
 .catch-form-container {
     background: var(--color-white);
     border-radius: var(--radius-lg);
@@ -338,14 +313,12 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1rem;">
     <a href="stationList.php?tournament_id=<?php echo $station['tournament_id']; ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Stations
     </a>
 </div>
 
-<!-- Station Info -->
 <div class="section">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div>
@@ -363,7 +336,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Inline Catch Form -->
 <div class="catch-form-container">
     <div class="catch-form-header">
         <i class="fas fa-fish"></i>
@@ -388,7 +360,6 @@ include '../includes/header.php';
         <input type="hidden" name="action" value="insert">
         
         <div class="catch-form-grid">
-            <!-- Angler ID with Search -->
             <div class="form-group-inline">
                 <label>Angler ID <span style="color: red;">*</span></label>
                 <input type="text" 
@@ -400,25 +371,21 @@ include '../includes/header.php';
                 <div id="angler_suggestions" class="angler-suggestions"></div>
             </div>
 
-            <!-- Fish Weight -->
             <div class="form-group-inline">
                 <label>Fish Weight (KG) <span style="color: red;">*</span></label>
                 <input type="number" name="fish_weight" id="fish_weight" step="0.001" min="0.001" placeholder="0.000" required>
             </div>
 
-            <!-- Fish Species -->
             <div class="form-group-inline">
                 <label>Fish Species <span style="color: red;">*</span></label>
                 <input type="text" name="fish_species" id="fish_species" placeholder="e.g., KELI" required>
             </div>
 
-            <!-- Catch Time -->
             <div class="form-group-inline">
                 <label>Catch Time <span style="color: red;">*</span></label>
                 <input type="time" name="catch_time" id="catch_time" value="<?php echo date('H:i'); ?>" required>
             </div>
 
-            <!-- Notes -->
             <div class="form-group-inline catch-form-notes">
                 <label>Notes</label>
                 <textarea name="notes" id="notes" rows="2" placeholder="Optional notes..."></textarea>
@@ -436,7 +403,6 @@ include '../includes/header.php';
     </form>
 </div>
 
-<!-- Statistics -->
 <div class="dashboard-stats">
     <div class="stat-card">
         <div class="stat-header">
@@ -487,7 +453,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Catches Table -->
 <?php if (mysqli_num_rows($catches_result) > 0): ?>
     <div class="section">
         <div class="section-header">
@@ -586,7 +551,6 @@ include '../includes/header.php';
 <?php endif; ?>
 
 <script>
-// Participants data from PHP
 const participants = <?php echo json_encode($participants_array); ?>;
 
 console.log('Participants loaded:', participants);
@@ -595,27 +559,23 @@ console.log('Total participants:', participants.length);
 const anglerInput = document.getElementById('angler_id');
 const suggestionsDiv = document.getElementById('angler_suggestions');
 
-// Handle angler ID input
 anglerInput.addEventListener('input', function() {
     const value = this.value.trim();
     
     console.log('Input value:', value);
     
-    // Clear suggestions if input is empty
     if (value.length === 0) {
         suggestionsDiv.classList.remove('show');
         suggestionsDiv.innerHTML = '';
         return;
     }
-    
-    // Check if we have participants
+
     if (participants.length === 0) {
-        suggestionsDiv.innerHTML = '<div class="no-results">⚠️ No approved participants for this tournament</div>';
+        suggestionsDiv.innerHTML = '<div class="no-results">No approved participants for this tournament</div>';
         suggestionsDiv.classList.add('show');
         return;
     }
-    
-    // Filter participants - search by ID or name
+
     const searchValue = value.toUpperCase();
     const filtered = participants.filter(p => {
         const matchesId = p.angler_id.toUpperCase().includes(searchValue);
@@ -625,7 +585,6 @@ anglerInput.addEventListener('input', function() {
     
     console.log('Filtered results:', filtered);
     
-    // Show suggestions
     if (filtered.length > 0) {
         suggestionsDiv.innerHTML = '';
         
@@ -645,31 +604,26 @@ anglerInput.addEventListener('input', function() {
         
         suggestionsDiv.classList.add('show');
     } else {
-        // Show "No results"
         suggestionsDiv.innerHTML = '<div class="no-results">No matching anglers found</div>';
         suggestionsDiv.classList.add('show');
     }
 });
 
-// Select angler from suggestions
 function selectAngler(participant) {
     console.log('Selected:', participant);
     anglerInput.value = participant.angler_id;
     suggestionsDiv.classList.remove('show');
     suggestionsDiv.innerHTML = '';
     
-    // Focus on next field
     document.getElementById('fish_weight').focus();
 }
 
-// Close suggestions when clicking outside
 document.addEventListener('click', function(e) {
     if (!anglerInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
         suggestionsDiv.classList.remove('show');
     }
 });
 
-// Handle keyboard navigation
 anglerInput.addEventListener('keydown', function(e) {
     const items = suggestionsDiv.querySelectorAll('.suggestion-item');
     const activeItem = suggestionsDiv.querySelector('.suggestion-item.active');
@@ -693,7 +647,6 @@ anglerInput.addEventListener('keydown', function(e) {
     }
 });
 
-// Reset form
 function resetForm() {
     document.getElementById('catchForm').reset();
     document.getElementById('catch_time').value = '<?php echo date('H:i'); ?>';
@@ -702,14 +655,12 @@ function resetForm() {
     anglerInput.focus();
 }
 
-// Delete catch
 function deleteCatch(id) {
     if (confirm('Are you sure you want to delete this catch record?')) {
         window.location.href = 'deleteCatch.php?id=' + id + '&station_id=<?php echo $station_id; ?>';
     }
 }
 
-// Focus on angler ID on page load
 window.addEventListener('load', function() {
     anglerInput.focus();
 });

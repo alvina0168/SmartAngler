@@ -9,11 +9,9 @@ if (!isset($_GET['id'])) {
 
 $zone_id = intval($_GET['id']);
 
-// Handle adding new spots
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['new_spots'])) {
     $new_spots = json_decode($_POST['new_spots'], true);
 
-    // Get the current max spot_number in this zone
     $max_spot_result = mysqli_query($conn, "SELECT MAX(spot_number) AS max_number FROM FISHING_SPOT WHERE zone_id = '$zone_id'");
     $max_spot_row = mysqli_fetch_assoc($max_spot_result);
     $max_number = $max_spot_row['max_number'] ?? 0;
@@ -29,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['new_spots'])) {
     redirect(SITE_URL . '/admin/zone/viewZone.php?id=' . $zone_id);
 }
 
-// Get zone info
 $zone_query = "SELECT z.*, t.tournament_title 
                FROM ZONE z 
                LEFT JOIN TOURNAMENT t ON z.tournament_id = t.tournament_id
@@ -45,8 +42,6 @@ $zone = mysqli_fetch_assoc($zone_result);
 
 $page_title = $zone['zone_name'];
 $page_description = 'View and manage fishing spots';
-
-// Get all spots in this zone
 $spots_query = "
     SELECT fs.*, 
            u.full_name as booked_by
@@ -58,7 +53,6 @@ $spots_query = "
 ";
 $spots_result = mysqli_query($conn, $spots_query);
 
-// Count stats: Total, Available, Occupied, Maintenance
 $stats_query = "
     SELECT 
         COUNT(*) as total,
@@ -74,7 +68,6 @@ $stats = mysqli_fetch_assoc($stats_result);
 include '../includes/header.php';
 ?>
 
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
@@ -87,7 +80,6 @@ include '../includes/header.php';
     border-radius: 8px;
 }
 
-/* Custom marker styles for better visibility */
 .custom-marker {
     background: transparent;
 }
@@ -109,7 +101,6 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back & Edit Buttons -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
     <div>
         <a href="zoneList.php" class="btn btn-secondary">
@@ -123,7 +114,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Zone Header -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -144,7 +134,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Zone Statistics -->
 <div class="dashboard-stats">
     <?php 
     $stat_colors = ['total'=>'blue','available'=>'success','occupied'=>'primary','maintenance'=>'info'];
@@ -171,7 +160,6 @@ include '../includes/header.php';
     <?php endforeach; ?>
 </div>
 
-<!-- Map View -->
 <div class="section">
     <div class="section-header">
         <h2 class="section-title">
@@ -181,7 +169,6 @@ include '../includes/header.php';
     <div id="spotsMap" style="width:100%; height:650px; border-radius: var(--radius-md); border:3px solid var(--color-blue-primary); box-shadow: var(--shadow-md);"></div>
 </div>
 
-<!-- Add New Spots Section -->
 <div class="section">
     <h3>
         <i class="fas fa-plus-circle"></i> Add New Fishing Spots
@@ -208,7 +195,6 @@ include '../includes/header.php';
     </form>
 </div>
 
-<!-- Spots Table with Multi-Select -->
 <div class="section">
     <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
         <h2 class="section-title"><i class="fas fa-list"></i> All Spots (<?php echo $stats['total']; ?>)</h2>
@@ -270,41 +256,33 @@ include '../includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// --- MAP INITIALIZATION WITH GOOGLE MAPS TILES ---
 const spotsMap = L.map('spotsMap').setView([5.4164, 116.0553], 10);
-
-// Google Maps-style Street Layer
 const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Satellite Layer
 const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Hybrid Layer (Satellite + Roads/Labels)
 const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Google Terrain Layer
 const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
     attribution: '© Google Maps'
 });
 
-// Add Google Hybrid as default
 googleHybrid.addTo(spotsMap);
 
 // Layer Control
@@ -319,13 +297,11 @@ L.control.layers(baseLayers, null, {
     position: 'topright'
 }).addTo(spotsMap);
 
-// Add scale control
 L.control.scale({
     metric: true,
     imperial: false
 }).addTo(spotsMap);
 
-// Existing markers
 let spotMarkers = [];
 const existingSpots = [
 <?php mysqli_data_seek($spots_result,0); while($spot = mysqli_fetch_assoc($spots_result)):
@@ -335,10 +311,9 @@ if(!empty($spot['latitude']) && !empty($spot['longitude'])): ?>
 ];
 
 existingSpots.forEach(s=>{
-    // Custom marker based on status
-    let markerColor = '#28a745'; // available (green)
-    if (s.status === 'occupied') markerColor = '#007bff'; // blue
-    if (s.status === 'maintenance') markerColor = '#17a2b8'; // cyan
+    let markerColor = '#28a745'; 
+    if (s.status === 'occupied') markerColor = '#007bff'; 
+    if (s.status === 'maintenance') markerColor = '#17a2b8'; 
     
     const marker = L.marker([s.lat, s.lng], {
         icon: L.divIcon({
@@ -360,7 +335,6 @@ if(existingSpots.length>0){
     spotsMap.fitBounds(bounds,{padding:[50,50]});
 }
 
-// --- Add new spots ---
 let newSpots=[];
 let maxSpotNumber = <?php
 $max_result = mysqli_query($conn,"SELECT MAX(spot_number) AS max_number FROM FISHING_SPOT WHERE zone_id='$zone_id'");
@@ -431,7 +405,6 @@ function removeNewSpot(number){
     }
 }
 
-// --- DELETE SINGLE ---
 function deleteSpotSingle(id){
     if(confirm('Delete this spot?')){
         fetch(`deleteSpot.php?id=${id}&ajax=1`)
@@ -449,7 +422,6 @@ function deleteSpotSingle(id){
     }
 }
 
-// --- DELETE MULTI ---
 document.getElementById('deleteSelectedBtn').addEventListener('click', async function(){
     const selected=Array.from(document.querySelectorAll('.selectSpot:checked')).map(cb=>cb.dataset.id);
     if(selected.length===0){ alert('No spots selected'); return; }
@@ -472,7 +444,6 @@ document.getElementById('deleteSelectedBtn').addEventListener('click', async fun
     }
 });
 
-// --- SELECT ALL ---
 const selectAllCheckbox=document.getElementById('selectAllSpots');
 selectAllCheckbox.addEventListener('change',function(){
     document.querySelectorAll('.selectSpot').forEach(cb=>cb.checked=this.checked);

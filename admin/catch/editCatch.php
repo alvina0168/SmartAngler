@@ -28,8 +28,6 @@ $catch = mysqli_fetch_assoc($catch_result);
 
 $page_title = 'Edit Catch Record';
 $page_description = 'Update fish catch information';
-
-// Get approved participants for this tournament
 $participants_query = "
     SELECT u.user_id, u.full_name
     FROM TOURNAMENT_REGISTRATION tr
@@ -40,7 +38,6 @@ $participants_query = "
 ";
 $participants_result = mysqli_query($conn, $participants_query);
 
-// Build array for JS
 $participants = [];
 while ($p = mysqli_fetch_assoc($participants_result)) {
     $participants[] = [
@@ -52,7 +49,6 @@ while ($p = mysqli_fetch_assoc($participants_result)) {
 
 $error = '';
 
-// Handle update
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user_id = sanitize($_POST['user_id']);
     $fish_species = sanitize($_POST['fish_species']);
@@ -86,13 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Extract time
 $time_only = date('H:i', strtotime($catch['catch_time']));
 
 include '../includes/header.php';
 ?>
 
-<!-- Back & Header -->
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
     <a href="<?php echo SITE_URL; ?>/admin/catch/catchList.php?station_id=<?php echo $catch['station_id']; ?>"
        class="btn btn-secondary">
@@ -116,11 +110,9 @@ include '../includes/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Form Card -->
 <div class="section" style="padding:1.5rem; background:#fff; border-radius:12px; box-shadow:var(--shadow-md);">
 <form method="POST">
 
-    <!-- Angler Search -->
     <div class="form-group-inline" style="position:relative; margin-bottom:1rem;">
         <label style="font-weight:600;">Angler ID <span style="color:red">*</span></label>
         <input type="text"

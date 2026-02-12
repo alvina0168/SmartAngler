@@ -7,8 +7,6 @@ if (!isset($_GET['id'])) {
 }
 
 $zone_id = intval($_GET['id']);
-
-// Get zone info
 $zone_query = "SELECT z.*, t.tournament_title 
                FROM ZONE z 
                LEFT JOIN TOURNAMENT t ON z.tournament_id = t.tournament_id

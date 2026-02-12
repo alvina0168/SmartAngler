@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Get parameters first
 if (!isset($_GET['id']) || !isset($_GET['tournament_id'])) {
     $_SESSION['error'] = 'Missing parameters!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -13,11 +12,6 @@ $tournament_id = intval($_GET['tournament_id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -59,7 +53,7 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     $_SESSION['error'] = 'Tournament not found or access denied';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
-// Check if sponsor has linked prizes
+
 $check_query = "SELECT COUNT(*) as count FROM TOURNAMENT_PRIZE WHERE sponsor_id = $sponsor_id";
 $check_result = mysqli_query($conn, $check_query);
 $check = mysqli_fetch_assoc($check_result);
@@ -72,7 +66,6 @@ if ($check['count'] > 0) {
     mysqli_query($conn, $unlink_query);
 }
 
-// Delete sponsor
 $delete_query = "DELETE FROM SPONSOR WHERE sponsor_id = $sponsor_id";
 
 if (mysqli_query($conn, $delete_query)) {

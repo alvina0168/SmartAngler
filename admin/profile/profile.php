@@ -6,15 +6,13 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
-// Allow both organizer and admin
 requireAdminAccess();
 
 $admin_id = $_SESSION['user_id'];
-$user_role = $_SESSION['role']; // Get user role
+$user_role = $_SESSION['role']; 
 $error = '';
 $success = '';
 
-// Fetch current user data with organizer info for admins
 if ($user_role === 'admin') {
     $stmt = mysqli_prepare($conn, "
         SELECT u.full_name, u.email, u.phone_number, u.profile_image, u.username,
@@ -31,24 +29,20 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $admin = mysqli_fetch_assoc($result);
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = sanitize($_POST['full_name']);
     $phone = sanitize($_POST['phone']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
 
-    // For organizers, also handle email and profile image
     if ($user_role === 'organizer') {
         $email = sanitize($_POST['email']);
         
-        // Validate email for organizers
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = "Invalid email format.";
         }
     }
 
-    // Validate required fields
     if (empty($full_name) || empty($phone)) {
         $error = "Full name and phone number are required.";
     } elseif (!empty($password) && $password !== $confirm_password) {
@@ -57,8 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Password must be at least 6 characters long.";
     }
 
-    // Handle profile image upload (only for organizers)
-    $profile_image_db = $admin['profile_image']; // keep old if no new image
+    $profile_image_db = $admin['profile_image']; 
     if ($user_role === 'organizer' && isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
         $max_file_size = 5 * 1024 * 1024; // 5MB
@@ -86,10 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // If no errors, update user info
     if (empty($error)) {
         if ($user_role === 'organizer') {
-            // Organizer can update everything
             if (!empty($password)) {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $stmt_update = mysqli_prepare($conn, "UPDATE USER SET full_name=?, email=?, phone_number=?, profile_image=?, password=? WHERE user_id=?");
@@ -99,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_bind_param($stmt_update, "ssssi", $full_name, $email, $phone, $profile_image_db, $admin_id);
             }
         } else {
-            // Admin can only update name, phone, and password
             if (!empty($password)) {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $stmt_update = mysqli_prepare($conn, "UPDATE USER SET full_name=?, phone_number=?, password=? WHERE user_id=?");

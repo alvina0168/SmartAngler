@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Allow admin AND organizer
 if (
     !isset($_SESSION['user_id']) || 
     !in_array($_SESSION['role'], ['admin', 'organizer'])
@@ -10,7 +9,6 @@ if (
     redirect(SITE_URL . '/login.php');
 }
 
-// Check required parameters
 if (!isset($_GET['id']) || !isset($_GET['tournament_id'])) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
@@ -18,7 +16,6 @@ if (!isset($_GET['id']) || !isset($_GET['tournament_id'])) {
 $registration_id = intval($_GET['id']);
 $tournament_id   = intval($_GET['tournament_id']);
 
-// Approve registration
 $approve_query = "
     UPDATE TOURNAMENT_REGISTRATION 
     SET approval_status = 'approved', 
@@ -28,7 +25,6 @@ $approve_query = "
 
 if (mysqli_query($conn, $approve_query)) {
 
-    // Update fishing spot status
     $spot_update = "
         UPDATE FISHING_SPOT fs
         JOIN TOURNAMENT_REGISTRATION tr ON fs.spot_id = tr.spot_id

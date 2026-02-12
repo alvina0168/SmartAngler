@@ -13,13 +13,7 @@ $tournament_id = intval($_GET['tournament_id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
-    // Organizer can access their tournaments or tournaments created by their admins
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
         WHERE tournament_id = '$tournament_id'
@@ -31,7 +25,6 @@ if ($logged_in_role === 'organizer') {
         )
     ";
 } elseif ($logged_in_role === 'admin') {
-    // Admin can access their tournaments or their organizer's tournaments
     $get_creator_query = "SELECT created_by FROM USER WHERE user_id = '$logged_in_user_id'";
     $creator_result = mysqli_query($conn, $get_creator_query);
     $creator_row = mysqli_fetch_assoc($creator_result);
@@ -51,7 +44,6 @@ if ($logged_in_role === 'organizer') {
         ";
     }
 } else {
-    // Other roles - no access
     $_SESSION['error'] = 'Access denied';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
@@ -63,15 +55,8 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-// ═══════════════════════════════════════════════════════════════
-//              END OF ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Auto-calculate results in real-time
-// Clear existing results
 mysqli_query($conn, "DELETE FROM RESULT WHERE tournament_id = $tournament_id");
 
-// Get all prize categories for this tournament
 $prizes_query = "
     SELECT DISTINCT tp.category_id, tp.target_weight, c.category_type, tp.prize_ranking
     FROM TOURNAMENT_PRIZE tp
@@ -87,18 +72,14 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
     $category_id = $prize['category_id'];
     $category_type = $prize['category_type'];
     $target_weight = $prize['target_weight'];
-    
-    // Create unique key for this category configuration
     $cat_key = $category_id . '_' . ($target_weight ?? 'null');
     
-    // Skip if already processed
     if (isset($processed_categories[$cat_key])) {
         continue;
     }
     $processed_categories[$cat_key] = true;
     
     if ($category_type === 'heaviest') {
-        // Heaviest Catch - Get users with heaviest single fish
         $result_query = "
             SELECT fc.user_id, fc.catch_id, fc.fish_weight, fc.fish_species, fc.catch_time
             FROM FISH_CATCH fc
@@ -109,7 +90,6 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
         ";
         
     } elseif ($category_type === 'lightest') {
-        // Lightest Catch - Get users with lightest single fish
         $result_query = "
             SELECT fc.user_id, fc.catch_id, fc.fish_weight, fc.fish_species, fc.catch_time
             FROM FISH_CATCH fc
@@ -120,7 +100,6 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
         ";
         
     } elseif ($category_type === 'most_catches') {
-        // Most Catches - Get users with most fish caught
         $result_query = "
             SELECT fc.user_id, NULL as catch_id, COUNT(*) as total_fish_count, NULL as fish_weight, NULL as fish_species, MAX(fc.catch_time) as catch_time
             FROM FISH_CATCH fc
@@ -132,7 +111,6 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
         ";
         
     } elseif ($category_type === 'exact_weight' && $target_weight) {
-        // Exact Weight - MUST be exactly the target weight
         $result_query = "
             SELECT fc.user_id, fc.catch_id, fc.fish_weight, fc.fish_species, fc.catch_time
             FROM FISH_CATCH fc
@@ -166,7 +144,6 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
     unset($result_query);
 }
 
-// Fetch tournament info
 $tournament_query = "SELECT * FROM TOURNAMENT WHERE tournament_id = $tournament_id";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -176,8 +153,6 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
 }
 
 $tournament = mysqli_fetch_assoc($tournament_result);
-
-// Get all prizes with their rankings
 $all_prizes_query = "
     SELECT 
         tp.*,
@@ -193,8 +168,6 @@ $all_prizes_query = "
         CAST(SUBSTRING_INDEX(tp.prize_ranking, 'th', 1) AS UNSIGNED)
 ";
 $all_prizes_result = mysqli_query($conn, $all_prizes_query);
-
-// Group prizes by category + target weight
 $prizes_by_category = [];
 while ($prize = mysqli_fetch_assoc($all_prizes_result)) {
     $key = $prize['category_id'] . '_' . ($prize['target_weight'] ?? 'null');
@@ -212,7 +185,6 @@ while ($prize = mysqli_fetch_assoc($all_prizes_result)) {
     $prizes_by_category[$key]['prizes'][] = $prize;
 }
 
-// Fetch results and match with prizes
 $results_query = "
     SELECT 
         r.*,
@@ -234,7 +206,6 @@ while ($result = mysqli_fetch_assoc($results_result)) {
     $results_data[$result['category_id']][$result['ranking_position']] = $result;
 }
 
-// Get statistics
 $total_winners = mysqli_num_rows(mysqli_query($conn, "SELECT DISTINCT user_id FROM RESULT WHERE tournament_id = $tournament_id"));
 $prize_query = "SELECT SUM(prize_value) as total_value FROM TOURNAMENT_PRIZE WHERE tournament_id = $tournament_id";
 $prize_result = mysqli_query($conn, $prize_query);
@@ -285,14 +256,12 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="../tournament/viewTournament.php?id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournament
     </a>
 </div>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -305,7 +274,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="dashboard-stats" style="margin-bottom: 0;">
         <div class="stat-card">
             <div class="stat-header">
@@ -339,7 +307,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Results by Category -->
 <?php foreach ($prizes_by_category as $key => $category_data): ?>
     <div class="section">
         <div class="section-header">
@@ -356,7 +323,6 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <!-- Results Table -->
         <div style="overflow-x: auto;">
             <table class="results-table">
                 <thead>
@@ -377,19 +343,16 @@ include '../includes/header.php';
                 <tbody>
                     <?php foreach ($category_data['prizes'] as $prize): ?>
                         <?php
-                        // Extract rank number from prize_ranking (e.g., "1st" -> 1)
                         $rank_num = intval($prize['prize_ranking']);
                         $result = isset($results_data[$category_data['category_id']][$rank_num]) 
                                   ? $results_data[$category_data['category_id']][$rank_num] 
                                   : null;
                         ?>
                         <tr>
-                            <!-- Rank -->
                             <td style="text-align: center; font-weight: 700; font-size: 1rem; color: #495057;">
                                 <?= $rank_num ?>
                             </td>
-                            
-                            <!-- Participant Name -->
+
                             <td>
                                 <?php if ($result): ?>
                                     <div class="winner-name"><?= htmlspecialchars($result['full_name']) ?></div>
@@ -400,22 +363,18 @@ include '../includes/header.php';
                             </td>
                             
                             <?php if ($category_data['category_type'] === 'most_catches'): ?>
-                                <!-- Total Catches -->
                                 <td style="text-align: center; font-weight: 700; color: var(--color-blue-primary); font-size: 1.125rem;">
                                     <?= $result ? $result['total_fish_count'] : '-' ?>
                                 </td>
                             <?php else: ?>
-                                <!-- Fish Species -->
                                 <td>
                                     <?= $result && $result['fish_species'] ? htmlspecialchars($result['fish_species']) : '-' ?>
                                 </td>
-                                
-                                <!-- Weight -->
+
                                 <td style="text-align: right; font-weight: 700; color: var(--color-blue-primary);">
                                     <?= $result && $result['fish_weight'] ? number_format($result['fish_weight'], 2) : '-' ?>
                                 </td>
-                                
-                                <!-- Catch Time -->
+
                                 <td>
                                     <?php if ($result && $result['catch_time']): ?>
                                         <?= date('d M Y, h:i A', strtotime($result['catch_time'])) ?>
@@ -424,13 +383,11 @@ include '../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                             <?php endif; ?>
-                            
-                            <!-- Prize Description -->
+
                             <td>
                                 <?= htmlspecialchars($prize['prize_description']) ?>
                             </td>
-                            
-                            <!-- Prize Value -->
+ 
                             <td style="text-align: right; font-weight: 700; color: #28a745;">
                                 RM <?= number_format($prize['prize_value'], 2) ?>
                             </td>

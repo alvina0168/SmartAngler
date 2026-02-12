@@ -2,21 +2,15 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check admin access
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     redirect(SITE_URL . '/admin/index.php');
 }
 
-// Auto-calculate results function
 function calculateTournamentResults($conn, $tournament_id) {
     try {
-        // Begin transaction
         mysqli_begin_transaction($conn);
-        
-        // Delete existing results for this tournament
         mysqli_query($conn, "DELETE FROM RESULT WHERE tournament_id = '$tournament_id'");
         
-        // Get all categories for prizes in this tournament
         $cat_query = "SELECT DISTINCT c.* 
                       FROM CATEGORY c
                       INNER JOIN TOURNAMENT_PRIZE tp ON c.category_id = tp.category_id
@@ -35,7 +29,6 @@ function calculateTournamentResults($conn, $tournament_id) {
             
             switch ($category_type) {
                 case 'heaviest':
-                    // Get heaviest catch per participant - FIXED: Added table aliases
                     $query = "SELECT 
                                 fc.catch_id,
                                 fc.user_id,
@@ -68,7 +61,6 @@ function calculateTournamentResults($conn, $tournament_id) {
                     break;
                     
                 case 'lightest':
-                    // Get lightest catch per participant - FIXED: Added table aliases
                     $query = "SELECT 
                                 fc.catch_id,
                                 fc.user_id,
@@ -103,7 +95,6 @@ function calculateTournamentResults($conn, $tournament_id) {
                     break;
                     
                 case 'most_catches':
-                    // Get participants with most catches - FIXED: Added table aliases
                     $query = "SELECT 
                                 MAX(fc.catch_id) as catch_id,
                                 fc.user_id,
@@ -125,7 +116,6 @@ function calculateTournamentResults($conn, $tournament_id) {
                     break;
                     
                 case 'exact_weight':
-                    // Get catches that exactly match target weight
                     if ($target_weight > 0) {
                         $query = "SELECT 
                                     fc.catch_id,
@@ -150,7 +140,6 @@ function calculateTournamentResults($conn, $tournament_id) {
                     break;
                     
                 default:
-                    // Custom/default category - use heaviest catch logic
                     $query = "SELECT 
                                 fc.catch_id,
                                 fc.user_id,
@@ -183,7 +172,6 @@ function calculateTournamentResults($conn, $tournament_id) {
                     break;
             }
             
-            // Insert results with ranking
             $rank = 1;
             foreach ($results as $result_row) {
                 $catch_id = $result_row['catch_id'];
@@ -203,7 +191,6 @@ function calculateTournamentResults($conn, $tournament_id) {
             }
         }
         
-        // Commit transaction
         mysqli_commit($conn);
         
         return [
@@ -228,7 +215,6 @@ if ($tournament_id <= 0) {
     redirect(SITE_URL . '/admin/result/resultList.php');
 }
 
-// Get tournament details
 $query = "SELECT * FROM TOURNAMENT WHERE tournament_id = '$tournament_id'";
 $tournament = mysqli_fetch_assoc(mysqli_query($conn, $query));
 
@@ -237,7 +223,6 @@ if (!$tournament) {
     redirect(SITE_URL . '/admin/result/resultList.php');
 }
 
-// Get categories linked to this tournament via prizes
 $query = "SELECT DISTINCT c.* 
           FROM CATEGORY c
           INNER JOIN TOURNAMENT_PRIZE tp ON c.category_id = tp.category_id
@@ -249,7 +234,6 @@ while ($row = mysqli_fetch_assoc($categories_result)) {
     $categories[] = $row;
 }
 
-// Get participant and catch statistics
 $stats_query = "SELECT 
     (SELECT COUNT(*) FROM TOURNAMENT_REGISTRATION WHERE tournament_id = '$tournament_id' AND approval_status = 'approved') as participant_count,
     (SELECT COUNT(*) FROM FISH_CATCH fc 
@@ -257,7 +241,6 @@ $stats_query = "SELECT
      WHERE tr.tournament_id = '$tournament_id') as catch_count";
 $stats = mysqli_fetch_assoc(mysqli_query($conn, $stats_query));
 
-// Handle manual calculation request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['calculate'])) {
     $result = calculateTournamentResults($conn, $tournament_id);
     
@@ -326,14 +309,12 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="viewResult.php?tournament_id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Results
     </a>
 </div>
 
-<!-- Tournament Info -->
 <div class="section">
     <div class="section-header">
         <h3 class="section-title">
@@ -379,7 +360,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Categories Overview -->
 <div class="section">
     <div class="section-header">
         <h3 class="section-title">
@@ -471,7 +451,6 @@ include '../includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Manual Recalculate Button -->
 <?php if (!empty($categories) && $stats['catch_count'] > 0): ?>
     <div class="section">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 2.5rem; text-align: center; color: white;">

@@ -2,7 +2,6 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Allow both organizer and admin
 requireAdminAccess();
 
 if (!isset($_GET['id'])) {

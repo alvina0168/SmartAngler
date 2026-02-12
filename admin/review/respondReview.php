@@ -15,7 +15,6 @@ if (!isset($_GET['id'])) {
 
 $review_id = intval($_GET['id']);
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $admin_response = mysqli_real_escape_string($conn, trim($_POST['admin_response']));
     
@@ -31,8 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (mysqli_query($conn, $update_query)) {
             $_SESSION['success'] = 'Response submitted successfully!';
-            
-            // Get tournament_id for redirect
             $tournament_query = "SELECT tournament_id FROM REVIEW WHERE review_id = $review_id";
             $tournament_result = mysqli_query($conn, $tournament_query);
             $tournament_id = mysqli_fetch_assoc($tournament_result)['tournament_id'];
@@ -44,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch review with user info
 $query = "
     SELECT r.*, u.full_name, u.email, t.tournament_title, t.tournament_id
     FROM REVIEW r
@@ -64,14 +60,12 @@ $review = mysqli_fetch_assoc($result);
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="reviewList.php?tournament_id=<?= $review['tournament_id'] ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Reviews
     </a>
 </div>
 
-<!-- Review & Response Form -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -84,7 +78,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Original Review -->
     <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #e9ecef;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
             <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--color-blue-primary), var(--color-blue-light)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem;">
@@ -100,7 +93,6 @@ include '../includes/header.php';
             </div>
         </div>
 
-        <!-- Rating -->
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <div style="display: flex; gap: 0.25rem; font-size: 1.25rem;">
                 <?php for ($i = 1; $i <= 5; $i++): ?>
@@ -115,7 +107,6 @@ include '../includes/header.php';
             </span>
         </div>
 
-        <!-- Review Text -->
         <div style="background: white; border-radius: 8px; padding: 1rem;">
             <div style="color: #495057; line-height: 1.7; font-size: 0.9375rem;">
                 <?= nl2br(htmlspecialchars($review['review_text'])) ?>
@@ -123,7 +114,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Response Form -->
     <form method="POST" action="">
         <div class="form-group">
             <label>Your Response <span class="required">*</span></label>

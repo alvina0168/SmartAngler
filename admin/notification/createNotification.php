@@ -1,8 +1,6 @@
 <?php
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
-
-// Include PHPMailer
 require '../../includes/PHPMailer/src/PHPMailer.php';
 require '../../includes/PHPMailer/src/SMTP.php';
 require '../../includes/PHPMailer/src/Exception.php';
@@ -10,7 +8,6 @@ require '../../includes/PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Allow both organizer and admin
 requireAdminAccess();
 
 $page_title = 'Create Tournament Notification';
@@ -18,11 +15,8 @@ $page_description = 'Send notification to all participants of a tournament';
 
 $error = '';
 $success = '';
-
-// Get all tournaments
 $tournaments_result = mysqli_query($conn, "SELECT tournament_id, tournament_title FROM TOURNAMENT ORDER BY tournament_date DESC");
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = sanitize($_POST['title']);
     $message = sanitize($_POST['message']);
@@ -31,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($title) || empty($message) || $tournament_id <= 0) {
         $error = 'Please fill in all required fields and select a tournament.';
     } else {
-        // Get all approved participants of the selected tournament
         $participants_query = "SELECT user_id FROM TOURNAMENT_REGISTRATION WHERE tournament_id=? AND approval_status='approved'";
         $stmt = mysqli_prepare($conn, $participants_query);
         mysqli_stmt_bind_param($stmt, "i", $tournament_id);
@@ -42,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             while ($row = mysqli_fetch_assoc($result)) {
                 $user_id = $row['user_id'];
 
-                // Insert notification in the database
                 $insert = mysqli_prepare($conn, "INSERT INTO NOTIFICATION (user_id, tournament_id, title, message) VALUES (?, ?, ?, ?)");
                 mysqli_stmt_bind_param($insert, "iiss", $user_id, $tournament_id, $title, $message);
                 mysqli_stmt_execute($insert);
@@ -62,10 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 try {
                     $mail = new PHPMailer(true);
                     $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com'; // Your SMTP server
+                    $mail->Host = 'smtp.gmail.com'; 
                     $mail->SMTPAuth = true;
-                    $mail->Username = 'alvinaao0168@gmail.com@gmail.com'; // Replace with your email
-                    $mail->Password = 'xmwxeyplblbyjeaj'; // Replace with your app password
+                    $mail->Username = 'alvinaao0168@gmail.com@gmail.com'; 
+                    $mail->Password = 'xmwxeyplblbyjeaj'; 
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port = 587;
 
@@ -81,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     $mail->send();
                 } catch (Exception $e) {
-                    // Log error but continue
                     error_log("Email error to $email: " . $mail->ErrorInfo);
                 }
             }

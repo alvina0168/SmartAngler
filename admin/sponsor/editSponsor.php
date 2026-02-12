@@ -4,7 +4,6 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Edit Sponsor';
 
-// Get sponsor ID first
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = 'Sponsor ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -13,8 +12,6 @@ if (!isset($_GET['id'])) {
 $sponsor_id = intval($_GET['id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
-
-// Get tournament_id from sponsor
 $sponsor_check_query = "SELECT tournament_id FROM SPONSOR WHERE sponsor_id = '$sponsor_id'";
 $sponsor_check_result = mysqli_query($conn, $sponsor_check_query);
 
@@ -26,11 +23,6 @@ if (!$sponsor_check_result || mysqli_num_rows($sponsor_check_result) == 0) {
 $sponsor_data = mysqli_fetch_assoc($sponsor_check_result);
 $tournament_id = $sponsor_data['tournament_id'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -74,7 +66,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
 }
 $sponsor_id = intval($_GET['id']);
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sponsor_name = mysqli_real_escape_string($conn, trim($_POST['sponsor_name']));
     $sponsor_description = mysqli_real_escape_string($conn, trim($_POST['sponsor_description']));
@@ -94,8 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 sponsored_amount = $sponsored_amount
             WHERE sponsor_id = $sponsor_id
         ";
-        
-        // Handle logo upload
+
         if (!empty($_FILES['sponsor_logo']['name'])) {
             $sponsor_logo = uploadFile($_FILES['sponsor_logo'], 'sponsors');
             if ($sponsor_logo) {
@@ -105,8 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (mysqli_query($conn, $update_query)) {
             $_SESSION['success'] = 'Sponsor updated successfully!';
-            
-            // Get tournament_id for redirect
             $tournament_query = "SELECT tournament_id FROM SPONSOR WHERE sponsor_id = $sponsor_id";
             $tournament_result = mysqli_query($conn, $tournament_query);
             $tournament_id = mysqli_fetch_assoc($tournament_result)['tournament_id'];
@@ -118,7 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch sponsor
 $query = "
     SELECT s.*, t.tournament_title
     FROM SPONSOR s
@@ -137,14 +124,12 @@ $sponsor = mysqli_fetch_assoc($result);
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="sponsorList.php?tournament_id=<?= $sponsor['tournament_id'] ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Sponsors
     </a>
 </div>
 
-<!-- Edit Sponsor Form -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -159,7 +144,6 @@ include '../includes/header.php';
 
     <form method="POST" action="" enctype="multipart/form-data">
         <div class="info-grid">
-            <!-- Left Column -->
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <div class="form-group">
                     <label>Sponsor Name <span class="required">*</span></label>
@@ -197,7 +181,6 @@ include '../includes/header.php';
                 </div>
             </div>
 
-            <!-- Right Column -->
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <div class="form-group">
                     <label>Sponsor Logo</label>

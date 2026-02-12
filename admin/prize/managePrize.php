@@ -4,7 +4,6 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Prize Management';
 
-// Get tournament ID first
 if (!isset($_GET['tournament_id'])) {
     $_SESSION['error'] = 'Tournament ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -14,11 +13,6 @@ $tournament_id = intval($_GET['tournament_id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -61,7 +55,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-// Handle ranking reorder via AJAX
 if (isset($_POST['action']) && $_POST['action'] === 'reorder_rankings') {
     header('Content-Type: application/json');
     
@@ -90,7 +83,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'reorder_rankings') {
     exit;
 }
 
-// Handle add new ranking
 if (isset($_POST['action']) && $_POST['action'] === 'add_ranking') {
     $category_id = intval($_POST['category_id']);
     $target_weight = !empty($_POST['target_weight']) ? floatval($_POST['target_weight']) : null;
@@ -98,7 +90,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'add_ranking') {
     $value = floatval($_POST['value']);
     
     if (!empty($category_id) && !empty($description) && $value > 0) {
-        // Get current count for this category with specific target weight
         $where_weight = $target_weight ? "AND target_weight = $target_weight" : "AND target_weight IS NULL";
         $count_query = "SELECT COUNT(*) as count FROM TOURNAMENT_PRIZE WHERE tournament_id = $tournament_id AND category_id = $category_id $where_weight";
         $count_result = mysqli_query($conn, $count_query);
@@ -127,7 +118,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'add_ranking') {
     redirect(SITE_URL . '/admin/prize/managePrize.php?tournament_id=' . $tournament_id);
 }
 
-// Fetch tournament info
 $tournament_query = "SELECT tournament_title FROM TOURNAMENT WHERE tournament_id = $tournament_id";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -138,7 +128,6 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
 
 $tournament = mysqli_fetch_assoc($tournament_result);
 
-// Fetch all prizes grouped by category AND target weight
 $prizes_query = "
     SELECT 
         tp.*,
@@ -167,14 +156,12 @@ $prizes_query = "
 ";
 $prizes_result = mysqli_query($conn, $prizes_query);
 
-// Group prizes by category AND target weight
 $prizes_by_category = [];
 while ($prize = mysqli_fetch_assoc($prizes_result)) {
     $category_id = $prize['category_id'] ?? 'uncategorized';
     $category_name = $prize['category_name'] ?? 'Uncategorized';
     $target_weight = $prize['target_weight'] ?? null;
-    
-    // Create unique key for category + target weight combination
+
     $group_key = $category_id . '_' . ($target_weight ?? 'null');
     
     if (!isset($prizes_by_category[$group_key])) {
@@ -192,7 +179,6 @@ while ($prize = mysqli_fetch_assoc($prizes_result)) {
     $prizes_by_category[$group_key]['prizes'][] = $prize;
 }
 
-// Calculate statistics
 $total_prizes = 0;
 $total_value = 0;
 foreach ($prizes_by_category as $category) {
@@ -308,14 +294,12 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="../tournament/viewTournament.php?id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournament
     </a>
 </div>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -331,7 +315,6 @@ include '../includes/header.php';
         </a>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="dashboard-stats" style="margin-bottom: 0;">
         <div class="stat-card">
             <div class="stat-header">
@@ -365,7 +348,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Prizes by Category -->
 <?php if (count($prizes_by_category) > 0): ?>
     <?php foreach ($prizes_by_category as $group_key => $category_data): ?>
         <div class="section">
@@ -391,7 +373,6 @@ include '../includes/header.php';
                 </span>
             </div>
 
-            <!-- Prize Table -->
             <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem; overflow-x: auto;">
                 <form method="POST" action="" id="add-form-<?= $group_key ?>">
                     <input type="hidden" name="action" value="add_ranking">
@@ -459,8 +440,7 @@ include '../includes/header.php';
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
-                            
-                            <!-- Add Ranking Row (Hidden by default) -->
+    
                             <tr class="add-ranking-row" id="add-row-<?= $group_key ?>" style="display: none; border-bottom: 1px solid #4caf50;">
                                 <td style="padding: 0.75rem; text-align: center;">
                                     <i class="fas fa-plus" style="color: #4caf50; font-size: 1.25rem;"></i>
@@ -511,7 +491,6 @@ include '../includes/header.php';
                     </table>
                 </form>
 
-                <!-- Add Ranking Button -->
                 <button type="button" 
                         class="btn-add-ranking" 
                         id="btn-add-<?= $group_key ?>"
@@ -536,7 +515,6 @@ include '../includes/header.php';
 const rankings = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th'];
 const medals = ['🥇', '🥈', '🥉'];
 
-// Initialize drag and drop for all categories
 document.addEventListener('DOMContentLoaded', function() {
     const tbodies = document.querySelectorAll('tbody[id^="category-tbody-"]');
     
@@ -589,11 +567,9 @@ function updateRankings(groupKey) {
     const rows = Array.from(tbody.querySelectorAll('.prize-row'));
     
     rows.forEach((row, index) => {
-        // Update ranking label
         const rankingLabel = row.querySelector('.ranking-label');
         rankingLabel.textContent = rankings[index] || `${index + 1}th`;
-        
-        // Update medal emoji
+
         const emojiSpan = row.querySelector('.ranking-emoji');
         emojiSpan.textContent = medals[index] || '';
     });
@@ -632,13 +608,10 @@ function saveOrder(groupKey) {
 }
 
 function showAddRankingRow(groupKey) {
-    // Hide add button
     document.getElementById(`btn-add-${groupKey}`).style.display = 'none';
     
-    // Show add ranking row
     document.getElementById(`add-row-${groupKey}`).style.display = 'table-row';
     
-    // Focus on description input
     const descInput = document.querySelector(`#add-row-${groupKey} input[name="description"]`);
     if (descInput) {
         descInput.focus();
@@ -646,13 +619,10 @@ function showAddRankingRow(groupKey) {
 }
 
 function cancelAddRanking(groupKey) {
-    // Show add button
     document.getElementById(`btn-add-${groupKey}`).style.display = 'inline-flex';
     
-    // Hide add ranking row
     document.getElementById(`add-row-${groupKey}`).style.display = 'none';
     
-    // Clear form inputs
     const form = document.getElementById(`add-form-${groupKey}`);
     form.reset();
 }

@@ -1,13 +1,10 @@
 <?php
-// Start processing BEFORE any output
 session_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Only organizers can access this page
 requireOrganizer();
 
-// Get admin ID
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = 'Invalid admin ID';
     header('Location: ' . SITE_URL . '/admin/admin-management/manage-admins.php');
@@ -16,8 +13,6 @@ if (!isset($_GET['id'])) {
 
 $admin_id = intval($_GET['id']);
 $organizer_id = $_SESSION['user_id'];
-
-// Get admin details (must be created by this organizer)
 $query = "SELECT * FROM USER 
           WHERE user_id = '$admin_id' 
           AND role = 'admin' 
@@ -33,8 +28,6 @@ if (mysqli_num_rows($result) == 0) {
 $admin = mysqli_fetch_assoc($result);
 
 $error = '';
-
-// PROCESS FORM (before any HTML output)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $full_name = sanitize($_POST['full_name']);
     $username = sanitize($_POST['username']);
@@ -52,9 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (!empty($phone_number) && !validatePhone($phone_number)) {
         $error = 'Please enter a valid phone number (10-15 digits)';
     } else {
-        // Build update query
         if (!empty($password)) {
-            // Update with new password
             if (strlen($password) < 6) {
                 $error = 'Password must be at least 6 characters';
             } else {
@@ -67,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                           WHERE user_id = '$admin_id'";
             }
         } else {
-            // Update without changing password
             $query = "UPDATE USER SET 
                       full_name = '$full_name',
                       username = '$username',
@@ -86,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// NOW include header (after form processing)
 $page_title = 'Edit Admin Account';
 include '../includes/header.php';
 ?>

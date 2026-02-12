@@ -4,7 +4,6 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Prize Configuration';
 
-// Get tournament ID first
 if (!isset($_GET['tournament_id'])) {
     $_SESSION['error'] = 'Tournament ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -14,11 +13,6 @@ $tournament_id = intval($_GET['tournament_id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -61,7 +55,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-// Fetch tournament
 $tournament_query = "SELECT tournament_title FROM TOURNAMENT WHERE tournament_id = $tournament_id";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -72,11 +65,9 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
 
 $tournament = mysqli_fetch_assoc($tournament_result);
 
-// Fetch categories
 $categories_query = "SELECT * FROM CATEGORY ORDER BY category_name ASC";
 $categories_result = mysqli_query($conn, $categories_query);
 
-// Fetch existing prizes for this tournament to check duplicates
 $existing_prizes_query = "
     SELECT DISTINCT category_id, target_weight
     FROM TOURNAMENT_PRIZE
@@ -89,7 +80,6 @@ while ($row = mysqli_fetch_assoc($existing_prizes_result)) {
     $existing_categories[$key] = true;
 }
 
-// Handle submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     $success_count = 0;
@@ -100,11 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $category_id = intval($catData['category_id']);
             $target_weight = !empty($catData['target_weight']) ? floatval($catData['target_weight']) : null;
-            
-            // Check if category already exists (except for exact_weight with different weights)
+
             $check_key = $category_id . '_' . ($target_weight ?? 'null');
             if (isset($existing_categories[$check_key])) {
-                // Get category name for error message
                 $cat_name_query = mysqli_query($conn, "SELECT category_name, category_type FROM CATEGORY WHERE category_id = $category_id");
                 $cat_info = mysqli_fetch_assoc($cat_name_query);
                 
@@ -267,14 +255,12 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="managePrize.php?tournament_id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Prizes
     </a>
 </div>
 
-<!-- Prize Configuration Form -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -308,13 +294,10 @@ include '../includes/header.php';
 <script>
 let categoryIndex = 0;
 
-// Categories data from PHP
 const categories = <?= json_encode(mysqli_fetch_all(mysqli_query($conn, "SELECT * FROM CATEGORY ORDER BY category_name ASC"), MYSQLI_ASSOC)) ?>;
 
-// Existing categories to check duplicates
 const existingCategories = <?= json_encode($existing_categories) ?>;
 
-// Ranking labels
 const rankingLabels = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th'];
 
 function addPrizeCategory() {
@@ -325,7 +308,6 @@ function addPrizeCategory() {
     
     let categoryOptions = '<option value="">-- Select Category --</option>';
     categories.forEach(cat => {
-        // Remove (X positions) from display
         categoryOptions += `<option value="${cat.category_id}" data-type="${cat.category_type}">${cat.category_name}</option>`;
     });
     
@@ -413,7 +395,6 @@ function handleCategorySelection(index, selectElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     const categoryType = selectedOption.dataset.type;
     
-    // Show/hide target weight field
     const targetWeightField = document.getElementById(`target-weight-${index}`);
     const targetWeightInput = targetWeightField.querySelector('input');
     
@@ -424,8 +405,7 @@ function handleCategorySelection(index, selectElement) {
         targetWeightField.classList.remove('show');
         targetWeightInput.required = false;
         targetWeightInput.value = '';
-        
-        // Check if category already exists (non-exact_weight categories)
+
         const checkKey = categoryId + '_null';
         if (existingCategories[checkKey]) {
             const categoryName = selectedOption.textContent;
@@ -435,7 +415,6 @@ function handleCategorySelection(index, selectElement) {
         }
     }
     
-    // Reset table to 1 row
     const numRanksInput = document.querySelector(`input[name="categories[${index}][number_of_ranks]"]`);
     if (numRanksInput) {
         numRanksInput.value = 1;
@@ -463,7 +442,6 @@ function updatePrizeTable(index, numRanks) {
     }
 }
 
-// Validate form before submit
 document.getElementById('prizeForm').addEventListener('submit', function(e) {
     const cards = document.querySelectorAll('.prize-category-card');
     
@@ -473,7 +451,6 @@ document.getElementById('prizeForm').addEventListener('submit', function(e) {
         return false;
     }
     
-    // Check for duplicate exact_weight categories with same weight
     const exactWeightCategories = {};
     let hasDuplicate = false;
     
@@ -496,15 +473,13 @@ document.getElementById('prizeForm').addEventListener('submit', function(e) {
             
             const key = categoryId + '_' + weight;
             
-            // Check against existing categories in database
             if (existingCategories[key]) {
                 e.preventDefault();
                 alert('An exact weight category with weight ' + weight + ' KG has already been created for this tournament.');
                 hasDuplicate = true;
                 return;
             }
-            
-            // Check for duplicates in current form
+
             if (exactWeightCategories[key]) {
                 e.preventDefault();
                 alert('You cannot add the same exact weight category with the same target weight twice.');
@@ -521,7 +496,6 @@ document.getElementById('prizeForm').addEventListener('submit', function(e) {
     }
 });
 
-// Add first category on page load
 window.addEventListener('DOMContentLoaded', function() {
     addPrizeCategory();
 });

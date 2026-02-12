@@ -7,8 +7,6 @@ if (!isset($_GET['tournament_id'])) {
 }
 
 $tournament_id = intval($_GET['tournament_id']);
-
-// Get tournament info
 $tournament_query = "SELECT * FROM TOURNAMENT WHERE tournament_id = '$tournament_id'";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -48,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 include '../includes/header.php';
 ?>
 
-<!-- Back & Header -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <a href="<?php echo SITE_URL; ?>/admin/catch/stationList.php?tournament_id=<?php echo $tournament_id; ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back
@@ -65,7 +62,6 @@ include '../includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Form Card -->
 <div class="section" style="padding: 1.5rem; background: var(--color-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
     <form method="POST" action="">
         <!-- Station Name -->

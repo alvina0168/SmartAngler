@@ -1112,7 +1112,6 @@ function generateReview() {
                 <strong style="color: var(--color-blue-primary); font-size: 1rem;">${escapeHtml(categoryName)}</strong> 
                 <span style="color: #6c757d; font-size: 0.875rem;">(${numWinners} winners)</span>`;
             
-            // Show target weight if exact weight category
             const targetWeightInput = prize.querySelector('input.prize-target-weight');
             if (targetWeightInput && targetWeightInput.offsetParent !== null && targetWeightInput.value) {
                 reviewHTML += `<div style="margin-top: 0.5rem; color: #6c757d; font-size: 0.875rem;">
@@ -1120,7 +1119,6 @@ function generateReview() {
                 </div>`;
             }
             
-            // Show prizes
             reviewHTML += `<ul class="review-list" style="margin-top: 0.75rem;">`;
             prizeDescs.forEach((input, i) => {
                 const desc = input.value;

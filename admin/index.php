@@ -235,7 +235,6 @@ function toggleActivities() {
     const btnIcon = btn.querySelector('i');
     
     if (!isExpanded) {
-        // Show all activities
         hiddenActivities.forEach(activity => {
             activity.style.display = 'flex';
         });
@@ -244,7 +243,6 @@ function toggleActivities() {
         btn.classList.add('view-less-btn');
         isExpanded = true;
     } else {
-        // Hide activities after first 5
         hiddenActivities.forEach(activity => {
             activity.style.display = 'none';
         });

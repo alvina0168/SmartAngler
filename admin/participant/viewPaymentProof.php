@@ -2,19 +2,16 @@
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Check if user is logged in and is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     redirect(SITE_URL . '/login.php');
 }
 
-// Get registration ID
 if (!isset($_GET['id'])) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
 $registration_id = intval($_GET['id']);
 
-// Fetch payment proof
 $query = "SELECT tr.payment_proof, tr.registration_id, t.tournament_title, u.full_name
           FROM TOURNAMENT_REGISTRATION tr
           JOIN TOURNAMENT t ON tr.tournament_id = t.tournament_id

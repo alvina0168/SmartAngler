@@ -4,7 +4,6 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Edit Prize';
 
-// Get prize ID first
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = 'Prize ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -14,7 +13,6 @@ $prize_id = intval($_GET['id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// Get tournament_id from prize
 $prize_check_query = "SELECT tournament_id FROM TOURNAMENT_PRIZE WHERE prize_id = '$prize_id'";
 $prize_check_result = mysqli_query($conn, $prize_check_query);
 
@@ -26,11 +24,6 @@ if (!$prize_check_result || mysqli_num_rows($prize_check_result) == 0) {
 $prize_data = mysqli_fetch_assoc($prize_check_result);
 $tournament_id = $prize_data['tournament_id'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -73,7 +66,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-// Fetch prize along with tournament and category info
 $query = "
     SELECT tp.*, t.tournament_title, c.category_name, c.category_type
     FROM TOURNAMENT_PRIZE tp
@@ -95,7 +87,6 @@ $prize = mysqli_fetch_assoc($result);
 $tournament_id = $prize['tournament_id'];
 $is_exact_weight = $prize['category_type'] === 'exact_weight';
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prize_description = trim($_POST['prize_description']);
     $prize_value = floatval($_POST['prize_value']);
@@ -136,14 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="managePrize.php?tournament_id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Prizes
     </a>
 </div>
 
-<!-- Edit Prize Form -->
 <div class="section">
     <div class="section-header">
         <div>

@@ -6,10 +6,8 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
-// Only organizers can access this page
 requireOrganizer();
 
-// Get all admins created by this organizer
 $organizer_id = $_SESSION['user_id'];
 $query = "SELECT user_id, full_name, username, phone_number, status, created_at 
           FROM USER 
@@ -146,7 +144,6 @@ include '../includes/header.php';
 <?php endif; ?>
 
 <script>
-    // Optional: auto-hide alerts after 5 seconds
     setTimeout(() => {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(alert => {

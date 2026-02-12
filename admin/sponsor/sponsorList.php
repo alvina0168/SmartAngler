@@ -4,7 +4,6 @@ require_once '../../includes/functions.php';
 
 $page_title = 'Sponsor Management';
 
-// Get tournament ID first
 if (!isset($_GET['tournament_id'])) {
     $_SESSION['error'] = 'Tournament ID is missing!';
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
@@ -14,11 +13,6 @@ $tournament_id = intval($_GET['tournament_id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -62,8 +56,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
 }
 
 $tournament_id = intval($_GET['tournament_id']);
-
-// Fetch tournament info
 $tournament_query = "SELECT tournament_title FROM TOURNAMENT WHERE tournament_id = $tournament_id";
 $tournament_result = mysqli_query($conn, $tournament_query);
 
@@ -73,8 +65,6 @@ if (!$tournament_result || mysqli_num_rows($tournament_result) == 0) {
 }
 
 $tournament = mysqli_fetch_assoc($tournament_result);
-
-// Fetch sponsors for this tournament
 $sponsors_query = "
     SELECT s.*
     FROM SPONSOR s
@@ -82,8 +72,6 @@ $sponsors_query = "
     ORDER BY s.sponsor_name ASC
 ";
 $sponsors_result = mysqli_query($conn, $sponsors_query);
-
-// Calculate total sponsorship
 $total_amount_query = "SELECT SUM(sponsored_amount) as total FROM SPONSOR WHERE tournament_id = $tournament_id";
 $total_result = mysqli_query($conn, $total_amount_query);
 $total_amount = mysqli_fetch_assoc($total_result)['total'] ?? 0;
@@ -91,14 +79,12 @@ $total_amount = mysqli_fetch_assoc($total_result)['total'] ?? 0;
 include '../includes/header.php';
 ?>
 
-<!-- Back Button -->
 <div style="margin-bottom: 1.5rem;">
     <a href="../tournament/viewTournament.php?id=<?= $tournament_id ?>" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to Tournament
     </a>
 </div>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -114,7 +100,6 @@ include '../includes/header.php';
         </a>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="dashboard-stats" style="margin-bottom: 0;">
         <div class="stat-card">
             <div class="stat-header">
@@ -138,7 +123,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Sponsors List -->
 <?php if (mysqli_num_rows($sponsors_result) > 0): ?>
     <div class="section">
         <table class="table">

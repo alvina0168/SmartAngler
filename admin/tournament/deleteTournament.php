@@ -101,7 +101,6 @@ try {
     $_SESSION['success'] = 'Tournament deleted successfully (zones retained).';
 
 } catch (Exception $e) {
-    // Rollback on error
     mysqli_rollback($conn);
     $_SESSION['error'] = 'Failed to delete tournament: ' . $e->getMessage();
 }

@@ -8,10 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     redirect(SITE_URL . '/login.php');
 }
 
-// Get filter
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
-
-// Build WHERE clause
 $where_clause = "1=1";
 if ($filter == 'pending') {
     $where_clause .= " AND r.admin_response IS NULL";
@@ -19,7 +16,6 @@ if ($filter == 'pending') {
     $where_clause .= " AND r.admin_response IS NOT NULL";
 }
 
-// Fetch all reviews
 $reviews_query = "
     SELECT r.*, u.full_name, u.email, t.tournament_title, t.tournament_id
     FROM REVIEW r
@@ -30,7 +26,6 @@ $reviews_query = "
 ";
 $reviews_result = mysqli_query($conn, $reviews_query);
 
-// Calculate statistics
 $stats_query = "
     SELECT 
         COUNT(*) as total_reviews,
@@ -41,8 +36,6 @@ $stats_query = "
 ";
 $stats_result = mysqli_query($conn, $stats_query);
 $stats = mysqli_fetch_assoc($stats_result);
-
-// Handle NULL values when no reviews exist
 $stats['total_reviews'] = $stats['total_reviews'] ?? 0;
 $stats['avg_rating'] = $stats['avg_rating'] ?? 0;
 $stats['pending_reviews'] = $stats['pending_reviews'] ?? 0;
@@ -51,7 +44,6 @@ $stats['responded_reviews'] = $stats['responded_reviews'] ?? 0;
 include '../includes/header.php';
 ?>
 
-<!-- Header Section -->
 <div class="section">
     <div class="section-header">
         <div>
@@ -61,7 +53,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="dashboard-stats" style="margin-bottom: 1rem;">
         <div class="stat-card">
             <div class="stat-header">
@@ -104,7 +95,6 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <!-- Filter Tabs -->
     <div class="filter-tabs">
         <a href="?filter=all" class="filter-btn <?= $filter == 'all' ? 'active' : '' ?>">
             <i class="fas fa-list"></i> All Reviews
@@ -118,12 +108,10 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Reviews List -->
 <?php if (mysqli_num_rows($reviews_result) > 0): ?>
     <div class="section">
         <?php while ($review = mysqli_fetch_assoc($reviews_result)): ?>
             <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #e9ecef;">
-                <!-- Tournament Badge -->
                 <div style="margin-bottom: 1rem;">
                     <a href="../tournament/viewTournament.php?id=<?= $review['tournament_id'] ?>" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #e3f2fd; border-radius: 20px; text-decoration: none; font-size: 0.875rem; font-weight: 600; color: var(--color-blue-primary);">
                         <i class="fas fa-trophy"></i>
@@ -131,7 +119,6 @@ include '../includes/header.php';
                     </a>
                 </div>
 
-                <!-- Review Header -->
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
@@ -146,7 +133,6 @@ include '../includes/header.php';
                             </div>
                         </div>
                         
-                        <!-- Star Rating -->
                         <div style="display: flex; gap: 0.25rem; font-size: 1.125rem;">
                             <?php for ($i = 1; $i <= 5; $i++): ?>
                                 <i class="fas fa-star" style="color: <?= $i <= $review['rating'] ? '#ff9800' : '#dee2e6' ?>;"></i>
@@ -170,14 +156,12 @@ include '../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Review Content -->
                 <div style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                     <div style="color: #495057; line-height: 1.6;">
                         <?= nl2br(htmlspecialchars($review['review_text'])) ?>
                     </div>
                 </div>
 
-                <!-- Admin Response -->
                 <?php if (!empty($review['admin_response'])): ?>
                     <div style="background: #e3f2fd; border-left: 4px solid var(--color-blue-primary); border-radius: 8px; padding: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">

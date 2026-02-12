@@ -1,16 +1,13 @@
 <?php
-// Start processing BEFORE any output
 session_start();
 require_once '../../includes/config.php';
 require_once '../../includes/functions.php';
 
-// Only organizers can access this page
 requireOrganizer();
 
 $error = '';
 $success = '';
 
-// PROCESS FORM FIRST (before any output)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $full_name = sanitize($_POST['full_name']);
     $username = sanitize($_POST['username']);
@@ -18,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = sanitize($_POST['password']);
     $confirm_password = sanitize($_POST['confirm_password']);
     
-    // Validation
     if (empty($full_name) || empty($username) || empty($password) || empty($confirm_password)) {
         $error = 'Please fill in all required fields';
     } elseif (!validateUsername($username)) {
@@ -32,10 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (!empty($phone_number) && !validatePhone($phone_number)) {
         $error = 'Please enter a valid phone number (10-15 digits)';
     } else {
-        // Insert new admin
         $organizer_id = $_SESSION['user_id'];
         
-        // Generate email from username for system
         $generated_email = $username . '@smartangler.local';
         
         $query = "INSERT INTO USER (email, username, password, full_name, phone_number, role, created_by, status, created_at) 
@@ -51,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// NOW include header (after form processing)
 $page_title = 'Create Admin Account';
 include '../includes/header.php';
 ?>

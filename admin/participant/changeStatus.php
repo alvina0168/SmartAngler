@@ -9,29 +9,25 @@ if (
     redirect(SITE_URL . '/login.php');
 }
 
-// Determine request method
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Coming from Reject form/modal
     if (!isset($_POST['registration_id']) || empty($_POST['status'])) {
         $_SESSION['error'] = "Invalid registration!";
         redirect(SITE_URL . '/admin/participant/manageParticipants.php');
     }
     $registration_id = intval($_POST['registration_id']);
-    $status = $_POST['status']; // 'rejected'
+    $status = $_POST['status']; 
     $notes = mysqli_real_escape_string($conn, $_POST['reject_note'] ?? '');
 
 } else {
-    // Coming from Approve GET link
     if (!isset($_GET['registration_id']) || !isset($_GET['status'])) {
         $_SESSION['error'] = "Invalid registration!";
         redirect(SITE_URL . '/admin/participant/manageParticipants.php');
     }
     $registration_id = intval($_GET['registration_id']);
-    $status = $_GET['status']; // 'approved'
+    $status = $_GET['status']; 
     $notes = 'Registration approved';
 }
 
-// Fetch registration info
 $query = "SELECT tr.*, u.full_name, u.email, fs.spot_status 
           FROM TOURNAMENT_REGISTRATION tr
           JOIN USER u ON tr.user_id = u.user_id
@@ -52,7 +48,6 @@ $spot_id = $registration['spot_id'];
 $user_id = $registration['user_id'];
 $tournament_id = $registration['tournament_id'];
 
-// Update registration status
 $approved_date = ($status === 'approved') ? ", approved_date=NOW()" : "";
 $update = "UPDATE TOURNAMENT_REGISTRATION 
            SET approval_status=?, notes=? $approved_date 
@@ -61,7 +56,6 @@ $stmt_update = mysqli_prepare($conn, $update);
 mysqli_stmt_bind_param($stmt_update, "ssi", $status, $notes, $registration_id);
 mysqli_stmt_execute($stmt_update);
 
-// Update fishing spot if assigned
 if ($spot_id) {
     $spot_status = ($status === 'rejected') ? 'available' : 'booked';
     $update_spot = "UPDATE FISHING_SPOT SET spot_status=? WHERE spot_id=?";
@@ -70,7 +64,6 @@ if ($spot_id) {
     mysqli_stmt_execute($stmt_spot);
 }
 
-// Send notification
 $title = ($status === 'approved') ? "Registration Approved" : "Registration Rejected";
 $message = ($status === 'approved') 
            ? "Your registration has been approved. Notes: $notes"
@@ -81,14 +74,13 @@ $stmt_notif = mysqli_prepare($conn, $notif_query);
 mysqli_stmt_bind_param($stmt_notif, "iiss", $user_id, $tournament_id, $title, $message);
 mysqli_stmt_execute($stmt_notif);
 
-// Send email
+
 $to = $registration['email'];
 $subject = $title;
 $body = "Hello ".$registration['full_name'].",\n\n".$message."\n\nBest regards,\nSmartAngler Team";
 $headers = "From: no-reply@smartangler.com\r\n";
 @mail($to, $subject, $body, $headers);
 
-// Success message and redirect
 $_SESSION['success'] = "Participant status updated successfully!";
 redirect(SITE_URL."/admin/participant/manageParticipants.php?id=$tournament_id");
 ?>
@@ -99,7 +91,6 @@ redirect(SITE_URL."/admin/participant/manageParticipants.php?id=$tournament_id")
     <h2>Change Registration Status</h2>
 
     <form id="statusForm" method="POST" class="form-card">
-        <!-- Hidden inputs -->
         <input type="hidden" name="status" id="statusInput" value="">
         <input type="hidden" name="notes" id="notesInput" value="">
 
@@ -144,5 +135,3 @@ function rejectParticipant() {
 </script>
 
 <?php include '../includes/footer.php'; ?>
-
-

@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/header.php';
 
-// Check if user is logged in and is admin
 if (!isLoggedIn() || !isAdmin()) {
     redirect(SITE_URL . '/pages/login.php');
 }
@@ -18,7 +17,6 @@ if ($tournament_id <= 0) {
     exit();
 }
 
-// Get tournament details
 $query = "SELECT * FROM TOURNAMENT WHERE tournament_id = ?";
 $stmt = $conn->prepare($query);
 $stmt->execute([$tournament_id]);
@@ -32,8 +30,6 @@ if (!$tournament) {
 
 try {
     $conn->beginTransaction();
-    
-    // Update all results for this tournament to 'final' status
     $query = "UPDATE RESULT SET result_status = 'final' WHERE tournament_id = ?";
     $stmt = $conn->prepare($query);
     $stmt->execute([$tournament_id]);
@@ -41,14 +37,12 @@ try {
     $updated_count = $stmt->rowCount();
     
     if ($updated_count > 0) {
-        // Update tournament status to completed if not already
         if ($tournament['status'] !== 'completed') {
             $query = "UPDATE TOURNAMENT SET status = 'completed' WHERE tournament_id = ?";
             $stmt = $conn->prepare($query);
             $stmt->execute([$tournament_id]);
         }
-        
-        // Get all participants who should receive notification
+
         $query = "SELECT DISTINCT u.user_id, u.email, u.full_name
                   FROM USER u
                   JOIN TOURNAMENT_REGISTRATION tr ON u.user_id = tr.user_id
@@ -56,8 +50,6 @@ try {
         $stmt = $conn->prepare($query);
         $stmt->execute([$tournament_id]);
         $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Send notification to all participants
         $notification_title = "Official Results Published!";
         $notification_message = "The official results for '{$tournament['tournament_title']}' have been published. Check your ranking and prizes!";
         

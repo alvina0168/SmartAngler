@@ -13,7 +13,6 @@ if (!isset($_GET['id'])) {
 
 $category_id = intval($_GET['id']);
 
-// Check if category is being used
 $check_query = "SELECT COUNT(*) as count FROM TOURNAMENT_PRIZE WHERE category_id = $category_id";
 $check_result = mysqli_query($conn, $check_query);
 $check = mysqli_fetch_assoc($check_result);
@@ -23,7 +22,6 @@ if ($check['count'] > 0) {
     redirect(SITE_URL . '/admin/category/categoryList.php');
 }
 
-// Delete category
 $delete_query = "DELETE FROM CATEGORY WHERE category_id = $category_id";
 
 if (mysqli_query($conn, $delete_query)) {

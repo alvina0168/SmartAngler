@@ -13,11 +13,6 @@ $tournament_id = intval($_GET['tournament_id']);
 $logged_in_user_id = intval($_SESSION['user_id']);
 $logged_in_role = $_SESSION['role'];
 
-// ═══════════════════════════════════════════════════════════════
-//              ACCESS CONTROL
-// ═══════════════════════════════════════════════════════════════
-
-// Check access permissions
 if ($logged_in_role === 'organizer') {
     $access_check = "
         SELECT tournament_id FROM TOURNAMENT 
@@ -60,7 +55,6 @@ if (!$access_result || mysqli_num_rows($access_result) == 0) {
     redirect(SITE_URL . '/admin/tournament/tournamentList.php');
 }
 
-// Delete prize
 $delete_query = "DELETE FROM TOURNAMENT_PRIZE WHERE prize_id = $prize_id";
 
 if (mysqli_query($conn, $delete_query)) {

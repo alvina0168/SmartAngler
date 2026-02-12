@@ -6,13 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 
-// Allow both organizer and admin
 requireAdminAccess();
 
-// Get logged-in admin user ID
 $logged_in_user_id = intval($_SESSION['user_id']);
 
-// Fetch notifications - Only for tournaments created by this admin
 $query = "
     SELECT n.*, u.full_name AS user_name, t.tournament_title 
     FROM NOTIFICATION n
@@ -55,7 +52,6 @@ include '../includes/header.php';
 }
 </style>
 
-<!-- Create Notification Button -->
 <div class="text-right mb-3">
     <a href="createNotification.php" class="create-btn">
         <i class="fas fa-plus-circle"></i> Create Notification
@@ -116,7 +112,6 @@ include '../includes/header.php';
 <?php endif; ?>
 
 <script>
-    // Optional: auto-hide alerts after 5 seconds
     setTimeout(() => {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(alert => {
